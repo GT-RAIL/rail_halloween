@@ -10,6 +10,9 @@ from geometry_msgs.msg import PoseStamped
 from task_executor.msg import ExecuteAction
 from std_srvs.srv import Trigger, TriggerResponse
 
+from task_executor.actions import actions
+from task_executor import ops
+
 
 # The actual action server to execute the tasks
 
@@ -39,28 +42,101 @@ class TaskServer(object):
 
     def reload(self, req):
         # Instantiate the DB of locations and objects
-        self.locations = rospy.get_param('~locations')
-        self.objects = rospy.get_param('~objects')
+        self.locations = self._validate_locations(rospy.get_param('~locations'))
+        self.objects = self._validate_objects(rospy.get_param('~objects'))
         self.task_plan = rospy.get_param('~task')
 
         # Instantiate the registry of actions
+        actions.init(self.locations, self.objects)
+
         return TriggerResponse(success=True)
 
     def execute(self, goal):
         """
         Execute the given goal. Has a spec of ExecuteGoal.
         """
-        result = self.get_default_result()
+        result = self._server.get_default_result()
         rospy.loginfo("Executing goal: {}".format(goal.name))
 
         # Instantiate the dictionary of local variables
         var = dict()
 
         # Go through each step of the specified plan
-        for idx, step in self.task_plan:
+        idx = 0
+        while idx < len(self.task_plan):
+            step = self.task_plan[idx]
 
-            # Continue running the step unless we request a preempt, or the goal
-            # is no longer active
-            while not self.is_preempt_requested() and self.is_active():
-                # TODO: Execute parts of the task plan
-                pass
+            action = actions[step['action']]
+            params = {
+                name: self._resolve_param(value, var)
+                for name, value in step.get('params', {}).iteritems()
+            }
+
+            for variables in action.run(**params):
+                # First check to see if we've been preempted
+                if self._server.is_preempt_requested() \
+                        or not self._server.is_active():
+                    self._server.set_preempted(result)
+                    return
+
+                # Then check to see if we have variables that have returned
+                if len(variables) > 0:
+                    break
+
+            # Verify the variables
+            if not self._validate_variables(step.get('var', []), variables):
+                rospy.logerr(
+                    "Step {}, Action {} failed. Retrying".format(idx, step['action'])
+                )
+                continue
+
+            # Update the variables that we're keeping track of
+            for name, value in variables.iteritems():
+                var[name] = value
+
+            idx += 1
+
+        # Otherwise, signal complete
+        result.success = True
+        self._server.set_succeeded(result)
+
+    def _validate_locations(self, locations):
+        # TODO: We don't need to validate yet. But perhaps soon
+        return locations
+
+    def _validate_objects(self, objects):
+        # TODO: We don't need to validate yet. But perhaps soon
+        return objects
+
+    def _validate_variables(self, expected_var, actual_var):
+        if sorted(actual_var.keys()) == sorted(expected_var):
+            return True
+        else:
+            return False
+
+    def _resolve_var(self, param, var):
+        # Check type
+        if type(param) == str:
+            splits = param.split('.', 1)  # Split up the param
+            if len(splits) > 1 and splits[0] == 'var':
+                return var[splits[1]]
+        return param
+
+    def _resolve_op(self, param, var):
+        op_name, args = param.split('(', 1)
+        args = args.strip(')').split(',')
+        args = [self._resolve_var(arg, var) for arg in args]
+
+        # Finally, get the op and provide it with the args
+        return getattr(ops, op_name)(*args)
+
+    def _resolve_param(self, param, var):
+        if type(param) == str:
+            splits = param.split('.', 1)  # Split up the param
+
+            # Check if this requires an ops resolution. TODO: Use regex?
+            if len(splits) > 1 and splits[0] == 'ops' and '(' in splits[1] \
+                    and ')' in splits[1]:
+                param = self._resolve_op(splits[1], var)
+
+        return self._resolve_var(param, var)

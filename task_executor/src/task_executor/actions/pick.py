@@ -15,6 +15,7 @@ class PickAction(AbstractAction):
 
     def run(self, cube, grasps):
         rospy.loginfo("Picking cube: {}".format(cube.name))
+        yield {}
 
         self._pick_client.updateScene()
         yield {}

@@ -26,6 +26,7 @@ class MoveAction(AbstractAction):
 
         rospy.loginfo("Moving to location: {}".format(location))
         coords = self._locations[location]
+        yield {}
 
         for coord in coords:
             self._move_base_client.goto(**coord)

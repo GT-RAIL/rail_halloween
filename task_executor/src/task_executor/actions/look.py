@@ -18,4 +18,5 @@ class LookAction(AbstractAction):
 
     def run(self, pose):
         rospy.loginfo("Looking at point: {}".format(pose))
+        yield {}
         self._look_client.look_at(**pose)

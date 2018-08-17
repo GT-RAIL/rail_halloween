@@ -21,6 +21,8 @@ class AbstractAction(object):
         """
         Run the action. This method returns a generator. So don't return;
         instead yield an empty dictionary of return values to keep executing.
-        Yield a non-empty dictionary or raise StopIteration to stop the run
+        Yield a non-empty dictionary or raise StopIteration to stop the run.
+
+        NOTE: Due to weirdness, there MUST be atleast 1 yield
         """
         raise NotImplementedError()

@@ -24,6 +24,7 @@ class PerceiveAction(AbstractAction):
         rospy.loginfo("Inspecting scene for object: {}".format(obj))
         bounds = self._objects[obj]['bounds']
         location = self._objects[obj]['location']
+        yield {}
 
         self._perceive_client.updateScene()
         yield {}

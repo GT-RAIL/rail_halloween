@@ -21,4 +21,5 @@ class TorsoAction(AbstractAction):
 
     def run(self, height):
         rospy.loginfo("Torso to height: {}".format(height))
+        yield {}
         self._torso_client.move_to([height,])

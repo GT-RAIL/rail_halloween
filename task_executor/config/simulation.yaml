@@ -9,7 +9,7 @@ locations:
 objects:
   cube:
     bounds: { xmin: 0.05, xmax: 0.07, ymin: 0.05, ymax: 0.07, zmin: 0.05, zmax: 0.07 }
-    location: { xmin: -inf, xmax: inf, ymin: -inf, ymax: inf, zmin: 0.5, zmax: inf }
+    location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
 task:
 - action: move
@@ -46,7 +46,7 @@ task:
 
 - action: move
   params:
-    location: table2
+    location: locations.table2
 
 - action: torso
   params:
@@ -54,8 +54,8 @@ task:
 
 - action: place
   params:
-    block: var.cube
-    pose_stamped: ops.pose_of_object(var.cube)
+    cube: var.cube
+    pose_stamped: ops.pose_of_cube(var.cube)
     pick_result: var.pick_result
 
 - action: tuck

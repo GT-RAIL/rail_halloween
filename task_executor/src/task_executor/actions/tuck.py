@@ -15,4 +15,5 @@ class TuckAction(AbstractAction):
 
     def run(self):
         rospy.loginfo("Tucking arm")
+        yield {}
         self._tuck_client.tuck()

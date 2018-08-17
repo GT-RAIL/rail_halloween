@@ -13,15 +13,16 @@ class PlaceAction(AbstractAction):
     def init(self, locations, objects):
         self._place_client = GraspingClient()
 
-    def run(self, block, pose_stamped, pick_result):
+    def run(self, cube, pose_stamped, pick_result):
         rospy.loginfo(
             "Placing {} at: {}".format(
-                block.name,
+                cube.name,
                 [pose_stamped.pose.position.x,
                  pose_stamped.pose.position.y,
                  pose_stamped.pose.position.z]
             )
         )
+        yield {}
 
         self._place_client.updateScene()
         yield {}
