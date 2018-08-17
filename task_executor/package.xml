@@ -58,6 +58,7 @@
   <exec_depend>fetch_gazebo_demo</exec_depend>
   <exec_depend>message_generation</exec_depend>
   <exec_depend>rospy</exec_depend>
+  <exec_depend>std_srvs</exec_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->

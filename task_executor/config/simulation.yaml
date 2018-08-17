@@ -1,10 +1,10 @@
 locations:
   table1:
-  - {x: 2.250, y: 3.118, theta: 0}
-  - {x: 2.750, y: 3.118, theta: 0}
+  - {x: 2.250, y: 3.118, theta: 0, frame: "map"}
+  - {x: 2.750, y: 3.118, theta: 0, frame: "map"}
   table2:
-  - {x: -3.53, y: 3.75, theta: 1.57}
-  - {x: -3.53, y: 4.15, theta: 1.57}
+  - {x: -3.53, y: 3.75, theta: 1.57, frame: "map"}
+  - {x: -3.53, y: 4.15, theta: 1.57, frame: "map"}
 
 objects:
   cube:
@@ -26,15 +26,17 @@ task:
 
 - action: perceive
   params:
-    object: objects.cube
-  vars:
+    obj: objects.cube
+  var:
   - cube
   - grasps
 
 - action: pick
   params:
-    cube: vars.cube
-    grasps: vars.grasps
+    cube: var.cube
+    grasps: var.grasps
+  var:
+  - pick_result
 
 - action: tuck
 
@@ -52,8 +54,9 @@ task:
 
 - action: place
   params:
-    object: vars.cube
-    pose: ops.pose_of_object(vars.cube)
+    block: var.cube
+    pose_stamped: ops.pose_of_object(var.cube)
+    pick_result: var.pick_result
 
 - action: tuck
 
