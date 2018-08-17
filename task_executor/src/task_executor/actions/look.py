@@ -13,7 +13,7 @@ class LookAction(AbstractAction):
     def __init__(self):
         self._look_client = None
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, scene):
         self._look_client = PointHeadClient()
 
     def run(self, pose):

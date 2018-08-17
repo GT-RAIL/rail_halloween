@@ -10,8 +10,8 @@ class TuckAction(AbstractAction):
     def __init__(self):
         self._tuck_client = None
 
-    def init(self, locations, objects):
-        self._tuck_client = GraspingClient()
+    def init(self, locations, objects, scene):
+        self._tuck_client = GraspingClient(scene)
 
     def run(self):
         rospy.loginfo("Tucking arm")

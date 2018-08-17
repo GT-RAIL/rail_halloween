@@ -15,7 +15,7 @@ class MoveAction(AbstractAction):
         self._move_base_client = None
         self._locations = None
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, scene):
         self._locations = locations
         self._move_base_client = MoveBaseClient()
 

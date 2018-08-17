@@ -10,8 +10,8 @@ class PlaceAction(AbstractAction):
     def __init__(self):
         self._place_client = None
 
-    def init(self, locations, objects):
-        self._place_client = GraspingClient()
+    def init(self, locations, objects, scene):
+        self._place_client = GraspingClient(scene)
 
     def run(self, cube, pose_stamped, pick_result):
         rospy.loginfo(
@@ -22,9 +22,6 @@ class PlaceAction(AbstractAction):
                  pose_stamped.pose.position.z]
             )
         )
-        yield {}
-
-        self._place_client.updateScene()
         yield {}
 
         # Drop off 5 cm higher just to avoid collisions

@@ -36,9 +36,9 @@ class Actions(object):
     def __getitem__(self, key):
         return self.registry[key]
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, scene):
         for key, action in self.registry.iteritems():
-            action.init(locations, objects)
+            action.init(locations, objects, scene)
 
 
 # Make sure to only ever import actions

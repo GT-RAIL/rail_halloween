@@ -10,6 +10,7 @@ from geometry_msgs.msg import PoseStamped
 from task_executor.msg import ExecuteAction
 from std_srvs.srv import Trigger, TriggerResponse
 
+from moveit_python import PlanningSceneInterface
 from task_executor.actions import actions
 from task_executor import ops
 
@@ -44,10 +45,11 @@ class TaskServer(object):
         # Instantiate the DB of locations and objects
         self.locations = self._validate_locations(rospy.get_param('~locations'))
         self.objects = self._validate_objects(rospy.get_param('~objects'))
+        self.scene = PlanningSceneInterface("base_link")
         self.task_plan = rospy.get_param('~task')
 
         # Instantiate the registry of actions
-        actions.init(self.locations, self.objects)
+        actions.init(self.locations, self.objects, self.scene)
 
         return TriggerResponse(success=True)
 

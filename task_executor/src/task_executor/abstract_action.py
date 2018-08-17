@@ -12,7 +12,7 @@ class AbstractAction(object):
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def init(self, locations, objects):
+    def init(self, locations, objects, scene):
         """Initialize the databases. Really these should be their own thing"""
         raise NotImplementedError()
 

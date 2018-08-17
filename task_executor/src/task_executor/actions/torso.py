@@ -13,7 +13,7 @@ class TorsoAction(AbstractAction):
     def __init__(self):
         self._torso_client = None
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, scene):
         self._torso_client = FollowTrajectoryClient(
             "torso_controller",
             ["torso_lift_joint"]

@@ -10,15 +10,13 @@ class PickAction(AbstractAction):
     def __init__(self):
         self._pick_client = None
 
-    def init(self, location, objects):
-        self._pick_client = GraspingClient()
+    def init(self, location, objects, scene):
+        self._pick_client = GraspingClient(scene)
 
     def run(self, cube, grasps):
         rospy.loginfo("Picking cube: {}".format(cube.name))
         yield {}
 
-        self._pick_client.updateScene()
-        yield {}
         success, result = self._pick_client.pick(cube, grasps)
         if success:
             yield {'pick_result': result}
