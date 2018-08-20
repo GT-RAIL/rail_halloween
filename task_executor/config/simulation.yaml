@@ -12,9 +12,9 @@ objects:
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
 task:
-- action: move
-  params:
-    location: locations.table1
+# - action: move
+#   params:
+#     location: locations.table1
 
 - action: torso
   params:
@@ -22,7 +22,7 @@ task:
 
 - action: look
   params:
-    pose: {x: 3.7, y: 3.18, z: 0.0, frame: "map"}
+    pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
 - action: perceive
   params:
@@ -31,12 +31,12 @@ task:
   - cube
   - grasps
 
-- action: pick
-  params:
-    cube: var.cube
-    grasps: var.grasps
-  var:
-  - pick_result
+# - action: pick
+#   params:
+#     cube: var.cube
+#     grasps: var.grasps
+#   var:
+#   - pick_result
 
 - action: tuck
 
@@ -44,22 +44,22 @@ task:
   params:
     height: 0.0
 
-- action: move
-  params:
-    location: locations.table2
+# - action: move
+#   params:
+#     location: locations.table2
 
-- action: torso
-  params:
-    height: 0.4
+# - action: torso
+#   params:
+#     height: 0.4
 
-- action: place
-  params:
-    cube: var.cube
-    pose_stamped: ops.pose_of_cube(var.cube)
-    pick_result: var.pick_result
+# - action: place
+#   params:
+#     cube: var.cube
+#     pose_stamped: ops.pose_of_cube(var.cube)
+#     pick_result: var.pick_result
 
-- action: tuck
+# - action: tuck
 
-- action: torso
-  params:
-    height: 0.0
+# - action: torso
+#   params:
+#     height: 0.0
