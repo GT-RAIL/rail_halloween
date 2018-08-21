@@ -3,15 +3,17 @@
 
 from __future__ import print_function, division
 
+import copy
+
 import rospy
 import actionlib
 
 from geometry_msgs.msg import PoseStamped
 from task_executor.msg import ExecuteAction
 from std_srvs.srv import Trigger, TriggerResponse
+from actionlib_msgs.msg import GoalStatus
 
-from moveit_python import PlanningSceneInterface
-from task_executor.actions import actions
+from task_executor.actions import actions, AbstractAction
 from task_executor import ops
 
 
@@ -45,11 +47,10 @@ class TaskServer(object):
         # Instantiate the DB of locations and objects
         self.locations = self._validate_locations(rospy.get_param('~locations'))
         self.objects = self._validate_objects(rospy.get_param('~objects'))
-        self.scene = PlanningSceneInterface("base_link")
         self.task_plan = rospy.get_param('~task')
 
         # Instantiate the registry of actions
-        actions.init(self.locations, self.objects, self.scene)
+        actions.init(self.locations, self.objects)
 
         return TriggerResponse(success=True)
 
@@ -74,23 +75,41 @@ class TaskServer(object):
                 for name, value in step.get('params', {}).iteritems()
             }
 
-            for variables in action.run(**params):
-                # First check to see if we've been preempted
+            for status in action.run(**params):
+                # First check to see if we've been preempted. If we have, then
+                # set the preempt flag and wait for the action to return
                 if self._server.is_preempt_requested() \
                         or not self._server.is_active():
-                    self._server.set_preempted(result)
-                    return
+                    action.stop()
+                    continue
 
-                # Then check to see if we have variables that have returned
-                if len(variables) > 0:
-                    break
+            # If we've failed for some reason. Stop execution and return
+            if self._is_preempted(status):
+                rospy.logwarn(
+                    "Step {}, Action {}: PREEMPTED."
+                    .format(idx, step['action'])
+                )
+                self._server.set_preempted(result)
+                return
+
+            if self._is_aborted(status):
+                rospy.logerr(
+                    "Step {}, Action {}: FAIL. Status: {}"
+                    .format(idx, step['action'], status)
+                )
+                self._server.set_aborted(result)
+                return
+
+            # Get the variables from the status
+            variables = self._get_variables(status)
 
             # Verify the variables
             if not self._validate_variables(step.get('var', []), variables):
                 rospy.logerr(
-                    "Step {}, Action {} failed. Retrying".format(idx, step['action'])
+                    "Step {}, Action {}: Variable validation failed. Variables: {}"
+                    .format(idx, step['action'], variables)
                 )
-                continue
+                return
 
             # Update the variables that we're keeping track of
             for name, value in variables.iteritems():
@@ -101,6 +120,37 @@ class TaskServer(object):
         # Otherwise, signal complete
         result.success = True
         self._server.set_succeeded(result)
+
+    def _is_succeeded(self, status):
+        """
+        Checks to see if the current action is running. Counterpoint to
+        `AbstractAction.succeeded()`
+        """
+        return status[AbstractAction.STATUS_KEY] == GoalStatus.SUCCEEDED
+
+    def _is_preempted(self, status):
+        """
+        Checks to see if the current action was preempted. Counterpoint to
+        `AbstractAction.preempted()`
+        """
+        return status[AbstractAction.STATUS_KEY] == GoalStatus.PREEMPTED
+
+    def _is_aborted(self, status):
+        """
+        Checks to see if the current action is running. Counterpoint to
+        `AbstractAction.aborted()`
+        """
+        try:
+            return not (self._is_succeeded(status) or self._is_preempted(status))
+        except KeyError as e:
+            rospy.logerr("Marking action as failed. Invalid status: {}".format(status))
+            return True
+
+    def _get_variables(self, status):
+        """Retrieve the variables from a status object"""
+        variables = copy.deepcopy(status)
+        del variables['_status']
+        return variables
 
     def _validate_locations(self, locations):
         # TODO: We don't need to validate yet. But perhaps soon

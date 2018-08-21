@@ -20,13 +20,13 @@ class Actions(object):
     def __init__(self):
         # Painful manual specification of the actions
         self.registry = {
-            'move': MoveAction(),
+            # 'move': MoveAction(),
             'torso': TorsoAction(),
-            'look': LookAction(),
-            'perceive': PerceiveAction(),
-            'pick': PickAction(),
-            'tuck': TuckAction(),
-            'place': PlaceAction(),
+            # 'look': LookAction(),
+            # 'perceive': PerceiveAction(),
+            # 'pick': PickAction(),
+            # 'tuck': TuckAction(),
+            # 'place': PlaceAction(),
         }
 
         # Quick sanity check because I don't trust people
@@ -36,9 +36,9 @@ class Actions(object):
     def __getitem__(self, key):
         return self.registry[key]
 
-    def init(self, locations, objects, scene):
+    def init(self, locations, objects):
         for key, action in self.registry.iteritems():
-            action.init(locations, objects, scene)
+            action.init(locations, objects)
 
 
 # Make sure to only ever import actions
