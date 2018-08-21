@@ -22,7 +22,7 @@ class Actions(object):
         self.registry = {
             # 'move': MoveAction(),
             'torso': TorsoAction(),
-            # 'look': LookAction(),
+            'look': LookAction(),
             # 'perceive': PerceiveAction(),
             # 'pick': PickAction(),
             # 'tuck': TuckAction(),

@@ -19,13 +19,14 @@ class TorsoAction(AbstractAction):
             FollowJointTrajectoryAction
         )
         self._joint_names = ["torso_lift_joint"]
+        self._duration = 5.0
 
     def init(self, locations, objects):
         rospy.loginfo("Connecting to torso_controller...")
         self._torso_client.wait_for_server()
         rospy.loginfo("...torso_controller connected")
 
-    def run(self, height, duration=5.0):
+    def run(self, height):
         rospy.loginfo("Torso to height: {}".format(height))
 
         # Create and send the goal height
@@ -35,7 +36,7 @@ class TorsoAction(AbstractAction):
         trajectory.points[0].positions = [height]
         trajectory.points[0].velocities = [0.0]
         trajectory.points[0].accelerations = [0.0]
-        trajectory.points[0].time_from_start = rospy.Duration(duration)
+        trajectory.points[0].time_from_start = rospy.Duration(self._duration)
 
         follow_goal = FollowJointTrajectoryGoal()
         follow_goal.trajectory = trajectory
