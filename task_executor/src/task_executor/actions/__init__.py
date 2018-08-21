@@ -20,7 +20,7 @@ class Actions(object):
     def __init__(self):
         # Painful manual specification of the actions
         self.registry = {
-            # 'move': MoveAction(),
+            'move': MoveAction(),
             'torso': TorsoAction(),
             'look': LookAction(),
             # 'perceive': PerceiveAction(),
