@@ -13,15 +13,15 @@ from actionlib_msgs.msg import GoalStatus
 
 class TorsoAction(AbstractAction):
 
-    def __init__(self):
+    def init(self, locations, objects):
         self._torso_client = actionlib.SimpleActionClient(
             "torso_controller/follow_joint_trajectory",
             FollowJointTrajectoryAction
         )
         self._joint_names = ["torso_lift_joint"]
+
         self._duration = 5.0
 
-    def init(self, locations, objects):
         rospy.loginfo("Connecting to torso_controller...")
         self._torso_client.wait_for_server()
         rospy.loginfo("...torso_controller connected")
@@ -45,15 +45,15 @@ class TorsoAction(AbstractAction):
 
         # Yield an empty dict while we're executing
         while self._torso_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
-            yield self.running()
+            yield self.set_running()
 
         # Yield a aborted or succeeded based on how we exited
         if self._torso_client.get_state() == GoalStatus.SUCCEEDED:
-            yield self.succeeded()
+            yield self.set_succeeded()
         elif self._torso_client.get_state() == GoalStatus.PREEMPTED:
-            yield self.preempted()
+            yield self.set_preempted()
         else:
-            yield self.aborted()
+            yield self.set_aborted()
 
     def stop(self):
-        self._torso_client.cancel_all_goals()
+        self._torso_client.cancel_goal()

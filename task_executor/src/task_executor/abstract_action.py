@@ -10,35 +10,66 @@ class AbstractAction(object):
     """All actions are derived from this class"""
 
     __metaclass__ = abc.ABCMeta
-    STATUS_KEY = '_status'
     RUNNING_GOAL_STATES = [GoalStatus.PENDING, GoalStatus.ACTIVE, GoalStatus.RECALLING, GoalStatus.PREEMPTING]
 
-    def running(self, **kwargs):
+    def __init__(self):
+        self._status = GoalStatus.LOST
+
+    def set_running(self, **kwargs):
         """
         Returns a status denoting that the action is still running
         """
-        return {}
+        self._status = GoalStatus.ACTIVE
+        return kwargs
 
-    def succeeded(self, **kwargs):
+    def set_succeeded(self, **kwargs):
         """
         Returns a status denoting that the action has succeeded
         """
-        kwargs[AbstractAction.STATUS_KEY] = GoalStatus.SUCCEEDED
+        self._status = GoalStatus.SUCCEEDED
         return kwargs
 
-    def aborted(self, **kwargs):
+    def set_aborted(self, **kwargs):
         """
         Returns a status denoting that the action has failed
         """
-        kwargs[AbstractAction.STATUS_KEY] = GoalStatus.ABORTED
+        self._status = GoalStatus.ABORTED
         return kwargs
 
-    def preempted(self, **kwargs):
+    def set_preempted(self, **kwargs):
         """
         Returns a status denoting that the action was preempted
         """
-        kwargs[AbstractAction.STATUS_KEY] = GoalStatus.PREEMPTED
+        self._status = GoalStatus.PREEMPTED
         return kwargs
+
+    def is_running(self):
+        """
+        Checks to see if the current action is running. Counterpoint to
+        `AbstractAction.running()`
+        """
+        return self._status == GoalStatus.ACTIVE
+
+    def is_succeeded(self):
+        """
+        Checks to see if the current action is running. Counterpoint to
+        `AbstractAction.succeeded()`
+        """
+        return self._status == GoalStatus.SUCCEEDED
+
+    def is_preempted(self):
+        """
+        Checks to see if the current action was preempted. Counterpoint to
+        `AbstractAction.preempted()`
+        """
+        return self._status == GoalStatus.PREEMPTED
+
+    def is_aborted(self):
+        """
+        Checks to see if the current action is running. Counterpoint to
+        `AbstractAction.aborted()`
+        """
+        return not (self.is_running() or self.is_succeeded() or self.is_preempted())
 
     @abc.abstractmethod
     def init(self, locations, objects):

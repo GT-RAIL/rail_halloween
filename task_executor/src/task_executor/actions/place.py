@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# The place action in a task plan
+
 import rospy
 
 from fetch_gazebo_demo import GraspingClient

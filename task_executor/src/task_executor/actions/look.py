@@ -1,5 +1,5 @@
 #!/usr/bin/env
-# The torso action in a task plan
+# The look action in a task plan
 
 import rospy
 import actionlib
@@ -12,14 +12,13 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractAction):
 
-    def __init__(self):
+    def init(self, locations, objects):
         self._look_client = actionlib.SimpleActionClient(
             "head_controller/point_head",
             PointHeadAction
         )
         self._duration = 1.0
 
-    def init(self, locations, objects):
         rospy.loginfo("Connecting to head_controller...")
         self._look_client.wait_for_server()
         rospy.loginfo("...head_controller connected")
@@ -39,15 +38,15 @@ class LookAction(AbstractAction):
 
         # Yield an empty dict while we're executing
         while self._look_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
-            yield self.running()
+            yield self.set_running()
 
         # Yield based on how we exited
         if self._look_client.get_state() == GoalStatus.SUCCEEDED:
-            yield self.succeeded()
+            yield self.set_succeeded()
         elif self._look_client.get_state() == GoalStatus.PREEMPTED:
-            yield self.preempted()
+            yield self.set_preempted()
         else:
-            yield self.aborted()
+            yield self.set_aborted()
 
     def stop(self):
-        self._look_client.cancel_all_goals()
+        self._look_client.cancel_goal()

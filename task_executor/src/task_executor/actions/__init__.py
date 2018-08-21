@@ -8,6 +8,8 @@ from task_executor.abstract_action import AbstractAction
 from .move import MoveAction
 from .torso import TorsoAction
 from .look import LookAction
+from .find_object import FindObjectAction
+from .find_grasps import FindGraspsAction
 from .perceive import PerceiveAction
 from .pick import PickAction
 from .tuck import TuckAction
@@ -23,6 +25,8 @@ class Actions(object):
             'move': MoveAction(),
             'torso': TorsoAction(),
             'look': LookAction(),
+            'find_object': FindObjectAction(),
+            'find_grasps': FindGraspsAction(),
             'perceive': PerceiveAction(),
             # 'pick': PickAction(),
             # 'tuck': TuckAction(),

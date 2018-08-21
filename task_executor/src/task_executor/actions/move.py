@@ -17,12 +17,10 @@ from actionlib_msgs.msg import GoalStatus
 class MoveAction(AbstractAction):
     """Move to a location"""
 
-    def __init__(self):
-        self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-        self._locations = None
-
     def init(self, locations, objects):
+        self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         self._locations = locations
+
         rospy.loginfo("Connecting to move_base...")
         self._move_base_client.wait_for_server()
         rospy.loginfo("...move_base connected")
@@ -48,7 +46,7 @@ class MoveAction(AbstractAction):
 
             # Yield running while the move_client is executing
             while self._move_base_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
-                yield self.running()
+                yield self.set_running()
 
             # Check the status and stop executing if we didn't complete our goal
             status = self._move_base_client.get_state()
@@ -57,11 +55,11 @@ class MoveAction(AbstractAction):
 
         # Finally, yield based on the final status
         if status == GoalStatus.SUCCEEDED:
-            yield self.succeeded()
+            yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
-            yield self.preempted()
+            yield self.set_preempted()
         else:
-            yield self.aborted()
+            yield self.set_aborted()
 
     def stop(self):
-        self._move_base_client.cancel_all_goals()
+        self._move_base_client.cancel_goal()

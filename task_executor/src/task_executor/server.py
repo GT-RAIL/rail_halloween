@@ -75,7 +75,7 @@ class TaskServer(object):
                 for name, value in step.get('params', {}).iteritems()
             }
 
-            for status in action.run(**params):
+            for variables in action.run(**params):
                 # First check to see if we've been preempted. If we have, then
                 # set the preempt flag and wait for the action to return
                 if self._server.is_preempt_requested() \
@@ -83,25 +83,27 @@ class TaskServer(object):
                     action.stop()
                     continue
 
-            # If we've failed for some reason. Stop execution and return
-            if self._is_preempted(status):
+                # Check to see if something has stopped the action. If so, then
+                # exit out of this for loop
+                if action.is_preempted() or action.is_aborted():
+                    break
+
+            # If we've failed for some reason. Return
+            if action.is_preempted():
                 rospy.logwarn(
-                    "Step {}, Action {}: PREEMPTED."
-                    .format(idx, step['action'])
+                    "Step {}, Action {}: PREEMPTED. Context: {}"
+                    .format(idx, step['action'], variables)
                 )
                 self._server.set_preempted(result)
                 return
 
-            if self._is_aborted(status):
+            if action.is_aborted():
                 rospy.logerr(
-                    "Step {}, Action {}: FAIL. Status: {}"
-                    .format(idx, step['action'], status)
+                    "Step {}, Action {}: FAIL. Context: {}"
+                    .format(idx, step['action'], variables)
                 )
                 self._server.set_aborted(result)
                 return
-
-            # Get the variables from the status
-            variables = self._get_variables(status)
 
             # Verify the variables
             if not self._validate_variables(step.get('var', []), variables):
@@ -121,37 +123,6 @@ class TaskServer(object):
         # Otherwise, signal complete
         result.success = True
         self._server.set_succeeded(result)
-
-    def _is_succeeded(self, status):
-        """
-        Checks to see if the current action is running. Counterpoint to
-        `AbstractAction.succeeded()`
-        """
-        return status[AbstractAction.STATUS_KEY] == GoalStatus.SUCCEEDED
-
-    def _is_preempted(self, status):
-        """
-        Checks to see if the current action was preempted. Counterpoint to
-        `AbstractAction.preempted()`
-        """
-        return status[AbstractAction.STATUS_KEY] == GoalStatus.PREEMPTED
-
-    def _is_aborted(self, status):
-        """
-        Checks to see if the current action is running. Counterpoint to
-        `AbstractAction.aborted()`
-        """
-        try:
-            return not (self._is_succeeded(status) or self._is_preempted(status))
-        except KeyError as e:
-            rospy.logerr("Marking action as failed. Invalid status: {}".format(status))
-            return True
-
-    def _get_variables(self, status):
-        """Retrieve the variables from a status object"""
-        variables = copy.deepcopy(status)
-        del variables['_status']
-        return variables
 
     def _validate_locations(self, locations):
         # TODO: We don't need to validate yet. But perhaps soon
