@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+  <!-- Args to start different nodes -->
+  <arg name="sim" default="false" />
+  <arg name="start_all" default="false" />
+  <arg name="task_executor" default="$(arg start_all)" />
+  <arg name="navigation" default="$(arg start_all)" />
+  <arg name="perception" default="$(arg start_all)" />
+
+  <!-- Fixed args -->
+  <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
+  <arg name="classifier_file" value="random_forest.pkl" />
+  <arg name="segmentation_config" value="$(find fetch_grasp_suggestion)/config/zones.yaml" />
+
+  <!-- Location params -->
+  <arg name="config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
+  <arg name="map_file" default="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
+
+  <!-- Navigation -->
+  <include file="$(find fetch_navigation)/launch/fetch_nav.launch" if="$(arg navigation)" >
+    <arg name="map_file" value="$(arg map_file)" />
+  </include>
+
+  <!-- Perception -->
+  <group if="$(arg perception)">
+
+    <!-- RAIL Segmentation -->
+    <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
+      <param name="zones_config" value="$(arg segmentation_config)" />
+      <param name="point_cloud_topic" value="$(arg cloud_topic)" />
+      <param name="max_cluster_size" value="30000" />
+      <param name="min_cluster_size" value="75" />
+    </node>
+
+    <!-- Grasp Suggestion -->
+    <include file="$(find fetch_grasp_suggestion)/launch/grasp_suggestion.launch">
+      <arg name="cloud_topic" value="$(arg cloud_topic)" />
+      <arg name="classifier_file" value="$(arg classifier_file)" />
+    </include>
+
+  </group>
+
+  <!-- Task Execution -->
+  <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen" if="$(arg task_executor)" >
+    <rosparam command="load" file="$(arg config)" />
+  </node>
+</launch>

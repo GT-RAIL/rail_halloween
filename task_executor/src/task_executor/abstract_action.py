@@ -55,10 +55,10 @@ class AbstractAction(object):
         """
         Run the action. This method returns a generator. So don't return;
         instead yield an empty dictionary of return values to keep executing.
-        Yield a non-empty dictionary or raise StopIteration to stop the run.
+        Stop yielding values or raise StopIteration to stop the run.
 
         Use `running()`, `succeeded()`, `aborted()`, `preempted()` helper
-        functions to set status
+        functions to set status when yielding
         """
         raise NotImplementedError()
 

@@ -23,7 +23,7 @@ class Actions(object):
             'move': MoveAction(),
             'torso': TorsoAction(),
             'look': LookAction(),
-            # 'perceive': PerceiveAction(),
+            'perceive': PerceiveAction(),
             # 'pick': PickAction(),
             # 'tuck': TuckAction(),
             # 'place': PlaceAction(),

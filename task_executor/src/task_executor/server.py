@@ -109,6 +109,7 @@ class TaskServer(object):
                     "Step {}, Action {}: Variable validation failed. Variables: {}"
                     .format(idx, step['action'], variables)
                 )
+                self._server.set_aborted(result)
                 return
 
             # Update the variables that we're keeping track of
