@@ -88,11 +88,6 @@ class TaskServer(object):
                 if action.is_preempted() or action.is_aborted():
                     break
 
-            # FIXME: Figure out what's going on with pick and remove this
-            if step['action'] == 'pick':
-                idx += 1
-                continue
-
             # If we've failed for some reason. Return
             if action.is_preempted():
                 rospy.logwarn(
