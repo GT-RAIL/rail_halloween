@@ -12,7 +12,9 @@ from .find_object import FindObjectAction
 from .find_grasps import FindGraspsAction
 from .perceive import PerceiveAction
 from .pick import PickAction
-from .tuck import TuckAction
+from .tuck_pose import TuckPoseAction
+from .ready_pose import ReadyPoseAction
+from .drop_pose import DropPoseAction
 from .place import PlaceAction
 
 
@@ -29,7 +31,9 @@ class Actions(object):
             'find_grasps': FindGraspsAction(),
             'perceive': PerceiveAction(),
             'pick': PickAction(),
-            # 'tuck': TuckAction(),
+            'tuck_pose': TuckPoseAction(),
+            'ready_pose': ReadyPoseAction(),
+            'drop_pose': DropPoseAction(),
             # 'place': PlaceAction(),
         }
 

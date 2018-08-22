@@ -75,7 +75,6 @@ class TaskServer(object):
                 for name, value in step.get('params', {}).iteritems()
             }
 
-            print(step, params)
             for variables in action.run(**params):
                 # First check to see if we've been preempted. If we have, then
                 # set the preempt flag and wait for the action to return
@@ -88,6 +87,11 @@ class TaskServer(object):
                 # exit out of this for loop
                 if action.is_preempted() or action.is_aborted():
                     break
+
+            # FIXME: Figure out what's going on with pick and remove this
+            if step['action'] == 'pick':
+                idx += 1
+                continue
 
             # If we've failed for some reason. Return
             if action.is_preempted():

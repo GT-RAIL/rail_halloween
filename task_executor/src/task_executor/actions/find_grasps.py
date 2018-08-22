@@ -25,7 +25,7 @@ class FindGraspsAction(AbstractAction):
         )
 
         # Set the max number of grasps to try. This can be a param lookup
-        self._max_grasps = 3
+        self._max_grasps = 10
 
         # Set a stop flag
         self._stopped = False

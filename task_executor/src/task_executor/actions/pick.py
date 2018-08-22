@@ -34,7 +34,7 @@ class PickAction(AbstractAction):
         # failed
         status = GoalStatus.LOST
         for idx, grasp_pose in enumerate(grasps.poses):
-            rospy.loginfo("Attempting grasp {}/{}".format(idx, len(grasps.poses)))
+            rospy.loginfo("Attempting grasp {}/{}".format(idx + 1, len(grasps.poses)))
 
             goal.grasp_pose.pose = grasp_pose
             goal.grasp_pose.header.stamp = rospy.Time.now()

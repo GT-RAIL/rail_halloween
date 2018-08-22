@@ -8,17 +8,25 @@ locations:
 
 objects:
   cube:
-    bounds: { xmin: 0.05, xmax: 0.07, ymin: 0.05, ymax: 0.07, zmin: 0.05, zmax: 0.07 }
+    bounds: { xmin: 0.025, xmax: 0.07, ymin: 0.025, ymax: 0.07, zmin: 0.025, zmax: 0.07 }
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
 task:
-# - action: move
-#   params:
-#     location: locations.table1
+- action: tuck_pose
+
+- action: torso
+  params:
+    height: 0.0
+
+- action: move
+  params:
+    location: locations.table1
 
 - action: torso
   params:
     height: 0.4
+
+- action: ready_pose
 
 - action: look
   params:
@@ -28,29 +36,33 @@ task:
   params:
     obj: objects.cube
   var:
-  - cube
+  - cube_idx
   - grasps
 
-# - action: pick
-#   params:
-#     cube: var.cube
-#     grasps: var.grasps
-#   var:
-#   - pick_result
+- action: pick
+  params:
+    cube_idx: var.cube_idx
+    grasps: var.grasps
 
-- action: tuck
+- action: tuck_pose
 
 - action: torso
   params:
     height: 0.0
 
-# - action: move
-#   params:
-#     location: locations.table2
+- action: look
+  params:
+    pose: {x: 50.0, y: 0.0, z: 0.0, frame: "base_link"}
 
-# - action: torso
-#   params:
-#     height: 0.4
+- action: move
+  params:
+    location: locations.table2
+
+- action: torso
+  params:
+    height: 0.4
+
+- action: drop_pose
 
 # - action: place
 #   params:
@@ -58,8 +70,8 @@ task:
 #     pose_stamped: ops.pose_of_cube(var.cube)
 #     pick_result: var.pick_result
 
-# - action: tuck
+- action: tuck_pose
 
-# - action: torso
-#   params:
-#     height: 0.0
+- action: torso
+  params:
+    height: 0.0
