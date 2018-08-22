@@ -28,7 +28,7 @@ class Actions(object):
             'find_object': FindObjectAction(),
             'find_grasps': FindGraspsAction(),
             'perceive': PerceiveAction(),
-            # 'pick': PickAction(),
+            'pick': PickAction(),
             # 'tuck': TuckAction(),
             # 'place': PlaceAction(),
         }

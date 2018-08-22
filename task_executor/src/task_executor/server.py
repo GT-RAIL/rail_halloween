@@ -75,6 +75,7 @@ class TaskServer(object):
                 for name, value in step.get('params', {}).iteritems()
             }
 
+            print(step, params)
             for variables in action.run(**params):
                 # First check to see if we've been preempted. If we have, then
                 # set the preempt flag and wait for the action to return

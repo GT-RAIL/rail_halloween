@@ -6,6 +6,7 @@
   <arg name="task_executor" default="$(arg start_all)" />
   <arg name="navigation" default="$(arg start_all)" />
   <arg name="perception" default="$(arg start_all)" />
+  <arg name="arm" default="$(arg start_all)" />
 
   <!-- Fixed args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
@@ -38,6 +39,15 @@
       <arg name="classifier_file" value="$(arg classifier_file)" />
     </include>
 
+  </group>
+
+  <!-- Arm -->
+  <group if="$(arg arm)">
+    <node pkg="fetch_grasp_suggestion" type="executor" name="grasp_executor" output="screen" />
+
+    <include file="$(find fetch_moveit_config)/launch/move_group.launch" >
+      <arg name="info" value="true"/><!-- publish grasp markers -->
+    </include>
   </group>
 
   <!-- Task Execution -->
