@@ -72,7 +72,7 @@ class AbstractAction(object):
         return not (self.is_running() or self.is_succeeded() or self.is_preempted())
 
     @abc.abstractmethod
-    def init(self, locations, objects):
+    def init(self, locations, objects, poses):
         """
         Initialize the action.
 

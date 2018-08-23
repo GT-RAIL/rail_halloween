@@ -12,9 +12,7 @@ from .find_object import FindObjectAction
 from .find_grasps import FindGraspsAction
 from .perceive import PerceiveAction
 from .pick import PickAction
-from .tuck_pose import TuckPoseAction
-from .ready_pose import ReadyPoseAction
-from .drop_pose import DropPoseAction
+from .arm_pose import ArmPoseAction
 from .place import PlaceAction
 
 
@@ -31,9 +29,7 @@ class Actions(object):
             'find_grasps': FindGraspsAction(),
             'perceive': PerceiveAction(),
             'pick': PickAction(),
-            'tuck_pose': TuckPoseAction(),
-            'ready_pose': ReadyPoseAction(),
-            'drop_pose': DropPoseAction(),
+            'arm': ArmPoseAction(),
             # 'place': PlaceAction(),
         }
 
@@ -44,9 +40,9 @@ class Actions(object):
     def __getitem__(self, key):
         return self.registry[key]
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, poses):
         for key, action in self.registry.iteritems():
-            action.init(locations, objects)
+            action.init(locations, objects, poses)
 
 
 # Make sure to only ever import actions

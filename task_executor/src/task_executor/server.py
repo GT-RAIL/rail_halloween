@@ -47,10 +47,11 @@ class TaskServer(object):
         # Instantiate the DB of locations and objects
         self.locations = self._validate_locations(rospy.get_param('~locations'))
         self.objects = self._validate_objects(rospy.get_param('~objects'))
-        self.task_plan = rospy.get_param('~task')
+        self.poses = self._validate_poses(rospy.get_param('~poses'))
+        self.tasks = rospy.get_param('~tasks')
 
         # Instantiate the registry of actions
-        actions.init(self.locations, self.objects)
+        actions.init(self.locations, self.objects, self.poses)
 
         return TriggerResponse(success=True)
 
@@ -59,15 +60,21 @@ class TaskServer(object):
         Execute the given goal. Has a spec of ExecuteGoal.
         """
         result = self._server.get_default_result()
-        rospy.loginfo("Executing goal: {}".format(goal.name))
+        if goal.name not in self.tasks:
+            rospy.logerr("Unrecognized task: {}".format(goal.name))
+            self._server.set_aborted(result)
+            return
+
+        rospy.loginfo("Executing task: {}".format(goal.name))
 
         # Instantiate the dictionary of local variables
         var = dict()
 
         # Go through each step of the specified plan
         idx = 0
-        while idx < len(self.task_plan):
-            step = self.task_plan[idx]
+        task = self.tasks[goal.name]
+        while idx < len(task):
+            step = task[idx]
 
             action = actions[step['action']]
             params = {
@@ -131,6 +138,10 @@ class TaskServer(object):
     def _validate_objects(self, objects):
         # TODO: We don't need to validate yet. But perhaps soon
         return objects
+
+    def _validate_poses(self, poses):
+        # TODO: We don't need to validate yet. But perhaps soon
+        return poses
 
     def _validate_variables(self, expected_var, actual_var):
         if sorted(actual_var.keys()) == sorted(expected_var):

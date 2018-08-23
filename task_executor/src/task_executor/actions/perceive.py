@@ -13,13 +13,14 @@ from .find_object import FindObjectAction
 
 
 class PerceiveAction(AbstractAction):
+    # TODO: This should be another "task". Need to figure out the semantics
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, poses):
         self._find_grasps = FindGraspsAction()
         self._find_object = FindObjectAction()
 
-        self._find_grasps.init(locations, objects)
-        self._find_object.init(locations, objects)
+        self._find_grasps.init(locations, objects, poses)
+        self._find_object.init(locations, objects, poses)
 
     def run(self, obj):
         # First find the object

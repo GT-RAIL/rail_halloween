@@ -1,73 +1,131 @@
 locations:
-  table1:
+  pre_table1:
   - {x: 2.250, y: 3.118, theta: 0, frame: "map"}
+  table1:
   - {x: 2.750, y: 3.118, theta: 0, frame: "map"}
-  table2:
+  post_table1:
+  - {x: 2.250, y: 3.118, theta: 3.14, frame: "map"}
+  pre_table2:
   - {x: -3.53, y: 3.75, theta: 1.57, frame: "map"}
+  table2:
   - {x: -3.53, y: 4.15, theta: 1.57, frame: "map"}
+  post_table2:
+  - {x: -3.53, y: 3.75, theta: 4.71, frame: "map"}
 
 objects:
   cube:
     bounds: { xmin: 0.025, xmax: 0.13, ymin: 0.025, ymax: 0.13, zmin: 0.025, zmax: 0.13 }
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
-task:
-- action: tuck_pose
+poses:
+  tuck: [1.32, 1.40, -0.2, 1.72, 0.0, 1.66, 0.0]
+  ready: [1.55, -0.91, 0.98, -1.18, 0.14, -1.06, 0.0]
+  stow: [1.32, 0.7, 0.0, -2.0, 0.0, -0.57, 0.0]
 
-- action: torso
-  params:
-    height: 0.0
+tasks:
+  foo:
+  - action: arm
+    params:
+      pose: poses.tuck
 
-- action: move
-  params:
-    location: locations.table1
+  - action: torso
+    params:
+      height: 0.0
 
-- action: torso
-  params:
-    height: 0.4
+  - action: move
+    params:
+      location: locations.pre_table1
 
-- action: ready_pose
+  - action: torso
+    params:
+      height: 0.4
 
-- action: look
-  params:
-    pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+  - action: arm
+    params:
+      pose: poses.stow
 
-- action: perceive
-  params:
-    obj: objects.cube
-  var:
-  - cube_idx
-  - grasps
+  - action: move
+    params:
+      location: locations.table1
 
-- action: pick
-  params:
-    cube_idx: var.cube_idx
-    grasps: var.grasps
+  - action: arm
+    params:
+      pose: poses.ready
 
-- action: tuck_pose
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
-- action: torso
-  params:
-    height: 0.0
+  - action: perceive
+    params:
+      obj: objects.cube
+    var:
+    - cube_idx
+    - grasps
 
-- action: move
-  params:
-    location: locations.table2
+  - action: pick
+    params:
+      cube_idx: var.cube_idx
+      grasps: var.grasps
 
-- action: torso
-  params:
-    height: 0.4
+  - action: arm
+    params:
+      pose: poses.stow
 
-- action: drop_pose
+  - action: move
+    params:
+      location: locations.post_table1
 
-# - action: place
-#   params:
-#     cube: var.cube
-#     pose_stamped: ops.pose_of_cube(var.cube)
-#     pick_result: var.pick_result
+  - action: arm
+    params:
+      pose: poses.tuck
 
-- action: tuck_pose
+  - action: torso
+    params:
+      height: 0.0
 
-- action: torso
-  params:
-    height: 0.0
+  - action: move
+    params:
+      location: locations.pre_table2
+
+  - action: torso
+    params:
+      height: 0.4
+
+  - action: arm
+    params:
+      pose: poses.stow
+
+  - action: move
+    params:
+      location: locations.table2
+
+  - action: arm
+    params:
+      pose: poses.ready
+
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+  # - action: place
+  #   params:
+  #     cube: var.cube
+  #     pose_stamped: ops.pose_of_cube(var.cube)
+  #     pick_result: var.pick_result
+
+  - action: arm
+    params:
+      pose: poses.stow
+
+  - action: move
+    params:
+      location: locations.post_table2
+
+  - action: arm
+    params:
+      pose: poses.tuck
+
+  - action: torso
+    params:
+      height: 0.0

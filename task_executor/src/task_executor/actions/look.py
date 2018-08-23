@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractAction):
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, poses):
         self._look_client = actionlib.SimpleActionClient(
             "head_controller/point_head",
             PointHeadAction

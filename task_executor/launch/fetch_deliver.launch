@@ -46,7 +46,7 @@
     <node pkg="fetch_grasp_suggestion" type="executor" name="grasp_executor" output="screen" />
 
     <include file="$(find fetch_moveit_config)/launch/move_group.launch" >
-      <arg name="info" value="true"/><!-- publish grasp markers -->
+      <arg name="info" value="true"/>
       <arg name="allow_active_sensing" value="true" />
     </include>
   </group>

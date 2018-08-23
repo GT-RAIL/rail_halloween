@@ -13,7 +13,7 @@ from fetch_grasp_suggestion.srv import SuggestGrasps, PairwiseRank
 
 class FindGraspsAction(AbstractAction):
 
-    def init(self, locations, objects):
+    def init(self, locations, objects, poses):
         # The Grasp calculation interface
         self._suggest_grasps_srv = rospy.ServiceProxy(
             "/suggester/suggest_grasps",

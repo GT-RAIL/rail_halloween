@@ -12,7 +12,7 @@ from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal
 
 class PickAction(AbstractAction):
 
-    def init(self, location, objects):
+    def init(self, location, objects, poses):
         self._grasp_client = actionlib.SimpleActionClient(
             "/grasp_executor/execute_grasp",
             ExecuteGraspAction
