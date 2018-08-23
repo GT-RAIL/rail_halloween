@@ -1,20 +1,20 @@
 locations:
   pre_table1:
-  - {x: 2.250, y: 3.118, theta: 0, frame: "map"}
+  - {x: 4.905, y: -29.033, theta: 1.872, frame: "map"}
   table1:
-  - {x: 2.750, y: 3.118, theta: 0, frame: "map"}
+  - {x: 4.881, y: -28.146, theta: 1.93, frame: "map"}
   post_table1:
-  - {x: 2.250, y: 3.118, theta: 3.14, frame: "map"}
+  - {x: 5.120, y: -28.681, theta: -1.34, frame: "map"}
   pre_table2:
-  - {x: -3.53, y: 3.75, theta: 1.57, frame: "map"}
+  - {x: 4.905, y: -29.033, theta: 1.872, frame: "map"}
   table2:
-  - {x: -3.53, y: 4.15, theta: 1.57, frame: "map"}
+  - {x: 4.881, y: -28.146, theta: 1.93, frame: "map"}
   post_table2:
-  - {x: -3.53, y: 3.75, theta: 4.71, frame: "map"}
+  - {x: 5.120, y: -28.681, theta: -1.34, frame: "map"}
 
 objects:
   cube:
-    bounds: { xmin: 0.034, xmax: 0.11, ymin: 0.034, ymax: 0.11, zmin: 0.034, zmax: 0.11 }
+    bounds: { xmin: 0.034, xmax: 0.12, ymin: 0.034, ymax: 0.12, zmin: 0.034, zmax: 0.12 }
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
 poses:
@@ -25,6 +25,10 @@ poses:
 
 tasks:
   main:
+  - action: torso
+    params:
+      height: 0.4
+
   - action: arm
     params:
       pose: poses.tuck
@@ -33,9 +37,9 @@ tasks:
     params:
       height: 0.0
 
-  # - action: move
-  #   params:
-  #     location: locations.pre_table1
+  - action: move
+    params:
+      location: locations.pre_table1
 
   - action: torso
     params:
@@ -45,9 +49,9 @@ tasks:
     params:
       pose: poses.stow
 
-  # - action: move
-  #   params:
-  #     location: locations.table1
+  - action: move
+    params:
+      location: locations.table1
 
   - action: arm
     params:
@@ -73,9 +77,9 @@ tasks:
     params:
       pose: poses.stow
 
-  # - action: move
-  #   params:
-  #     location: locations.post_table1
+  - action: move
+    params:
+      location: locations.post_table1
 
   - action: arm
     params:
@@ -85,9 +89,9 @@ tasks:
     params:
       height: 0.0
 
-  # - action: move
-  #   params:
-  #     location: locations.pre_table2
+  - action: move
+    params:
+      location: locations.pre_table2
 
   - action: torso
     params:
@@ -97,9 +101,9 @@ tasks:
     params:
       pose: poses.stow
 
-  # - action: move
-  #   params:
-  #     location: locations.table2
+  - action: move
+    params:
+      location: locations.table2
 
   - action: arm
     params:
@@ -111,9 +115,9 @@ tasks:
 
   - action: place
 
-  # - action: arm
-  #   params:
-  #     pose: poses.stow
+  - action: arm
+    params:
+      pose: poses.stow
 
   - action: move
     params:

@@ -21,6 +21,8 @@ class ArmPoseAction(AbstractAction):
         )
         self._poses = poses
 
+        self._max_attempts = 5
+
         rospy.loginfo("Connecting to arm_pose_executor...")
         self._pose_client.wait_for_server()
         rospy.loginfo("...arm_pose_executor connected")
@@ -43,14 +45,22 @@ class ArmPoseAction(AbstractAction):
         ])
         goal.position.extend(self._poses[pose])
         assert len(goal.name) == len(goal.position)
-        self._pose_client.send_goal(goal)
 
-        # Yield running while the client is executing
-        while self._pose_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
-            yield self.set_running()
+        for attempt in xrange(self._max_attempts):
+            rospy.loginfo("Attempt {}/{}".format(attempt + 1, self._max_attempts))
+            self._pose_client.send_goal(goal)
 
-        # Yield based on the server's status
-        status = self._pose_client.get_state()
+            # Yield running while the client is executing
+            while self._pose_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+                yield self.set_running()
+
+            # Yield based on the server's status
+            status = self._pose_client.get_state()
+
+            # Exit if we have succeeded or been preempted
+            if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
+                break
+
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
