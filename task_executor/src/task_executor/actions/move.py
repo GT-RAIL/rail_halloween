@@ -17,7 +17,7 @@ from actionlib_msgs.msg import GoalStatus
 class MoveAction(AbstractAction):
     """Move to a location"""
 
-    def init(self, locations, objects, poses):
+    def init(self, locations, **kwargs):
         self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         self._locations = locations
 

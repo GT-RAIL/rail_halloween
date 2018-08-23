@@ -14,13 +14,13 @@ from rail_manipulation_msgs.srv import SegmentObjects
 
 class FindObjectAction(AbstractAction):
 
-    def init(self, locations, objects, poses):
+    def init(self, objects, **kwargs):
         # Objects DB
         self._objects = objects
 
         # The segmentation interface
         self._segment_objects_srv = rospy.ServiceProxy(
-            "/rail_segmentation/segment_objects",
+            "rail_segmentation/segment_objects",
             SegmentObjects
         )
 

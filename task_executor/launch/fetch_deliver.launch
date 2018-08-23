@@ -11,7 +11,7 @@
   <!-- Fixed args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
   <arg name="classifier_file" value="random_forest.pkl" />
-  <arg name="segmentation_config" value="$(find fetch_grasp_suggestion)/config/zones.yaml" />
+  <arg name="segmentation_config" value="$(find task_executor)/config/zones.yaml" />
 
   <!-- Location params -->
   <arg name="config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />

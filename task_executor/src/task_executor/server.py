@@ -51,7 +51,11 @@ class TaskServer(object):
         self.tasks = rospy.get_param('~tasks')
 
         # Instantiate the registry of actions
-        actions.init(self.locations, self.objects, self.poses)
+        actions.init(
+            locations=self.locations,
+            objects=self.objects,
+            poses=self.poses
+        )
 
         return TriggerResponse(success=True)
 

@@ -30,7 +30,7 @@ class Actions(object):
             'perceive': PerceiveAction(),
             'pick': PickAction(),
             'arm': ArmPoseAction(),
-            # 'place': PlaceAction(),
+            'place': PlaceAction(),
         }
 
         # Quick sanity check because I don't trust people
@@ -40,9 +40,9 @@ class Actions(object):
     def __getitem__(self, key):
         return self.registry[key]
 
-    def init(self, locations, objects, poses):
+    def init(self, **kwargs):
         for key, action in self.registry.iteritems():
-            action.init(locations, objects, poses)
+            action.init(**kwargs)
 
 
 # Make sure to only ever import actions

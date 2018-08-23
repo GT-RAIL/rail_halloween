@@ -13,7 +13,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class TorsoAction(AbstractAction):
 
-    def init(self, locations, objects, poses):
+    def init(self, **kwargs):
         self._torso_client = actionlib.SimpleActionClient(
             "torso_controller/follow_joint_trajectory",
             FollowJointTrajectoryAction

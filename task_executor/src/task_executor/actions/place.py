@@ -3,35 +3,59 @@
 
 import rospy
 
-from fetch_gazebo_demo import GraspingClient
-
 from task_executor.abstract_action import AbstractAction
+
+from std_srvs.srv import Empty
+
+from .arm_pose import ArmPoseAction
 
 
 class PlaceAction(AbstractAction):
 
-    def __init__(self):
-        self._place_client = None
-
-    def init(self, locations, objects, scene):
-        self._place_client = GraspingClient(scene)
-
-    def run(self, cube, pose_stamped, pick_result):
-        rospy.loginfo(
-            "Placing {} at: {}".format(
-                cube.name,
-                [pose_stamped.pose.position.x,
-                 pose_stamped.pose.position.y,
-                 pose_stamped.pose.position.z]
-            )
+    def init(self, **kwargs):
+        self._drop_object_srv = rospy.ServiceProxy(
+            "grasp_executor/drop_object",
+            Empty
         )
-        yield {}
+        self._arm_pose = ArmPoseAction()
+        self._drop_pose_name = "poses.drop"  # This is from the poses database
 
-        # Drop off 5 cm higher just to avoid collisions
-        pose_stamped.pose.position.z += 0.05
-        success = self._place_client.place(cube, pose_stamped, pick_result)
+        # Set a stop flag
+        self._stopped = False
 
-        # This is a bit weird and non-conventional. We yield on error; else just
-        # stop execution
-        if not success:
-            yield {'success': success}
+        rospy.loginfo("Connecting to drop_service...")
+        self._drop_object_srv.wait_for_service()
+        rospy.loginfo("...drop_service connected")
+        self._arm_pose.init(**kwargs)
+
+    def run(self):
+        rospy.loginfo("Placing object that are in hand")
+        self._stopped = False
+
+        # First move to the desired pose
+        for variables in self._arm_pose.run(self._drop_pose_name):
+            yield self.set_running(**variables)
+
+        # Check to see if the arm pose failed
+        if not self._arm_pose.is_succeeded():
+            if self._arm_pose.is_preempted():
+                yield self.set_preempted(**variables)
+            else:
+                yield self.set_aborted(**variables)
+            raise StopIteration()
+
+        # Then call the client to perform the grasps
+        try:
+            self._drop_object_srv()  # There is no feedback from this service...
+            if self._stopped:
+                yield self.set_preempted()
+            else:
+                yield self.set_succeeded()
+        except Exception as e:  # On any exception, make sure we are set to aborted
+            yield self.set_aborted(exception=e)
+
+
+    def stop(self):
+        # Propagate the stop signal and also set a personal stopped flag
+        self._arm_pose.stop()
+        self._stopped = True
