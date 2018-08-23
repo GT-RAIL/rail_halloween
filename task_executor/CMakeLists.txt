@@ -10,7 +10,6 @@ project(task_executor)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
-  fetch_gazebo_demo
   geometry_msgs
   rospy
   std_msgs
@@ -110,7 +109,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES task_executor
-#  CATKIN_DEPENDS actionlib fetch_gazebo_demo geometry_msgs rospy
+#  CATKIN_DEPENDS actionlib geometry_msgs rospy
 #  DEPENDS system_lib
 )
 

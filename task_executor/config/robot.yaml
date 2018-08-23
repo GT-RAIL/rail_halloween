@@ -1,0 +1,128 @@
+locations:
+  pre_table1:
+  - {x: 2.250, y: 3.118, theta: 0, frame: "map"}
+  table1:
+  - {x: 2.750, y: 3.118, theta: 0, frame: "map"}
+  post_table1:
+  - {x: 2.250, y: 3.118, theta: 3.14, frame: "map"}
+  pre_table2:
+  - {x: -3.53, y: 3.75, theta: 1.57, frame: "map"}
+  table2:
+  - {x: -3.53, y: 4.15, theta: 1.57, frame: "map"}
+  post_table2:
+  - {x: -3.53, y: 3.75, theta: 4.71, frame: "map"}
+
+objects:
+  cube:
+    bounds: { xmin: 0.034, xmax: 0.11, ymin: 0.034, ymax: 0.11, zmin: 0.034, zmax: 0.11 }
+    location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
+
+poses:
+  tuck: [1.32, 1.40, -0.2, 1.72, 0.0, 1.66, 0.0]
+  ready: [1.55, -0.91, 0.98, -1.18, 0.14, -1.06, 0.0]
+  stow: [1.32, 0.7, 0.0, -2.0, 0.0, -0.57, 0.0]
+  drop: [0.54, 0.06, 1.31, -1.15, 1.61, -1.68, 0.0]
+
+tasks:
+  main:
+  - action: arm
+    params:
+      pose: poses.tuck
+
+  - action: torso
+    params:
+      height: 0.0
+
+  # - action: move
+  #   params:
+  #     location: locations.pre_table1
+
+  - action: torso
+    params:
+      height: 0.4
+
+  - action: arm
+    params:
+      pose: poses.stow
+
+  # - action: move
+  #   params:
+  #     location: locations.table1
+
+  - action: arm
+    params:
+      pose: poses.ready
+
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+  - action: perceive
+    params:
+      obj: objects.cube
+    var:
+    - cube_idx
+    - grasps
+
+  - action: pick
+    params:
+      cube_idx: var.cube_idx
+      grasps: var.grasps
+
+  - action: arm
+    params:
+      pose: poses.stow
+
+  # - action: move
+  #   params:
+  #     location: locations.post_table1
+
+  - action: arm
+    params:
+      pose: poses.tuck
+
+  - action: torso
+    params:
+      height: 0.0
+
+  # - action: move
+  #   params:
+  #     location: locations.pre_table2
+
+  - action: torso
+    params:
+      height: 0.4
+
+  - action: arm
+    params:
+      pose: poses.stow
+
+  # - action: move
+  #   params:
+  #     location: locations.table2
+
+  - action: arm
+    params:
+      pose: poses.ready
+
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+  - action: place
+
+  # - action: arm
+  #   params:
+  #     pose: poses.stow
+
+  - action: move
+    params:
+      location: locations.post_table2
+
+  - action: arm
+    params:
+      pose: poses.tuck
+
+  - action: torso
+    params:
+      height: 0.0

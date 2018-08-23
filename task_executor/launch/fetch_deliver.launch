@@ -16,6 +16,9 @@
   <!-- Location params -->
   <arg name="config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
   <arg name="map_file" default="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
+  <arg name="config" default="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
+  <arg name="map_file" default="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
+
 
   <!-- Navigation -->
   <include file="$(find fetch_navigation)/launch/fetch_nav.launch" if="$(arg navigation)" >
