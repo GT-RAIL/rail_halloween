@@ -45,14 +45,15 @@ class PlaceAction(AbstractAction):
             raise StopIteration()
 
         # Then call the client to perform the grasps
+        # On any exception, make sure that we are set to aborted
         try:
             self._drop_object_srv()  # There is no feedback from this service...
             if self._stopped:
                 yield self.set_preempted()
             else:
                 yield self.set_succeeded()
-        except Exception as e:  # On any exception, make sure we are set to aborted
-            yield self.set_aborted(exception=e)
+        except Exception as e:
+            yield self.set_aborted(exception=e.message)
 
 
     def stop(self):

@@ -39,13 +39,21 @@ trajectories:
 
 tasks:
   test:
-    - action: arm
-      params:
-        poses: poses.tuck
+  - action: look
+    params:
+      pose: {x: 1.8, y: 0.0, z: -1.0, frame: "base_link"}
 
-    - action: arm
-      params:
-        poses: trajectories.tuck_to_stow
+  - action: perceive
+    params:
+      obj: objects.cube
+    var:
+    - cube_idx
+    - grasps
+
+  - action: pick
+    params:
+      cube_idx: var.cube_idx
+      grasps: var.grasps
 
   main:
   - action: torso
@@ -141,6 +149,10 @@ tasks:
       pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
   - action: place
+
+  - action: arm
+    params:
+      poses: poses.ready
 
   - action: arm
     params:

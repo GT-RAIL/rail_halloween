@@ -7,7 +7,8 @@ import actionlib
 from task_executor.abstract_action import AbstractAction
 
 from actionlib_msgs.msg import GoalStatus
-from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal
+from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal, \
+                                       ExecuteGraspResult
 
 
 class PickAction(AbstractAction):
@@ -46,7 +47,15 @@ class PickAction(AbstractAction):
 
             # Check the status. Exit if we've succeeded
             status = self._grasp_client.get_state()
+            result = self._grasp_client.get_result()
             if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
+                break
+
+            # Check to see the result. If we've failed, but we failed during the
+            # lift phase, then break out an report an error
+            rospy.sleep(0.2)  # Sleep to allow the result to fill up
+            assert result is not None
+            if result.failure_point in [ExecuteGraspResult.PICK_UP_PLAN, ExecuteGraspResult.PICK_UP_EXECUTION]:
                 break
 
         # Finally, return based on status after all tries

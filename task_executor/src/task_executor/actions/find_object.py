@@ -8,8 +8,10 @@ import actionlib
 
 from task_executor.abstract_action import AbstractAction
 
+from std_srvs.srv import Empty
 from rail_manipulation_msgs.msg import SegmentedObjectList
 from rail_manipulation_msgs.srv import SegmentObjects
+from fetch_grasp_suggestion.srv import AddObject, AddObjectRequest
 
 
 class FindObjectAction(AbstractAction):
@@ -24,6 +26,16 @@ class FindObjectAction(AbstractAction):
             SegmentObjects
         )
 
+        # The planning scene interface
+        self._planning_scene_add_srv = rospy.ServiceProxy(
+            "grasp_executor/add_object",
+            AddObject
+        )
+        self._planning_scene_clear_srv = rospy.ServiceProxy(
+            "grasp_executor/clear_objects",
+            Empty
+        )
+
         # Set a stop flag
         self._stopped = False
 
@@ -31,6 +43,11 @@ class FindObjectAction(AbstractAction):
         rospy.loginfo("Connecting to rail_segmentation...")
         self._segment_objects_srv.wait_for_service()
         rospy.loginfo("...rail_segmentation connected")
+
+        rospy.loginfo("Connecting to planning_scene...")
+        self._planning_scene_add_srv.wait_for_service()
+        self._planning_scene_clear_srv.wait_for_service()
+        rospy.loginfo("...planning_scene connected")
 
     def run(self, obj):
         # Fetch the object from the database and determing the bounds and
@@ -40,19 +57,41 @@ class FindObjectAction(AbstractAction):
         self._stopped = False
 
         # Ask for a segmentation and then identify the object that we want
+        # On any exception, make sure that we are set to aborted
         try:
             segmented_objects = self._segment_objects_srv().segmented_objects
-            found_idx, found_obj = self._find_obj(obj, segmented_objects)
             yield self.set_running()  # Check on the status of the server
-
             if self._stopped:
                 yield self.set_preempted()
-            elif found_idx > -1:
-                yield self.set_succeeded(found_obj=found_obj, found_idx=found_idx)
-            else:
-                raise IndexError("{} not found among {}".format(obj, segmented_objects))
-        except Exception as e:  # On any exception, make sure that we are set to aborted
-            yield self.set_aborted(exception=e)
+
+            # Update the planning scene
+            self._planning_scene_clear_srv()
+            yield self.set_running()  # Check on the status of the server
+            if self._stopped:
+                yield self.set_preempted()
+
+            req = AddObjectRequest()
+            for idx, segmented_object in enumerate(segmented_objects.objects):
+                req.point_clouds.append(segmented_object.point_cloud)
+                req.centroids.append(segmented_object.centroid)
+                req.indices.append(idx)
+            self._planning_scene_add_srv(req)
+            yield self.set_running()  # Check on the status of the server
+            if self._stopped:
+                yield self.set_preempted()
+
+            # Find the object, based on constraints, among the objects
+            found_idx, found_obj = self._find_obj(obj, segmented_objects)
+            yield self.set_running()  # Check on the status of the server
+            if self._stopped:
+                yield self.set_preempted()
+            elif found_idx == -1:
+                raise IndexError("{} not found among {} objects.".format(obj, len(segmented_objects)))
+
+            # Finally, yield a success
+            yield self.set_succeeded(found_obj=found_obj, found_idx=found_idx)
+        except Exception as e:
+            yield self.set_aborted(exception=e.message)
 
     def stop(self):
         self._stopped = True

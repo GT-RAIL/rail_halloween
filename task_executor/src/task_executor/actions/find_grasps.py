@@ -41,6 +41,7 @@ class FindGraspsAction(AbstractAction):
         self._stopped = False
 
         # Given the segmentation and the objects, now ask for grasps
+        # On any exception, make sure that we are set to aborted
         try:
             grasps = self._suggest_grasps_srv(cloud=segmented_obj.point_cloud).grasp_list
             if len(grasps.poses) == 0:
@@ -59,8 +60,8 @@ class FindGraspsAction(AbstractAction):
             else:
                 grasps.poses = grasps.poses[:self._max_grasps]
                 yield self.set_succeeded(grasps=grasps)
-        except Exception as e:  # On any exception, make sure that we are set to aborted
-            yield self.set_aborted(exception=e)
+        except Exception as e:
+            yield self.set_aborted(exception=e.message)
 
     def stop(self):
         self._stopped = True
