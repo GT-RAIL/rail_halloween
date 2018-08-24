@@ -48,13 +48,15 @@ class TaskServer(object):
         self.locations = self._validate_locations(rospy.get_param('~locations'))
         self.objects = self._validate_objects(rospy.get_param('~objects'))
         self.poses = self._validate_poses(rospy.get_param('~poses'))
+        self.trajectories = self._validate_trajectories(rospy.get_param('~trajectories'))
         self.tasks = rospy.get_param('~tasks')
 
         # Instantiate the registry of actions
         actions.init(
             locations=self.locations,
             objects=self.objects,
-            poses=self.poses
+            poses=self.poses,
+            trajectories=self.trajectories
         )
 
         return TriggerResponse(success=True)
@@ -146,6 +148,10 @@ class TaskServer(object):
     def _validate_poses(self, poses):
         # TODO: We don't need to validate yet. But perhaps soon
         return poses
+
+    def _validate_trajectories(self, trajectories):
+        # TODO: We don't need to validate yet. But perhaps soon
+        return trajectories
 
     def _validate_variables(self, expected_var, actual_var):
         if sorted(actual_var.keys()) == sorted(expected_var):

@@ -30,19 +30,16 @@ trajectories:
   - [1.32, -0.46, -1.58, 1.65, 0.00, 1.66, 0.00]
   - [1.32, -0.46, -1.58, 1.65, 0.00, 0.82, 0.00]
   - [1.32, -0.46, 2.76, 1.19, 0.00, 0.82, 0.00]
-  stow_to_ready:
-  - [1.32, -0.46, 2.76, 1.19, 0.00, 0.82, 0.00]
-  - [1.55, -0.91, 0.98, -1.18, 0.14, -1.06, 0.0]
 
 tasks:
   test:
   - action: arm
     params:
-      pose: poses.stow
+      poses: poses.stow
 
   - action: arm
     params:
-      pose: poses.tuck
+      poses: poses.tuck
 
   main:
   - action: torso
@@ -51,7 +48,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.tuck
+      poses: poses.tuck
 
   - action: torso
     params:
@@ -67,7 +64,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.stow
+      poses: poses.stow
 
   - action: move
     params:
@@ -75,7 +72,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.ready
+      poses: poses.ready
 
   - action: look
     params:
@@ -95,11 +92,11 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.ready
+      poses: poses.ready
 
   - action: arm
     params:
-      pose: poses.stow
+      poses: poses.stow
 
   - action: move
     params:
@@ -107,7 +104,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.tuck
+      poses: trajectories.stow_to_tuck
 
   - action: torso
     params:
@@ -123,7 +120,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.stow
+      poses: trajectories.tuck_to_stow
 
   - action: move
     params:
@@ -131,7 +128,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.ready
+      poses: poses.ready
 
   - action: look
     params:
@@ -141,7 +138,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.stow
+      poses: poses.stow
 
   - action: move
     params:
@@ -149,7 +146,7 @@ tasks:
 
   - action: arm
     params:
-      pose: poses.tuck
+      poses: trajectories.stow_to_tuck
 
   - action: torso
     params:
