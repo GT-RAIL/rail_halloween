@@ -86,7 +86,7 @@ class FindObjectAction(AbstractAction):
             if self._stopped:
                 yield self.set_preempted()
             elif found_idx == -1:
-                raise IndexError("{} not found among {} objects.".format(obj, len(segmented_objects)))
+                raise IndexError("{} not found among {} objects.".format(obj, len(segmented_objects.objects)))
 
             # Finally, yield a success
             yield self.set_succeeded(found_obj=found_obj, found_idx=found_idx)

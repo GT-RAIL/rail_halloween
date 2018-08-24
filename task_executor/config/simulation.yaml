@@ -80,6 +80,14 @@ tasks:
     params:
       poses: trajectories.tuck_to_stow
 
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+  - action: look
+    params:
+      pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
+
   - action: move
     params:
       location: locations.table1
@@ -135,6 +143,14 @@ tasks:
   - action: arm
     params:
       poses: trajectories.tuck_to_stow
+
+  - action: look
+    params:
+      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+  - action: look
+    params:
+      pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
 
   - action: move
     params:
