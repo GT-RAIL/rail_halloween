@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(task_executor)
+project(assistance_msgs)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -8,18 +8,9 @@ project(task_executor)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  actionlib
   actionlib_msgs
-  assistance_msgs
-  control_msgs
-  fetch_grasp_suggestion
   geometry_msgs
-  move_base_msgs
-  rail_manipulation_msgs
-  rospy
   std_msgs
-  std_srvs
-  trajectory_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -29,7 +20,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -56,11 +47,10 @@ catkin_python_setup()
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  Context.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -70,10 +60,11 @@ catkin_python_setup()
 # )
 
 ## Generate actions in the 'action' folder
-add_action_files(
-  FILES
-  Execute.action
-)
+# add_action_files(
+#   FILES
+#   Action1.action
+#   Action2.action
+# )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
@@ -114,8 +105,8 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES task_executor
-#  CATKIN_DEPENDS actionlib geometry_msgs rospy
+#  LIBRARIES assistance_msgs
+#  CATKIN_DEPENDS actionlib_msgs geometry_msgs std_msgs
 #  DEPENDS system_lib
 )
 
@@ -132,7 +123,7 @@ include_directories(
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/task_executor.cpp
+#   src/${PROJECT_NAME}/assistance_msgs.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -143,7 +134,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/task_executor_node.cpp)
+# add_executable(${PROJECT_NAME}_node src/assistance_msgs_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -200,7 +191,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_task_executor.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_assistance_msgs.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
