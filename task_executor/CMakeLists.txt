@@ -10,10 +10,15 @@ project(task_executor)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
+  control_msgs
+  fetch_grasp_suggestion
   geometry_msgs
+  move_base_msgs
+  rail_manipulation_msgs
   rospy
   std_msgs
   std_srvs
+  trajectory_msgs
 )
 
 ## System dependencies are found with CMake's conventions
