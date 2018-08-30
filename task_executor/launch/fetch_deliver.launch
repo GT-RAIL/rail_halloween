@@ -1,19 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
-  <!-- Args to start different nodes -->
   <arg name="sim" default="false" />
+  <arg name="debug" default="false" />
+
+  <!-- Args to start different nodes -->
   <arg name="start_all" default="false" />
   <arg name="task_executor" default="$(arg start_all)" />
   <arg name="navigation" default="$(arg start_all)" />
   <arg name="perception" default="$(arg start_all)" />
   <arg name="arm" default="$(arg start_all)" />
+  <arg name="people" default="$(arg start_all)" />
 
-  <!-- Fixed args -->
+  <!-- Common args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
-  <arg name="classifier_file" value="random_forest.pkl" />
+  <arg name="grasp_classifier_file" value="random_forest.pkl" />
   <arg name="segmentation_config" value="$(find task_executor)/config/zones.yaml" />
 
-  <!-- Location params -->
+  <!-- Simulation vs. non simulation args -->
   <arg name="config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
   <arg name="map_file" default="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
   <arg name="config" default="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
@@ -21,13 +24,12 @@
 
 
   <!-- Navigation -->
-  <include file="$(find fetch_navigation)/launch/fetch_nav.launch" if="$(arg navigation)" >
+  <include file="$(find fetch_navigation)/launch/fetch_nav.launch" if="$(arg navigation)">
     <arg name="map_file" value="$(arg map_file)" />
   </include>
 
   <!-- Perception -->
   <group if="$(arg perception)">
-
     <!-- RAIL Segmentation -->
     <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
       <param name="zones_config" value="$(arg segmentation_config)" />
@@ -39,23 +41,34 @@
     <!-- Grasp Suggestion -->
     <include file="$(find fetch_grasp_suggestion)/launch/grasp_suggestion.launch">
       <arg name="cloud_topic" value="$(arg cloud_topic)" />
-      <arg name="classifier_file" value="$(arg classifier_file)" />
+      <arg name="classifier_file" value="$(arg grasp_classifier_file)" />
     </include>
-
   </group>
 
   <!-- Arm -->
   <group if="$(arg arm)">
     <node pkg="fetch_grasp_suggestion" type="executor" name="grasp_executor" output="screen" />
 
-    <include file="$(find fetch_moveit_config)/launch/move_group.launch" >
+    <include file="$(find fetch_moveit_config)/launch/move_group.launch">
       <arg name="info" value="true"/>
       <arg name="allow_active_sensing" value="true" />
     </include>
   </group>
 
+  <!-- People Detection -->
+  <include file="$(find rail_people_detector)/launch/closest_person_detection.launch" unless="$(arg sim)" >
+    <arg name="start_all" value="true" />
+    <arg name="debug" value="$(arg debug)" />
+  </include>
+  <node name="rail_people_detector" pkg="simulation_helpers" type="closest_person_generator.py" output="screen" if="$(arg sim)">
+    <param name="desired_pose_frame" value="base_link" />
+    <param name="position_match_threshold" value="1.0" />
+    <param name="publish_rate" value="15.0" />
+    <param name="debug" value="$(arg debug)" />
+  </node>
+
   <!-- Task Execution -->
-  <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen" if="$(arg task_executor)" >
+  <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen" if="$(arg task_executor)">
     <rosparam command="load" file="$(arg config)" />
   </node>
 </launch>
