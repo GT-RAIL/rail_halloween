@@ -56,16 +56,18 @@
   </group>
 
   <!-- People Detection -->
-  <include file="$(find rail_people_detector)/launch/closest_person_detection.launch" unless="$(arg sim)" >
-    <arg name="start_all" value="true" />
-    <arg name="debug" value="$(arg debug)" />
-  </include>
-  <node name="rail_people_detector" pkg="simulation_helpers" type="closest_person_generator.py" output="screen" if="$(arg sim)">
-    <param name="desired_pose_frame" value="base_link" />
-    <param name="position_match_threshold" value="1.0" />
-    <param name="publish_rate" value="15.0" />
-    <param name="debug" value="$(arg debug)" />
-  </node>
+  <group if="$(arg people)">
+    <include file="$(find rail_people_detector)/launch/closest_person_detection.launch" unless="$(arg sim)" >
+      <arg name="start_all" value="true" />
+      <arg name="debug" value="$(arg debug)" />
+    </include>
+    <node name="rail_people_detector" pkg="simulation_helpers" type="closest_person_generator.py" output="screen" if="$(arg sim)">
+      <param name="desired_pose_frame" value="base_link" />
+      <param name="position_match_threshold" value="1.0" />
+      <param name="publish_rate" value="15.0" />
+      <param name="debug" value="$(arg debug)" />
+    </node>
+  </group>
 
   <!-- Task Execution -->
   <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen" if="$(arg task_executor)">

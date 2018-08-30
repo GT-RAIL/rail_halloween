@@ -94,7 +94,7 @@ class PersonGenerator(object):
                 type=Marker.SPHERE,
                 action=Marker.ADD,
                 pose=pose.pose,
-                scale=Vector3(0.5, 0.5, 0.5),
+                scale=Vector3(0.1, 0.1, 0.1),
                 color=ColorRGBA(0.0, 1.0, 0.0, 1.0)
             )
 
