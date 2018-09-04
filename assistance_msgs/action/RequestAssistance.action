@@ -21,7 +21,7 @@ uint8 PRIORITY_INFO=40
 uint8 priority
 
 # The context of the status
-assistance_msgs/Context[] context
+Context[] context
 ---
 # The result after fulfilling the request
 
@@ -42,7 +42,10 @@ uint8 resume_hint
 
 # The context of the resumption. Just in case there are things the component
 # should be aware of when the strategy finished
-assistance_msgs/Context[] context
+Context[] context
+
+# Statistics on the assistance
+Statistics stats
 ---
 # The feedback while the request is being fulfilled
 
