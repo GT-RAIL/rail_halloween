@@ -14,7 +14,6 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   rail_people_detection_msgs
   rospy
-  sound_play
   std_msgs
 )
 

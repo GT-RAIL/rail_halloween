@@ -56,7 +56,6 @@
   <depend>geometry_msgs</depend>
   <depend>rail_people_detection_msgs</depend>
   <depend>rospy</depend>
-  <depend>sound_play</depend>
   <depend>std_msgs</depend>
 
 
