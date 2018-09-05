@@ -8,6 +8,7 @@ from task_executor.abstract_step import AbstractStep
 from .move import MoveAction
 from .torso import TorsoAction
 from .look import LookAction
+from .gripper import GripperAction
 from .find_object import FindObjectAction
 from .find_grasps import FindGraspsAction
 from .pick import PickAction
@@ -39,6 +40,7 @@ default_actions = Actions({
     'move': MoveAction(),
     'torso': TorsoAction(),
     'look': LookAction(),
+    'gripper': GripperAction(),
     'find_object': FindObjectAction(),
     'find_grasps': FindGraspsAction(),
     'pick': PickAction(),

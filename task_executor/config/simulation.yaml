@@ -138,59 +138,13 @@ tasks:
   # Task used for testing subsets of the main task
   test:
     steps:
-    - action: torso
+    - action: gripper
       params:
-        height: 0.4
+        command: close
 
-    - action: arm
+    - action: gripper
       params:
-        poses: poses.stow
-
-    - action: arm
-      params:
-        poses: poses.ready
-
-    - action: look
-      params:
-        pose: {x: 1.8, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - task: perceive
-      params:
-        obj: objects.cube
-      var:
-      - cube_idx
-      - grasps
-
-    - action: pick
-      params:
-        cube_idx: var.cube_idx
-        grasps: var.grasps
-
-    - action: arm
-      params:
-        poses: poses.ready
-
-    - action: arm
-      params:
-        poses: poses.stow
-
-    - action: arm
-      params:
-        poses: poses.ready
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: place
-
-    - action: arm
-      params:
-        poses: poses.ready
-
-    - action: arm
-      params:
-        poses: poses.stow
+        command: open
 
   # The main fetch and deliver task that we want to make robust
   main:
