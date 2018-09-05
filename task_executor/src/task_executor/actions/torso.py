@@ -4,14 +4,14 @@
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from actionlib_msgs.msg import GoalStatus
 
 
-class TorsoAction(AbstractAction):
+class TorsoAction(AbstractStep):
 
     def init(self, **kwargs):
         self._torso_client = actionlib.SimpleActionClient(
@@ -44,7 +44,7 @@ class TorsoAction(AbstractAction):
         self._torso_client.send_goal(follow_goal)
 
         # Yield an empty dict while we're executing
-        while self._torso_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+        while self._torso_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             yield self.set_running()
 
         # Yield a aborted or succeeded based on how we exited

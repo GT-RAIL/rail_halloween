@@ -3,14 +3,14 @@
 
 import rospy
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from std_srvs.srv import Empty
 
 from .arm_pose import ArmPoseAction
 
 
-class PlaceAction(AbstractAction):
+class PlaceAction(AbstractStep):
 
     def init(self, **kwargs):
         self._drop_object_srv = rospy.ServiceProxy(

@@ -6,12 +6,12 @@ from __future__ import print_function, division
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from fetch_grasp_suggestion.srv import SuggestGrasps, PairwiseRank
 
 
-class FindGraspsAction(AbstractAction):
+class FindGraspsAction(AbstractStep):
 
     def init(self, **kwargs):
         # The Grasp calculation interface

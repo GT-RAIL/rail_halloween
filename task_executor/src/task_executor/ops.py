@@ -10,16 +10,14 @@ from geometry_msgs.msg import PoseStamped
 
 # The Operations
 
-def pose_of_cube(obj):
+def assign(var_name, value):
     """
-    Given an object returned by the perceive operation, return its pose.
+    Assigns the indicated `value` to a variable with name `var_name`
 
     Args:
-        obj (grasping_msgs/Object) : The object to get the position of
+        var_name (str) : Name of the variable to assign the value to
+        value (any) : Value to assign to that variable
     Returns:
-        geometry_msgs/PoseStamped with the pose of that object
+        A dictionary with { var_name: value }
     """
-    pose = PoseStamped()
-    pose.pose = obj.primitive_poses[0]
-    pose.header.frame_id = obj.header.frame_id
-    return pose
+    return { var_name: value }

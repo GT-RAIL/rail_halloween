@@ -6,13 +6,13 @@ from __future__ import print_function, division
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from actionlib_msgs.msg import GoalStatus
 from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveGoal
 
 
-class ArmPoseAction(AbstractAction):
+class ArmPoseAction(AbstractStep):
 
     def init(self, poses, trajectories, **kwargs):
         self._pose_client = actionlib.SimpleActionClient(
@@ -61,7 +61,7 @@ class ArmPoseAction(AbstractAction):
                 self._pose_client.send_goal(goal)
 
                 # Yield running while the client is executing
-                while self._pose_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+                while self._pose_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
                     yield self.set_running()
 
                 # Yield based on the server's status

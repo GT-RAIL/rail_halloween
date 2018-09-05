@@ -38,142 +38,176 @@ trajectories:
   - [1.32, 1.47, -0.20, 1.65, 0.00, 1.66, 0.00]
 
 tasks:
-  test:
-  - action: arm
+  # Perception is a task comprising of the find_objects and find_grasps subtasks
+  perceive:
     params:
-      poses: poses.stow
+    - obj
 
-  - action: arm
-    params:
-      poses: poses.tuck
-
-  main:
-  - action: torso
-    params:
-      height: 0.4
-
-  - action: arm
-    params:
-      poses: poses.tuck
-
-  - action: torso
-    params:
-      height: 0.0
-
-  - action: move
-    params:
-      location: locations.pre_table1
-
-  - action: torso
-    params:
-      height: 0.4
-
-  - action: arm
-    params:
-      poses: trajectories.tuck_to_stow
-
-  - action: look
-    params:
-      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-  - action: look
-    params:
-      pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
-
-  - action: move
-    params:
-      location: locations.table1
-
-  - action: arm
-    params:
-      poses: poses.ready
-
-  - action: look
-    params:
-      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-  - action: perceive
-    params:
-      obj: objects.cube
     var:
     - cube_idx
     - grasps
 
-  - action: pick
-    params:
-      cube_idx: var.cube_idx
-      grasps: var.grasps
+    steps:
+    - action: find_object
+      params:
+        obj: params.obj
+      var:
+      - found_idx
+      - found_obj
 
-  - action: arm
-    params:
-      poses: poses.ready
+    - action: find_grasps
+      params:
+        segmented_obj: var.found_obj
+      var:
+      - grasps
 
-  - action: arm
-    params:
-      poses: poses.stow
+    - op: assign
+      params:
+        var_name: cube_idx
+        value: var.found_idx
+      var:
+      - cube_idx
 
-  - action: move
-    params:
-      location: locations.post_table1
+  # Task used for testing subsets of the main task
+  test:
+    steps:
+    - action: arm
+      params:
+        poses: poses.stow
 
-  - action: arm
-    params:
-      poses: trajectories.stow_to_tuck
+    - action: arm
+      params:
+        poses: poses.tuck
 
-  - action: torso
-    params:
-      height: 0.0
+  # The main fetch and deliver task that we want to make robust
+  main:
+    steps:
+    - action: torso
+      params:
+        height: 0.4
 
-  - action: move
-    params:
-      location: locations.pre_table2
+    - action: arm
+      params:
+        poses: poses.tuck
 
-  - action: torso
-    params:
-      height: 0.4
+    - action: torso
+      params:
+        height: 0.0
 
-  - action: arm
-    params:
-      poses: trajectories.tuck_to_stow
+    - action: move
+      params:
+        location: locations.pre_table1
 
-  - action: look
-    params:
-      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+    - action: torso
+      params:
+        height: 0.4
 
-  - action: look
-    params:
-      pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
+    - action: arm
+      params:
+        poses: trajectories.tuck_to_stow
 
-  - action: move
-    params:
-      location: locations.table2
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
-  - action: arm
-    params:
-      poses: poses.ready
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
 
-  - action: look
-    params:
-      pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+    - action: move
+      params:
+        location: locations.table1
 
-  - action: place
+    - action: arm
+      params:
+        poses: poses.ready
 
-  - action: arm
-    params:
-      poses: poses.ready
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
-  - action: arm
-    params:
-      poses: poses.stow
+    - action: perceive
+      params:
+        obj: objects.cube
+      var:
+      - cube_idx
+      - grasps
 
-  - action: move
-    params:
-      location: locations.post_table2
+    - action: pick
+      params:
+        cube_idx: var.cube_idx
+        grasps: var.grasps
 
-  - action: arm
-    params:
-      poses: trajectories.stow_to_tuck
+    - action: arm
+      params:
+        poses: poses.ready
 
-  - action: torso
-    params:
-      height: 0.0
+    - action: arm
+      params:
+        poses: poses.stow
+
+    - action: move
+      params:
+        location: locations.post_table1
+
+    - action: arm
+      params:
+        poses: trajectories.stow_to_tuck
+
+    - action: torso
+      params:
+        height: 0.0
+
+    - action: move
+      params:
+        location: locations.pre_table2
+
+    - action: torso
+      params:
+        height: 0.4
+
+    - action: arm
+      params:
+        poses: trajectories.tuck_to_stow
+
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: move
+      params:
+        location: locations.table2
+
+    - action: arm
+      params:
+        poses: poses.ready
+
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: place
+
+    - action: arm
+      params:
+        poses: poses.ready
+
+    - action: arm
+      params:
+        poses: poses.stow
+
+    - action: move
+      params:
+        location: locations.post_table2
+
+    - action: arm
+      params:
+        poses: trajectories.stow_to_tuck
+
+    - action: torso
+      params:
+        height: 0.0

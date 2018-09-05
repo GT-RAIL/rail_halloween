@@ -4,14 +4,14 @@
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from actionlib_msgs.msg import GoalStatus
 from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal, \
                                        ExecuteGraspResult
 
 
-class PickAction(AbstractAction):
+class PickAction(AbstractStep):
 
     def init(self, **kwargs):
         self._grasp_client = actionlib.SimpleActionClient(
@@ -42,7 +42,7 @@ class PickAction(AbstractAction):
             self._grasp_client.send_goal(goal)
 
             # Yield running while the client is executing
-            while self._grasp_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+            while self._grasp_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
                 yield self.set_running()
 
             # Check the status. Exit if we've succeeded

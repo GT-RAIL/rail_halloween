@@ -4,13 +4,13 @@
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from control_msgs.msg import PointHeadAction, PointHeadGoal
 from actionlib_msgs.msg import GoalStatus
 
 
-class LookAction(AbstractAction):
+class LookAction(AbstractStep):
 
     def init(self, **kwargs):
         self._look_client = actionlib.SimpleActionClient(
@@ -37,7 +37,7 @@ class LookAction(AbstractAction):
         self._look_client.send_goal(goal)
 
         # Yield an empty dict while we're executing
-        while self._look_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+        while self._look_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             yield self.set_running()
 
         # Yield based on how we exited

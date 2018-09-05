@@ -8,13 +8,13 @@ from math import sin, cos
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus
 
 
-class MoveAction(AbstractAction):
+class MoveAction(AbstractStep):
     """Move to a location"""
 
     def init(self, locations, **kwargs):
@@ -45,7 +45,7 @@ class MoveAction(AbstractAction):
             self._move_base_client.send_goal(goal)
 
             # Yield running while the move_client is executing
-            while self._move_base_client.get_state() in AbstractAction.RUNNING_GOAL_STATES:
+            while self._move_base_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
                 yield self.set_running()
 
             # Check the status and stop executing if we didn't complete our goal

@@ -6,7 +6,7 @@ from __future__ import print_function, division
 import rospy
 import actionlib
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from std_srvs.srv import Empty
 from rail_manipulation_msgs.msg import SegmentedObjectList
@@ -14,7 +14,7 @@ from rail_manipulation_msgs.srv import SegmentObjects
 from fetch_grasp_suggestion.srv import AddObject, AddObjectRequest
 
 
-class FindObjectAction(AbstractAction):
+class FindObjectAction(AbstractStep):
 
     def init(self, objects, **kwargs):
         # Objects DB

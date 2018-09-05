@@ -8,13 +8,11 @@ import copy
 import rospy
 import actionlib
 
-from geometry_msgs.msg import PoseStamped
+from task_executor.actions import default_actions
+from task_executor.tasks import Task
+
 from task_executor.msg import ExecuteAction
 from std_srvs.srv import Trigger, TriggerResponse
-from actionlib_msgs.msg import GoalStatus
-
-from task_executor.actions import actions, AbstractAction
-from task_executor import ops
 
 
 # The actual action server to execute the tasks
@@ -23,8 +21,9 @@ class TaskServer(object):
     """
     Given the task to perform, this server yields control to sub clients. When
     the clients are done, it moves on to the next task. If the task fails, the
-    server sends context to an arbitrator. Based on decisions from the
-    arbitrator, the server then yields control to a recovery interface
+    server sends context to an arbitrator. The arbitrator yields control to a
+    recovery interface, which then returns a signal back up the stack to this
+    server with hints on how execution should proceed.
     """
 
     def __init__(self):
@@ -49,15 +48,26 @@ class TaskServer(object):
         self.objects = self._validate_objects(rospy.get_param('~objects'))
         self.poses = self._validate_poses(rospy.get_param('~poses'))
         self.trajectories = self._validate_trajectories(rospy.get_param('~trajectories'))
-        self.tasks = rospy.get_param('~tasks')
+
+        tasks_config = self._validate_tasks(rospy.get_param('~tasks'))
+        self.tasks = { key: Task() for key, _ in tasks_config.iteritems() }
 
         # Instantiate the registry of actions
-        actions.init(
+        default_actions.init(
             locations=self.locations,
             objects=self.objects,
             poses=self.poses,
             trajectories=self.trajectories
         )
+
+        # Instantiate the registry of tasks
+        for key, task in self.tasks.iteritems():
+            task.init(
+                name=key,
+                tasks=self.tasks,
+                actions=default_actions,
+                **tasks_config[key]
+            )
 
         return TriggerResponse(success=True)
 
@@ -73,115 +83,56 @@ class TaskServer(object):
 
         rospy.loginfo("Executing task: {}".format(goal.name))
 
-        # Instantiate the dictionary of local variables
-        var = dict()
-
-        # Go through each step of the specified plan
-        idx = 0
+        # Execute the task. TODO: Include params in the execution request of a
+        # task?
         task = self.tasks[goal.name]
-        while idx < len(task):
-            step = task[idx]
+        for variables in task.run():
+            # First check to see if we've been preempted. If we have, then
+            # set the preempt flag and wait for the task to return
+            if self._server.is_preempt_requested() or not self._server.is_active():
+                task.stop()
+                continue
 
-            action = actions[step['action']]
-            params = {
-                name: self._resolve_param(value, var)
-                for name, value in step.get('params', {}).iteritems()
-            }
+            # Check to see if something has stopped the task. If so, then
+            # exit out of this for loop
+            if task.is_preempted() or task.is_aborted():
+                break
 
-            for variables in action.run(**params):
-                # First check to see if we've been preempted. If we have, then
-                # set the preempt flag and wait for the action to return
-                if self._server.is_preempt_requested() \
-                        or not self._server.is_active():
-                    action.stop()
-                    continue
+        # If we've failed for some reason. Return an error
+        if task.is_preempted():
+            rospy.logwarn("Task {}: PREEMPTED. Context: {}".format(task.name, variables))
+            self._server.set_preempted(result)
+            return
 
-                # Check to see if something has stopped the action. If so, then
-                # exit out of this for loop
-                if action.is_preempted() or action.is_aborted():
-                    break
+        if task.is_aborted():
+            rospy.logerr("Task {}: FAIL. Context: {}".format(task.name, variables))
+            self._server.set_aborted(result)
+            return
 
-            # If we've failed for some reason. Return
-            if action.is_preempted():
-                rospy.logwarn(
-                    "Step {}, Action {}: PREEMPTED. Context: {}"
-                    .format(idx, step['action'], variables)
-                )
-                self._server.set_preempted(result)
-                return
-
-            if action.is_aborted():
-                rospy.logerr(
-                    "Step {}, Action {}: FAIL. Context: {}"
-                    .format(idx, step['action'], variables)
-                )
-                self._server.set_aborted(result)
-                return
-
-            # Verify the variables
-            if not self._validate_variables(step.get('var', []), variables):
-                rospy.logerr(
-                    "Step {}, Action {}: Variable validation failed. Variables: {}"
-                    .format(idx, step['action'], variables)
-                )
-                self._server.set_aborted(result)
-                return
-
-            # Update the variables that we're keeping track of
-            for name, value in variables.iteritems():
-                var[name] = value
-
-            idx += 1
+        # TODO: Perhaps task should be allowed to return values. In which case,
+        # there needs to be another round of variable validation here.
 
         # Otherwise, signal complete
         result.success = True
+        rospy.loginfo("Task {}: SUCCESS".format(task.name))
         self._server.set_succeeded(result)
 
     def _validate_locations(self, locations):
-        # TODO: We don't need to validate yet. But perhaps soon
+        # We don't need to validate yet. But perhaps soon
         return locations
 
     def _validate_objects(self, objects):
-        # TODO: We don't need to validate yet. But perhaps soon
+        # We don't need to validate yet. But perhaps soon
         return objects
 
     def _validate_poses(self, poses):
-        # TODO: We don't need to validate yet. But perhaps soon
+        # We don't need to validate yet. But perhaps soon
         return poses
 
     def _validate_trajectories(self, trajectories):
-        # TODO: We don't need to validate yet. But perhaps soon
+        # We don't need to validate yet. But perhaps soon
         return trajectories
 
-    def _validate_variables(self, expected_var, actual_var):
-        if sorted(actual_var.keys()) == sorted(expected_var):
-            return True
-        else:
-            return False
-
-    def _resolve_var(self, param, var):
-        # Check type
-        if type(param) == str:
-            splits = param.split('.', 1)  # Split up the param
-            if len(splits) > 1 and splits[0] == 'var':
-                return var[splits[1]]
-        return param
-
-    def _resolve_op(self, param, var):
-        op_name, args = param.split('(', 1)
-        args = args.strip(')').split(',')
-        args = [self._resolve_var(arg, var) for arg in args]
-
-        # Finally, get the op and provide it with the args
-        return getattr(ops, op_name)(*args)
-
-    def _resolve_param(self, param, var):
-        if type(param) == str:
-            splits = param.split('.', 1)  # Split up the param
-
-            # Check if this requires an ops resolution. TODO: Use regex?
-            if len(splits) > 1 and splits[0] == 'ops' and '(' in splits[1] \
-                    and ')' in splits[1]:
-                param = self._resolve_op(splits[1], var)
-
-        return self._resolve_var(param, var)
+    def _validate_tasks(self, tasks):
+        # We don't need to validate yet. But perhaps soon
+        return tasks

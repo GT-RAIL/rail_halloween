@@ -3,39 +3,27 @@
 
 from __future__ import print_function
 
-from task_executor.abstract_action import AbstractAction
+from task_executor.abstract_step import AbstractStep
 
 from .move import MoveAction
 from .torso import TorsoAction
 from .look import LookAction
 from .find_object import FindObjectAction
 from .find_grasps import FindGraspsAction
-from .perceive import PerceiveAction
 from .pick import PickAction
 from .arm_pose import ArmPoseAction
 from .place import PlaceAction
 
 
 class Actions(object):
-    """Contains all the actions. DON'T USE THIS"""
+    """Registry of actions"""
 
-    def __init__(self):
-        # Painful manual specification of the actions
-        self.registry = {
-            'move': MoveAction(),
-            'torso': TorsoAction(),
-            'look': LookAction(),
-            'find_object': FindObjectAction(),
-            'find_grasps': FindGraspsAction(),
-            'perceive': PerceiveAction(),
-            'pick': PickAction(),
-            'arm': ArmPoseAction(),
-            'place': PlaceAction(),
-        }
+    def __init__(self, registry):
+        self.registry = registry
 
         # Quick sanity check because I don't trust people
         for key, action in self.registry.iteritems():
-            assert isinstance(action, AbstractAction)
+            assert isinstance(action, AbstractStep)
 
     def __getitem__(self, key):
         return self.registry[key]
@@ -45,5 +33,15 @@ class Actions(object):
             action.init(**kwargs)
 
 
-# Make sure to only ever import actions
-actions = Actions()
+# The default actions contain all the action interfaces that are known to this
+# package
+default_actions = Actions({
+    'move': MoveAction(),
+    'torso': TorsoAction(),
+    'look': LookAction(),
+    'find_object': FindObjectAction(),
+    'find_grasps': FindGraspsAction(),
+    'pick': PickAction(),
+    'arm': ArmPoseAction(),
+    'place': PlaceAction(),
+})
