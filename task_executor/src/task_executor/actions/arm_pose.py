@@ -29,17 +29,31 @@ class ArmPoseAction(AbstractStep):
         rospy.loginfo("...arm_pose_executor connected")
 
     def run(self, poses):
-        # Parse out the pose. This will error if the pose format is incorrect
-        db_name, poses = poses.split('.', 1)
-        rospy.loginfo("Moving to poses: {}".format(poses))
+        # Parse out the pose waypoints
+        pose_waypoints = None
+        if type(poses) == str:
+            db_name, poses = poses.split('.', 1)
+            if db_name == 'poses':
+                pose_waypoints = [self._poses[poses]]
+            elif db_name == 'trajectories':
+                pose_waypoints = [pose for pose in self._trajectories[poses]]
+        elif (type(poses) == list or type(poses) == tuple) \
+                and len(poses) > 0 \
+                and (type(poses[0]) == list or type(poses[0]) == tuple):
+            pose_waypoints = poses
+        elif (type(poses) == list or type(poses) == tuple) and len(poses) > 0:
+            pose_waypoints = [poses]
 
-        if db_name == 'poses':
-            poses = [self._poses[poses]]
-        elif db_name == 'trajectories':
-            poses = [pose for pose in self._trajectories[poses]]
+        if pose_waypoints is None:
+            error_msg = "Unknown format for arm poses: {}".format(poses)
+            rospy.logerr(error_msg)
+            yield self.set_aborted(exception=Exception(error_msg))
+            raise StopIteration()
+
+        rospy.logdebug("Moving to poses: {}".format(pose_waypoints))
 
         status = GoalStatus.LOST
-        for pose in poses:
+        for pose in pose_waypoints:
             rospy.loginfo("Going to pose: {}".format(pose))
 
             # Create and send the goal

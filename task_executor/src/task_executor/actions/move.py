@@ -26,14 +26,29 @@ class MoveAction(AbstractStep):
         rospy.loginfo("...move_base connected")
 
     def run(self, location):
-        # Parse out the location. This will error if the location format is
-        # incorrect
-        location = location.split('.', 1)[1]
-        rospy.loginfo("Moving to location: {}".format(location))
-        coords = self._locations[location]
+        # Parse out the waypoints
+        coords = None
+        if type(location) == str:
+            db_name, location = location.split('.', 1)
+            if db_name == 'locations':
+                coords = self._locations[location]
+        elif type(location) == dict:
+            coords = [location]
+        elif type(location) == list or type(location) == tuple:
+            coords = location
+
+        if coords is None:
+            error_msg = "Unknown format for location: {}".format(location)
+            rospy.logerr(error_msg)
+            yield self.set_aborted(exception=Exception(error_msg))
+            raise StopIteration()
+
+        rospy.logdebug("Moving to location: {}".format(coords))
 
         status = GoalStatus.LOST
         for coord in coords:
+            rospy.loginfo("Going to coordinate: {}".format(coord))
+
             # Create and send the goal
             goal = MoveBaseGoal()
             goal.target_pose.pose.position.x = coord['x']
