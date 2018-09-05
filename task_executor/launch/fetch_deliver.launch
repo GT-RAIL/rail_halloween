@@ -10,6 +10,7 @@
   <arg name="perception" default="$(arg start_all)" />
   <arg name="arm" default="$(arg start_all)" />
   <arg name="people" default="$(arg start_all)" />
+  <arg name="sound" default="$(arg start_all)" />
 
   <!-- Common args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
@@ -24,9 +25,11 @@
 
 
   <!-- Navigation -->
-  <include file="$(find fetch_navigation)/launch/fetch_nav.launch" if="$(arg navigation)">
-    <arg name="map_file" value="$(arg map_file)" />
-  </include>
+  <group if="$(arg navigation)">
+    <include file="$(find fetch_navigation)/launch/fetch_nav.launch">
+      <arg name="map_file" value="$(arg map_file)" />
+    </include>
+  </group>
 
   <!-- Perception -->
   <group if="$(arg perception)">
@@ -61,12 +64,18 @@
       <arg name="start_all" value="true" />
       <arg name="debug" value="$(arg debug)" />
     </include>
+
     <node name="rail_people_detector" pkg="simulation_helpers" type="closest_person_generator.py" output="screen" if="$(arg sim)">
       <param name="desired_pose_frame" value="base_link" />
       <param name="position_match_threshold" value="1.0" />
       <param name="publish_rate" value="15.0" />
       <param name="debug" value="$(arg debug)" />
     </node>
+  </group>
+
+  <!-- Sound Play -->
+  <group if="$(arg sound)">
+    <node name="sound_play" pkg="sound_play" type="soundplay_node.py" />
   </group>
 
   <!-- Task Execution -->

@@ -138,13 +138,34 @@ tasks:
   # Task used for testing subsets of the main task
   test:
     steps:
-    - action: gripper
+    - action: speak
       params:
-        command: close
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
 
-    - action: gripper
+    - action: speak
       params:
-        command: open
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+        affect: sad
+
+    - action: speak
+      params:
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+        affect: happy
+
+    - action: speak
+      params:
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+        affect: angry
+
+    - action: speak
+      params:
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+        affect: calm
+
+    - action: speak
+      params:
+        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+        affect: nervous
 
   # The main fetch and deliver task that we want to make robust
   main:

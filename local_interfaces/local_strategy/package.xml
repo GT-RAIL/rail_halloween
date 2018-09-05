@@ -58,6 +58,7 @@
   <depend>rospy</depend>
   <depend>std_msgs</depend>
 
+  <exec_depend>sound_interface</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

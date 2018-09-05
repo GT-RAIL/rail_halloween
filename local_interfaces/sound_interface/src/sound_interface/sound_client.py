@@ -41,31 +41,70 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
     """
 
     # Keys for the different beeps
-    SOUND_SAD = "SAD"
-    SOUND_HAPPY = "HAPPY"
-    SOUND_SHOCKED = "SHOCKED"
-    SOUND_UNSURE = "UNSURE"
+    BEEP_SAD = "SAD"
+    BEEP_HAPPY = "HAPPY"
+    BEEP_SHOCKED = "SHOCKED"
+    BEEP_UNSURE = "UNSURE"
+
+    # Keys for the different affects
+    AFFECT_SAD = "SAD"
+    AFFECT_HAPPY = "HAPPY"
+    AFFECT_ANGRY = "ANGRY"
+    AFFECT_CALM = "CALM"
+    AFFECT_NERVOUS = "NERVOUS"
 
     # Mary TTS server URL
     MARY_SERVER_URL = "http://localhost:59125/process"
 
-    def __init__(self, beep_keys=None):
+    def __init__(self, beeps=None):
         # Want to reimplement SoundClient so that we are always using the action
         # interface to the sound_play_node.
         self.sound_client = actionlib.SimpleActionClient("sound_play", SoundRequestAction)
+        self._tmp_speech_file = None
 
-        self.beep_keys = beep_keys
-        if self.beep_keys is None:
+        # Load the beeps
+        self.beeps = beeps
+        if self.beeps is None:
             default_sound_path = os.path.join(
-                rospkg.RosPack().get_path('local_strategy'),
+                rospkg.RosPack().get_path('sound_interface'),
                 'sounds'
             )
-            self.beep_keys = {
-                SoundClient.SOUND_SAD: os.path.join(default_sound_path, 'R2D2_sad.wav'),
-                SoundClient.SOUND_HAPPY: os.path.join(default_sound_path, 'R2D2_excited.wav'),
-                SoundClient.SOUND_UNSURE: os.path.join(default_sound_path, 'R2D2_unsure.wav'),
-                SoundClient.SOUND_SHOCKED: os.path.join(default_sound_path, 'R2D2_shocked.wav'),
+            self.beeps = {
+                SoundClient.BEEP_SAD: os.path.join(default_sound_path, 'R2D2_sad.wav'),
+                SoundClient.BEEP_HAPPY: os.path.join(default_sound_path, 'R2D2_excited.wav'),
+                SoundClient.BEEP_UNSURE: os.path.join(default_sound_path, 'R2D2_unsure.wav'),
+                SoundClient.BEEP_SHOCKED: os.path.join(default_sound_path, 'R2D2_shocked.wav'),
             }
+
+        # Load the affects
+        self.affects = {
+            SoundClient.AFFECT_SAD: self.make_sad,
+            SoundClient.AFFECT_HAPPY: self.make_happy,
+            SoundClient.AFFECT_NERVOUS: self.make_nervous,
+            SoundClient.AFFECT_CALM: self.make_calm,
+            SoundClient.AFFECT_ANGRY: self.make_angry,
+        }
+
+        # Need to connect to the server
+        rospy.loginfo("Connecting to sound_play...")
+        self.sound_client.wait_for_server()
+        rospy.loginfo("...sound_play connected")
+
+    def get_state(self):
+        """Returns the state of the action client"""
+        return self.sound_client.get_state()
+
+    def get_result(self):
+        """Returns the result of the last sound action"""
+        return self.sound_client.get_result()
+
+    def get_beep_names(self):
+        """Get the keys to the different beep types that are available"""
+        return self.beeps.keys()
+
+    def get_affect_names(self):
+        """Get the keys to the different affects that are available"""
+        return self.affects.keys()
 
     def make_happy(self, text):
         """Make the text happy!"""
@@ -103,8 +142,14 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             """.format(text)
         )
 
-    def say(self, text, blocking=False, **kwargs):
+    def say(self, text, affect="", blocking=False, **kwargs):
         """Perform TTS using EmotionML"""
+
+        # Transform the text if the affect argument calls for it
+        if affect and affect in self.affects.keys():
+            text = self.affects[affect](text)
+
+        # Create the vars for the EmotionML query
         text = SoundClient.EMOTIONML_TEMPLATE.format(speech=text)
         query_dict = {
             'INPUT_TEXT': text,
@@ -116,7 +161,11 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             'effect_Robot_selected': 'on',
             'effect_Robot_parameters': 'amount:60.0',
         }
-        wavfile = None
+
+        # Close the old speech file, if it exists
+        if self._tmp_speech_file is not None:
+            self._tmp_speech_file.close()
+            self._tmp_speech_file = None
 
         try:
             r = requests.post(SoundClient.MARY_SERVER_URL, params=query_dict)
@@ -124,31 +173,32 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
                 rospy.logerr("Response Error Code: {}. Content: {}".format(r.status_code, r.content))
                 return
 
-            wavfile = tempfile.NamedTemporaryFile(prefix='marytts', suffix='.wav')
-            wavfile.write(r.content)
-            wavfile.flush()
+            self._tmp_speech_file = tempfile.NamedTemporaryFile(prefix='marytts', suffix='.wav')
+            self._tmp_speech_file.write(r.content)
+            self._tmp_speech_file.flush()
 
             # Now send the file's name over to sound play
             sound = SoundRequest()
             sound.sound = SoundRequest.PLAY_FILE
             sound.command = SoundRequest.PLAY_ONCE
-            sound.arg = wavfile.name
+            sound.arg = self._tmp_speech_file.name
             self._play(sound, blocking=blocking, **kwargs)
 
         finally:
             # We're done, so delete the file
-            if wavfile is not None:
-                wavfile.close()
+            if self._tmp_speech_file is not None and blocking:
+                self._tmp_speech_file.close()
+                self._tmp_speech_file = None
 
     def beep(self, key, blocking=False, **kwargs):
         """Play one of the beeps and boops that we know of"""
-        if key not in self.beep_keys:
+        if key not in self.beeps:
             return
 
         sound = SoundRequest()
         sound.sound = SoundRequest.PLAY_FILE
         sound.command = SoundRequest.PLAY_ONCE
-        sound.arg = self.beep_keys[key]
+        sound.arg = self.beeps[key]
         self._play(sound, blocking=blocking, **kwargs)
 
     def stop(self):
@@ -163,25 +213,14 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
         self._play(sound)
 
-    def get_state(self):
-        """Returns the state of the action client"""
-        return self.sound_client.get_state()
-
-    def get_result(self):
-        """Returns the result of the last sound action"""
-        return self.sound_client.get_result()
-
     def _play(self, sound, blocking, **kwargs):
-        # Need to connect to the server
-        rospy.logdebug("Connecting to sound_play...")
-        self.sound_client.wait_for_server()
-        rospy.logdebug("...sound_play connected")
-
         # Send the command
         rospy.logdebug("Sending sound action with (sound, command, arg): {}, {}, {}"
                        .format(sound.sound, sound.command, sound.arg))
         goal = SoundRequestGoal(sound_request=sound)
         self.sound_client.send_goal(goal)
+
+        # If blocking, wait until the sound is done
         if blocking:
             self.sound_client.wait_for_result()
             rospy.logdebug('Response to sound action received')
@@ -194,18 +233,8 @@ if __name__ == '__main__':
 
     def on_speak(args):
         text = args.text
-        if args.happy:
-            text = client.make_happy(text)
-        if args.sad:
-            text = client.make_sad(text)
-        if args.angry:
-            text = client.make_angry(text)
-        if args.calm:
-            text = client.make_calm(text)
-        if args.nervous:
-            text = client.make_nervous(text)
-
-        client.say(text, blocking=True)
+        affect = args.affect
+        client.say(text, affect, blocking=True)
 
     def on_beep(args):
         client.beep(args.key, blocking=True)
@@ -215,24 +244,13 @@ if __name__ == '__main__':
 
     speak_parser = subparsers.add_parser("speak", help="get the robot to speak")
     speak_parser.add_argument("text", help="text to speak")
-    speak_parser.add_argument("--happy", action="store_true",
-                              help="say things in a happy voice")
-    speak_parser.add_argument("--sad", action="store_true",
-                              help="Say things in a sad voice")
-    speak_parser.add_argument("--angry", action="store_true",
-                              help="Say things in an angry voice")
-    speak_parser.add_argument("--calm", action="store_true",
-                              help="Say things in a calm voice")
-    speak_parser.add_argument("--nervous", action="store_true",
-                              help="Say things in a nervous voice")
+    speak_parser.add_argument("--affect", choices=client.get_affect_names(),
+                              help="say things in an affected voice")
     speak_parser.set_defaults(func=on_speak)
 
     beep_parser = subparsers.add_parser("beep", help="get the robot to beep")
-    beep_choices = [
-        SoundClient.SOUND_SAD, SoundClient.SOUND_HAPPY, SoundClient.SOUND_SHOCKED, SoundClient.SOUND_UNSURE,
-    ]
     beep_parser.add_argument("key", help="type of beep to produce",
-                             choices=beep_choices)
+                             choices=client.get_beep_names())
     beep_parser.set_defaults(func=on_beep)
 
     args = parser.parse_args()

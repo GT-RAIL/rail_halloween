@@ -14,6 +14,8 @@ from .find_grasps import FindGraspsAction
 from .pick import PickAction
 from .arm_pose import ArmPoseAction
 from .place import PlaceAction
+from .beep import BeepAction
+from .speak import SpeakAction
 
 
 class Actions(object):
@@ -46,4 +48,6 @@ default_actions = Actions({
     'pick': PickAction(),
     'arm': ArmPoseAction(),
     'place': PlaceAction(),
+    'beep': BeepAction(),
+    'speak': SpeakAction(),
 })
