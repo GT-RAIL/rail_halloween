@@ -59,6 +59,7 @@
   <depend>move_base_msgs</depend>
   <depend>rail_manipulation_msgs</depend>
   <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>trajectory_msgs</depend>

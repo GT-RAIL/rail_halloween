@@ -11,6 +11,7 @@ import actionlib
 from task_executor.actions import default_actions
 from task_executor.tasks import Task
 
+from actionlib_msgs.msg import GoalID
 from task_executor.msg import ExecuteAction
 from std_srvs.srv import Trigger, TriggerResponse
 
@@ -116,6 +117,14 @@ class TaskServer(object):
         result.success = True
         rospy.loginfo("Task {}: SUCCESS".format(task.name))
         self._server.set_succeeded(result)
+
+    def stop(self):
+        # Cancel all current goals
+        cancel_pub = rospy.Publisher(rospy.get_name() + '/cancel', GoalID)
+        cancel_pub.publish(GoalID(stamp=rospy.Time.now()))
+
+        # Wait a bit
+        rospy.sleep(0.5)
 
     def _validate_locations(self, locations):
         # We don't need to validate yet. But perhaps soon

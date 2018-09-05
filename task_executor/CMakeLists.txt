@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   move_base_msgs
   rail_manipulation_msgs
   rospy
+  sensor_msgs
   std_msgs
   std_srvs
   trajectory_msgs

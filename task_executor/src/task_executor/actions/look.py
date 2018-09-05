@@ -17,7 +17,7 @@ class LookAction(AbstractStep):
             "head_controller/point_head",
             PointHeadAction
         )
-        self._duration = 1.0
+        self._duration = 0.5
 
         rospy.loginfo("Connecting to head_controller...")
         self._look_client.wait_for_server()

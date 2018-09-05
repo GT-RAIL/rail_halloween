@@ -1,11 +1,14 @@
 #!/usr/bin/env
 # The torso action in a task plan
 
+import numpy as np
+
 import rospy
 import actionlib
 
 from task_executor.abstract_step import AbstractStep
 
+from sensor_msgs.msg import JointState
 from trajectory_msgs.msg import JointTrajectory, JointTrajectoryPoint
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
 from actionlib_msgs.msg import GoalStatus
@@ -21,13 +24,24 @@ class TorsoAction(AbstractStep):
         self._joint_names = ["torso_lift_joint"]
 
         self._duration = 5.0
+        self._tolerance = 3e-2  # A 3 cm tolerance in torso joint is OK
 
         rospy.loginfo("Connecting to torso_controller...")
         self._torso_client.wait_for_server()
         rospy.loginfo("...torso_controller connected")
 
+        # Create a subscriber to check if we even have to move to the desired
+        # torso height
+        self._current_torso_height = 0.0
+        self._joints_sub = rospy.Subscriber("/joint_states", JointState, self._on_joints)
+
     def run(self, height):
         rospy.loginfo("Torso to height: {}".format(height))
+
+        # Check to see if we are close enough to the desired torso height
+        if np.isclose(self._current_torso_height, height, atol=self._tolerance):
+            yield self.set_succeeded()
+            raise StopIteration()
 
         # Create and send the goal height
         trajectory = JointTrajectory()
@@ -57,3 +71,10 @@ class TorsoAction(AbstractStep):
 
     def stop(self):
         self._torso_client.cancel_goal()
+
+    def _on_joints(self, msg):
+        try:
+            idx = msg.name.index("torso_lift_joint")
+            self._current_torso_height = msg.position[idx]
+        except ValueError as e:
+            pass
