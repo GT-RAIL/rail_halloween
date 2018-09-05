@@ -33,10 +33,12 @@ class Task(AbstractStep):
         self._stopped = False
 
     def run(self, **params):
+        rospy.loginfo("Task {}: EXECUTING.".format(self.name))
+
         # First validate the params that we might have received
         if not self._validate_params(self.params, params):
             error_msg = (
-                "Unexpected params to Task {}. Expected: {}. Received: {}"
+                "Task {}: FAIL. Unexpected Params. Expected: {}. Received: {}."
                 .format(self.name, self.params, params)
             )
             rospy.logerr(error_msg)
@@ -106,8 +108,8 @@ class Task(AbstractStep):
             # Validate the variables
             if not self._validate_variables(step.get('var', []), variables):
                 error_msg = (
-                    "Task {}, Step {}({}): Variable validation failed. Variables: {}"
-                    .format(self.name, idx, step_name, variables)
+                    "Task {}, Step {}({}): FAIL. Variables Invalid. Expected: {}. Received: {}."
+                    .format(self.name, idx, step_name, step.get('var', []), variables.keys())
                 )
                 rospy.logerr(error_msg)
                 yield self.set_aborted(exception=Exception(error_msg))
@@ -121,6 +123,7 @@ class Task(AbstractStep):
 
         # Finally, yield succeeded with the variables that should be local stack
         # of variables that we're keeping track of
+        rospy.loginfo("Task {}: SUCCESS.".format(self.name))
         yield self.set_succeeded(**{
             var_name: var[var_name] for var_name in self.var
         })

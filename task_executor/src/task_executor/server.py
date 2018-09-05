@@ -78,11 +78,11 @@ class TaskServer(object):
         """
         result = self._server.get_default_result()
         if goal.name not in self.tasks:
-            rospy.logerr("Unrecognized task: {}".format(goal.name))
+            rospy.logerr("Task {}: UNRECOGNIZED.".format(goal.name))
             self._server.set_aborted(result)
             return
 
-        rospy.loginfo("Executing task: {}".format(goal.name))
+        rospy.loginfo("Task {}: EXECUTING.".format(goal.name))
 
         # Execute the task. TODO: Include params in the execution request of a
         # task?
@@ -115,7 +115,7 @@ class TaskServer(object):
 
         # Otherwise, signal complete
         result.success = True
-        rospy.loginfo("Task {}: SUCCESS".format(task.name))
+        rospy.loginfo("Task {}: SUCCESS.".format(task.name))
         self._server.set_succeeded(result)
 
     def stop(self):

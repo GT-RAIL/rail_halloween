@@ -50,11 +50,11 @@ class ArmPoseAction(AbstractStep):
             yield self.set_aborted(exception=Exception(error_msg))
             raise StopIteration()
 
-        rospy.logdebug("Moving to poses: {}".format(pose_waypoints))
+        rospy.logdebug("Moving to arm poses: {}".format(pose_waypoints))
 
         status = GoalStatus.LOST
         for pose in pose_waypoints:
-            rospy.loginfo("Going to pose: {}".format(pose))
+            rospy.loginfo("Going to arm pose: {}".format(pose))
 
             # Create and send the goal
             goal = PresetJointsMoveGoal()

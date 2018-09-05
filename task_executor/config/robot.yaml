@@ -68,6 +68,73 @@ tasks:
       var:
       - cube_idx
 
+  # Approaching a pickup or dropoff location
+  approach:
+    params:
+      - pre_loc
+      - loc
+
+    steps:
+    # Move to the location and untuck the arm. Assume the torso is 0 and arm
+    # is tucked
+    - action: move
+      params:
+        location: params.pre_loc
+
+    - action: torso
+      params:
+        height: 0.4
+
+    - action: arm
+      params:
+        poses: trajectories.tuck_to_stow
+
+    # Clear out the costmap
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
+
+    # Move to the actual location and put the arm in ready
+    - action: move
+      params:
+        location: params.loc
+
+    - action: arm
+      params:
+        poses: poses.ready
+
+  # Departing a pickup or dropoff location.
+  depart:
+    params:
+      - loc
+      - post_loc
+
+    steps:
+    # Set the arm to ready, and then to stow. Assume the torso is at max height
+    - action: arm
+      params:
+        poses: poses.ready
+
+    - action: arm
+      params:
+        poses: poses.stow
+
+    - action: move
+      params:
+        location: params.post_loc
+
+    - action: arm
+      params:
+        poses: trajectories.stow_to_tuck
+
+    - action: torso
+      params:
+        height: 0.0
+
   # Task used for testing subsets of the main task
   test:
     steps:
@@ -94,39 +161,16 @@ tasks:
       params:
         height: 0.0
 
-    - action: move
+    - task: approach
       params:
-        location: locations.pre_table1
-
-    - action: torso
-      params:
-        height: 0.4
-
-    - action: arm
-      params:
-        poses: trajectories.tuck_to_stow
+        pre_loc: locations.pre_table1
+        loc: locations.table1
 
     - action: look
       params:
         pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
-    - action: look
-      params:
-        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: move
-      params:
-        location: locations.table1
-
-    - action: arm
-      params:
-        poses: poses.ready
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: perceive
+    - task: perceive
       params:
         obj: objects.cube
       var:
@@ -138,53 +182,15 @@ tasks:
         cube_idx: var.cube_idx
         grasps: var.grasps
 
-    - action: arm
+    - task: depart
       params:
-        poses: poses.ready
+        loc: locations.table1
+        post_loc: locations.post_table1
 
-    - action: arm
+    - task: approach
       params:
-        poses: poses.stow
-
-    - action: move
-      params:
-        location: locations.post_table1
-
-    - action: arm
-      params:
-        poses: trajectories.stow_to_tuck
-
-    - action: torso
-      params:
-        height: 0.0
-
-    - action: move
-      params:
-        location: locations.pre_table2
-
-    - action: torso
-      params:
-        height: 0.4
-
-    - action: arm
-      params:
-        poses: trajectories.tuck_to_stow
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: look
-      params:
-        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: move
-      params:
-        location: locations.table2
-
-    - action: arm
-      params:
-        poses: poses.ready
+        pre_loc: locations.pre_table2
+        loc: locations.table2
 
     - action: look
       params:
@@ -192,22 +198,7 @@ tasks:
 
     - action: place
 
-    - action: arm
+    - task: depart
       params:
-        poses: poses.ready
-
-    - action: arm
-      params:
-        poses: poses.stow
-
-    - action: move
-      params:
-        location: locations.post_table2
-
-    - action: arm
-      params:
-        poses: trajectories.stow_to_tuck
-
-    - action: torso
-      params:
-        height: 0.0
+        loc: locations.table2
+        post_loc: locations.post_table2
