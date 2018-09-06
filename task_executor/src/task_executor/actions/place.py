@@ -12,7 +12,8 @@ from .arm_pose import ArmPoseAction
 
 class PlaceAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._drop_object_srv = rospy.ServiceProxy(
             "grasp_executor/drop_object",
             Empty
@@ -27,10 +28,10 @@ class PlaceAction(AbstractStep):
         self._drop_object_srv.wait_for_service()
         rospy.loginfo("...drop_service connected")
 
-        self._arm_pose.init()
+        self._arm_pose.init('place_pose')
 
     def run(self):
-        rospy.loginfo("Placing object that are in hand")
+        rospy.loginfo("Action {}: Placing objects in hand".format(self.name))
         self._stopped = False
 
         # First move to the desired pose
@@ -46,15 +47,14 @@ class PlaceAction(AbstractStep):
             raise StopIteration()
 
         # Then call the client to perform the grasps
-        # On any exception, make sure that we are set to aborted
-        try:
-            self._drop_object_srv()  # There is no feedback from this service...
-            if self._stopped:
-                yield self.set_preempted()
-            else:
-                yield self.set_succeeded()
-        except Exception as e:
-            yield self.set_aborted(exception=e.message)
+        self._drop_object_srv()  # There is no feedback from this service...
+        if self._stopped:
+            yield self.set_preempted(
+                action=self.name,
+                srv=self._drop_object_srv.resolved_name
+            )
+        else:
+            yield self.set_succeeded()
 
 
     def stop(self):

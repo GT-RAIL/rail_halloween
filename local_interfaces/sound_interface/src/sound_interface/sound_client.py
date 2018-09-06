@@ -106,8 +106,10 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         """Returns the state of the action client"""
         return self.sound_client.get_state()
 
-    def get_result(self):
-        """Returns the result of the last sound action"""
+    def get_result(self, blocking=False):
+        """Returns the result of the last sound action. Blocks for a result"""
+        if blocking:
+            self.sound_client.wait_for_result()
         return self.sound_client.get_result()
 
     def get_beep_names(self):

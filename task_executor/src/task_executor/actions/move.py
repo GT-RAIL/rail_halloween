@@ -19,7 +19,8 @@ from task_executor.srv import GetWaypoints
 class MoveAction(AbstractStep):
     """Move to a location"""
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
         self._get_waypoints_srv = rospy.ServiceProxy("database/waypoints", GetWaypoints)
 
@@ -35,16 +36,20 @@ class MoveAction(AbstractStep):
         # Parse out the waypoints
         coords = self._parse_location(location)
         if coords is None:
-            error_msg = "Unknown format for location: {}".format(location)
-            rospy.logerr(error_msg)
-            yield self.set_aborted(exception=Exception(error_msg))
+            rospy.logerr("Action {}: FAIL. Unknown format: {}".format(self.name, location))
+            yield self.set_aborted(
+                action=self.name,
+                cause="Unknown format",
+                context=location
+            )
             raise StopIteration()
 
-        rospy.logdebug("Moving to location(s): {}".format(coords))
+        rospy.logdebug("Action {}: Moving to location(s): {}".format(self.name, coords))
 
         status = GoalStatus.LOST
-        for coord in coords:
-            rospy.loginfo("Going to coordinate: {}".format(coord))
+        for coord_num, coord in enumerate(coords):
+            rospy.loginfo("Action {}: Going to {}/{}. Coordinate: {}"
+                          .format(self.name, coord_num + 1, len(coords), coord))
 
             # Create and send the goal
             goal = MoveBaseGoal()
@@ -65,13 +70,30 @@ class MoveAction(AbstractStep):
             if status != GoalStatus.SUCCEEDED:
                 break
 
-        # Finally, yield based on the final status
+        # Wait for a result and yield based on how we exited
+        self._move_base_client.wait_for_result()
+        result = self._move_base_client.get_result()
+
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                goal=coords,
+                orig_goal=location,
+                coord_num=coord_num,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                goal=coords,
+                orig_goal=location,
+                coord_num=coord_num,
+                result=result
+            )
 
     def stop(self):
         self._move_base_client.cancel_goal()

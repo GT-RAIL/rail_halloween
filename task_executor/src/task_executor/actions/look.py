@@ -12,7 +12,8 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._look_client = actionlib.SimpleActionClient(
             "head_controller/point_head",
             PointHeadAction
@@ -24,7 +25,7 @@ class LookAction(AbstractStep):
         rospy.loginfo("...head_controller connected")
 
     def run(self, pose):
-        rospy.loginfo("Looking at point: {}".format(pose))
+        rospy.loginfo("Action {}: Looking at point: {}".format(self.name, pose))
 
         # Create and send the goal pose
         goal = PointHeadGoal()
@@ -40,13 +41,27 @@ class LookAction(AbstractStep):
         while self._look_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             yield self.set_running()
 
-        # Yield based on how we exited
-        if self._look_client.get_state() == GoalStatus.SUCCEEDED:
+        # Wait for a result and yield based on how we exited
+        status = self._look_client.get_state()
+        self._look_client.wait_for_result()
+        result = self._look_client.get_result()
+
+        if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
-        elif self._look_client.get_state() == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+        elif status == GoalStatus.PREEMPTED:
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                goal=pose,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                goal=pose,
+                result=result
+            )
 
     def stop(self):
         self._look_client.cancel_goal()

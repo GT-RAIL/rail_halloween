@@ -87,17 +87,21 @@ class TaskServer(object):
         # Execute the task. TODO: Include params in the execution request of a
         # task?
         task = self.tasks[goal.name]
-        for variables in task.run():
-            # First check to see if we've been preempted. If we have, then
-            # set the preempt flag and wait for the task to return
-            if self._server.is_preempt_requested() or not self._server.is_active():
-                task.stop()
-                continue
+        try:
+            for variables in task.run():
+                # First check to see if we've been preempted. If we have, then
+                # set the preempt flag and wait for the task to return
+                if self._server.is_preempt_requested() or not self._server.is_active():
+                    task.stop()
+                    continue
 
-            # Check to see if something has stopped the task. If so, then
-            # exit out of this for loop
-            if task.is_preempted() or task.is_aborted():
-                break
+                # Check to see if something has stopped the task. If so, then
+                # exit out of this for loop
+                if task.is_preempted() or task.is_aborted():
+                    break
+        except Exception as e:
+            # TODO: We need to actually do something here
+            pass
 
         # If we've failed for some reason. Return an error
         if task.is_preempted():

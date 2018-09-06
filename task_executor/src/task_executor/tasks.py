@@ -37,12 +37,16 @@ class Task(AbstractStep):
 
         # First validate the params that we might have received
         if not self._validate_params(self.params, params):
-            error_msg = (
+            rospy.logerr(
                 "Task {}: FAIL. Unexpected Params. Expected: {}. Received: {}."
                 .format(self.name, self.params, params)
             )
-            rospy.logerr(error_msg)
-            yield self.set_aborted(exception=Exception(error_msg))
+            yield self.set_aborted(
+                task=self.name,
+                cause="Unexpected Params",
+                expected_params=self.params,
+                received_params=params
+            )
             raise StopIteration()
 
         # Setup to run the task
@@ -88,31 +92,45 @@ class Task(AbstractStep):
 
                 # If the reason we stopped is a failure, then return
                 if executor.is_preempted():
-                    error_msg = (
+                    rospy.logwarn(
                         "Task {}, Step {}({}): PREEMPTED. Context: {}"
                         .format(self.name, idx, step_name, variables)
                     )
-                    rospy.logwarn(error_msg)
-                    yield self.set_preempted(exception=Exception(error_msg))
+                    yield self.set_preempted(
+                        task=self.name,
+                        step_idx=idx,
+                        step_name=step_name,
+                        context=variables
+                    )
                     raise StopIteration()
 
                 if executor.is_aborted():
-                    error_msg = (
+                    rospy.logerr(
                         "Task {}, Step {}({}): FAIL. Context: {}"
                         .format(self.name, idx, step_name, variables)
                     )
-                    rospy.logerr(error_msg)
-                    yield self.set_aborted(exception=Exception(error_msg))
+                    yield self.set_aborted(
+                        task=self.name,
+                        step_idx=idx,
+                        step_name=step_name,
+                        context=variables
+                    )
                     raise StopIteration()
 
             # Validate the variables
             if not self._validate_variables(step.get('var', []), variables):
-                error_msg = (
-                    "Task {}, Step {}({}): FAIL. Variables Invalid. Expected: {}. Received: {}."
-                    .format(self.name, idx, step_name, step.get('var', []), variables.keys())
+                rospy.logerr(
+                    "Task {}, Step {}({}): FAIL. Invalid Variables. Expected: {}. Received: {}."
+                    .format(self.name, idx, step_name, sorted(step.get('var', [])), sorted(variables.keys()))
                 )
-                rospy.logerr(error_msg)
-                yield self.set_aborted(exception=Exception(error_msg))
+                yield self.set_aborted(
+                    task=self.name,
+                    cause="Invalid Variables",
+                    step_idx=idx,
+                    step_name=step_name,
+                    expected_vars=sorted(step.get('var', [])),
+                    received_vars=sorted(variables.keys())
+                )
                 raise StopIteration()
 
             # Update the variables that we're keeping track of
@@ -124,9 +142,7 @@ class Task(AbstractStep):
         # Finally, yield succeeded with the variables that should be local stack
         # of variables that we're keeping track of
         rospy.loginfo("Task {}: SUCCESS.".format(self.name))
-        yield self.set_succeeded(**{
-            var_name: var[var_name] for var_name in self.var
-        })
+        yield self.set_succeeded(**{var_name: var[var_name] for var_name in self.var})
 
     def stop(self):
         self._stopped = True

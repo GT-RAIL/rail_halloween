@@ -16,7 +16,9 @@ from task_executor.srv import GetArmPose, GetTrajectory
 
 class ArmPoseAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
+
         self._pose_client = actionlib.SimpleActionClient(
             "grasp_executor/preset_position",
             PresetJointsMoveAction
@@ -39,16 +41,20 @@ class ArmPoseAction(AbstractStep):
         # Parse out the pose waypoints
         pose_waypoints = self._parse_poses(poses)
         if pose_waypoints is None:
-            error_msg = "Unknown format for arm poses: {}".format(poses)
-            rospy.logerr(error_msg)
-            yield self.set_aborted(exception=Exception(error_msg))
+            rospy.logerr("Action {}: FAIL. Unknown format: {}".format(self.name, poses))
+            yield self.set_aborted(
+                action=self.name,
+                cause="Unknown format",
+                context=poses
+            )
             raise StopIteration()
 
-        rospy.logdebug("Moving to arm poses: {}".format(pose_waypoints))
+        rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, pose_waypoints))
 
         status = GoalStatus.LOST
+        attempt_num = -1
         for pose in pose_waypoints:
-            rospy.loginfo("Going to arm pose: {}".format(pose.angles))
+            rospy.loginfo("Action {}: Going to arm pose: {}".format(self.name, pose.angles))
 
             # Create and send the goal
             goal = PresetJointsMoveGoal()
@@ -64,8 +70,8 @@ class ArmPoseAction(AbstractStep):
             goal.position = pose.angles
             assert len(goal.name) == len(goal.position)
 
-            for attempt in xrange(self._max_attempts):
-                rospy.loginfo("Attempt {}/{}".format(attempt + 1, self._max_attempts))
+            for attempt_num in xrange(self._max_attempts):
+                rospy.loginfo("Action {}: Attempt {}/{}".format(self.name, attempt_num + 1, self._max_attempts))
                 self._pose_client.send_goal(goal)
 
                 # Yield running while the client is executing
@@ -84,12 +90,30 @@ class ArmPoseAction(AbstractStep):
             if status != GoalStatus.SUCCEEDED:
                 break
 
+        # Wait for a result and yield based on how we exited
+        self._pose_client.wait_for_result()
+        result = self._pose_client.get_result()
+
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                orig_goal=poses,
+                goal=pose_waypoints,
+                attempt_num=attempt_num,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                orig_goal=poses,
+                goal=pose_waypoints,
+                attempt_num=attempt_num,
+                result=result
+            )
 
     def stop(self):
         self._pose_client.cancel_goal()

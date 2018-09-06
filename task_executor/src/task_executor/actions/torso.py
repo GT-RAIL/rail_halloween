@@ -16,7 +16,8 @@ from actionlib_msgs.msg import GoalStatus
 
 class TorsoAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._torso_client = actionlib.SimpleActionClient(
             "torso_controller/follow_joint_trajectory",
             FollowJointTrajectoryAction
@@ -36,7 +37,7 @@ class TorsoAction(AbstractStep):
         self._joints_sub = rospy.Subscriber("/joint_states", JointState, self._on_joints)
 
     def run(self, height):
-        rospy.loginfo("Torso to height: {}".format(height))
+        rospy.loginfo("Action {}: Torso to height {}".format(self.name, height))
 
         # Check to see if we are close enough to the desired torso height
         if np.isclose(self._current_torso_height, height, atol=self._tolerance):
@@ -61,13 +62,27 @@ class TorsoAction(AbstractStep):
         while self._torso_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             yield self.set_running()
 
-        # Yield a aborted or succeeded based on how we exited
-        if self._torso_client.get_state() == GoalStatus.SUCCEEDED:
+        # Wait for a result and yield based on how we exited
+        status = self._torso_client.get_state()
+        self._torso_client.wait_for_result()
+        result = self._torso_client.get_result()
+
+        if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
-        elif self._torso_client.get_state() == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+        elif status == GoalStatus.PREEMPTED:
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                goal=height,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                goal=height,
+                result=result
+            )
 
     def stop(self):
         self._torso_client.cancel_goal()

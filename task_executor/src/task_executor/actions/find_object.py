@@ -17,7 +17,9 @@ from task_executor.srv import GetObjectConstraints
 
 class FindObjectAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
+
         # Objects DB
         self._get_object_constraints_srv = rospy.ServiceProxy(
             "database/object_constraints",
@@ -61,45 +63,70 @@ class FindObjectAction(AbstractStep):
         # Fetch the object from the database and determing the bounds and
         # location within which the object will be
         obj = obj.split('.', 1)[1]
-        rospy.loginfo("Inspecting scene for object: {}".format(obj))
+        rospy.loginfo("Action {}: Inspecting scene for object: {}"
+                      .format(self.name, obj))
         self._stopped = False
 
         # Ask for a segmentation and then identify the object that we want
-        # On any exception, make sure that we are set to aborted
-        try:
-            segmented_objects = self._segment_objects_srv().segmented_objects
-            yield self.set_running()  # Check on the status of the server
-            if self._stopped:
-                yield self.set_preempted()
+        segmented_objects = self._segment_objects_srv().segmented_objects
+        yield self.set_running()  # Check on the status of the server
+        if self._stopped:
+            yield self.set_preempted(
+                action=self.name,
+                goal=obj,
+                srv=self._segment_objects_srv.resolved_name,
+                segmented_objects=segmented_objects
+            )
 
-            # Update the planning scene
-            self._planning_scene_clear_srv()
-            yield self.set_running()  # Check on the status of the server
-            if self._stopped:
-                yield self.set_preempted()
+        # Update the planning scene
+        self._planning_scene_clear_srv()
+        yield self.set_running()  # Check on the status of the server
+        if self._stopped:
+            yield self.set_preempted(
+                action=self.name,
+                goal=obj,
+                srv=self._planning_scene_clear_srv.resolved_name,
+                segmented_objects=segmented_objects
+            )
 
-            req = AddObjectRequest()
-            for idx, segmented_object in enumerate(segmented_objects.objects):
-                req.point_clouds.append(segmented_object.point_cloud)
-                req.centroids.append(segmented_object.centroid)
-                req.indices.append(idx)
-            self._planning_scene_add_srv(req)
-            yield self.set_running()  # Check on the status of the server
-            if self._stopped:
-                yield self.set_preempted()
+        req = AddObjectRequest()
+        for idx, segmented_object in enumerate(segmented_objects.objects):
+            req.point_clouds.append(segmented_object.point_cloud)
+            req.centroids.append(segmented_object.centroid)
+            req.indices.append(idx)
+        self._planning_scene_add_srv(req)
+        yield self.set_running()  # Check on the status of the server
+        if self._stopped:
+            yield self.set_preempted(
+                action=self.name,
+                goal=obj,
+                srv=self._planning_scene_add_srv.resolved_name,
+                segmented_objects=segmented_objects
+            )
 
-            # Find the object, based on constraints, among the objects
-            found_idx, found_obj = self._find_obj(obj, segmented_objects)
-            yield self.set_running()  # Check on the status of the server
-            if self._stopped:
-                yield self.set_preempted()
-            elif found_idx == -1:
-                raise IndexError("{} not found among {} objects.".format(obj, len(segmented_objects.objects)))
-
-            # Finally, yield a success
+        # Find the object, based on constraints, among the objects
+        found_idx, found_obj = self._find_obj(obj, segmented_objects)
+        yield self.set_running()  # Check on the status of the server
+        if self._stopped:
+            yield self.set_preempted(
+                action=self.name,
+                goal=obj,
+                found_idx=found_idx,
+                found_obj=found_obj,
+                segmented_objects=segmented_objects
+            )
+        elif found_idx == -1:
+            rospy.logerr("Action {}: FAIL. {} not found among {} objects."
+                         .format(self.name, obj, len(segmented_objects.objects)))
+            yield self.set_aborted(
+                action=self.name,
+                goal=obj,
+                found_idx=found_idx,
+                found_obj=found_obj,
+                segmented_objects=segmented_objects
+            )
+        else:
             yield self.set_succeeded(found_obj=found_obj, found_idx=found_idx)
-        except Exception as e:
-            yield self.set_aborted(exception=e.message)
 
     def stop(self):
         self._stopped = True

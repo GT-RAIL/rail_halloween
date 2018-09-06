@@ -12,7 +12,8 @@ from actionlib_msgs.msg import GoalStatus
 
 class GripperAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._gripper_client = actionlib.SimpleActionClient(
             "gripper_controller/gripper_action",
             GripperCommandAction
@@ -23,20 +24,23 @@ class GripperAction(AbstractStep):
         rospy.loginfo("...gripper_controller connected")
 
     def run(self, command):
-        if command not in ['close', 'open']:
-            error_msg = "Unknown gripper command: {}".format(command)
-            rospy.logerr(error_msg)
-            self.set_aborted(exception=Exception(error_msg))
+        if type(command) != str or command.lower() not in ['close', 'open']:
+            rospy.logerr("Action: {}. FAIL. Unrecognized: {}".format(self.name, command))
+            self.set_aborted(
+                action=self.name,
+                cause="Unrecognized",
+                context=command
+            )
             raise StopIteration()
 
-        rospy.loginfo("Gripper command: {}".format(command))
+        rospy.loginfo("Action {}: Gripper {}".format(self.name, command))
 
         # Create and send the goal pose
         goal = GripperCommandGoal()
-        if command == 'close':
+        if command.lower() == 'close':
             goal.command.position = 0.0
             goal.command.max_effort = 200
-        elif command == 'open':
+        elif command.lower() == 'open':
             goal.command.position = 0.15
 
         self._gripper_client.send_goal(goal)
@@ -45,13 +49,27 @@ class GripperAction(AbstractStep):
         while self._gripper_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             yield self.set_running()
 
-        # Yield based on how we exited
-        if self._gripper_client.get_state() == GoalStatus.SUCCEEDED:
+        # Wait for a result and yield based on how we exited
+        status = self._gripper_client.get_state()
+        self._gripper_client.wait_for_result()
+        result = self._gripper_client.get_result()
+
+        if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
-        elif self._gripper_client.get_state() == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+        elif status == GoalStatus.PREEMPTED:
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                goal=command,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                goal=command,
+                result=result
+            )
 
     def stop(self):
         self._gripper_client.cancel_goal()

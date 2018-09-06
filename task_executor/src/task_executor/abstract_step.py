@@ -73,7 +73,7 @@ class AbstractStep(object):
         return not (self.is_running() or self.is_succeeded() or self.is_preempted())
 
     @abc.abstractmethod
-    def init(self):
+    def init(self, name, *args, **kwargs):
         """
         Initialize the step.
         """

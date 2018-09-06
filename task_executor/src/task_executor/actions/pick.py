@@ -13,7 +13,8 @@ from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal, \
 
 class PickAction(AbstractStep):
 
-    def init(self):
+    def init(self, name):
+        self.name = name
         self._grasp_client = actionlib.SimpleActionClient(
             "grasp_executor/execute_grasp",
             ExecuteGraspAction
@@ -24,7 +25,7 @@ class PickAction(AbstractStep):
         rospy.loginfo("...grasp_executor connected")
 
     def run(self, cube_idx, grasps):
-        rospy.loginfo("Picking up object at index: {}".format(cube_idx))
+        rospy.loginfo("Action {}: Picking up object at index {}".format(self.name, cube_idx))
 
         # Create the template goal
         goal = ExecuteGraspGoal()
@@ -34,8 +35,9 @@ class PickAction(AbstractStep):
         # Iterate through all the poses, and report an error if all of them
         # failed
         status = GoalStatus.LOST
-        for idx, grasp_pose in enumerate(grasps.poses):
-            rospy.loginfo("Attempting grasp {}/{}".format(idx + 1, len(grasps.poses)))
+        for grasp_num, grasp_pose in enumerate(grasps.poses):
+            rospy.loginfo("Action {}: Attempting grasp {}/{}"
+                          .format(self.name, grasp_num + 1, len(grasps.poses)))
 
             goal.grasp_pose.pose = grasp_pose
             goal.grasp_pose.header.stamp = rospy.Time.now()
@@ -50,13 +52,32 @@ class PickAction(AbstractStep):
             if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
                 break
 
-        # Finally, return based on status after all tries
+        # Wait for a result and yield based on how we exited
+        self._grasp_client.wait_for_result()
+        result = self._grasp_client.get_result()
+
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
-            yield self.set_preempted()
+            yield self.set_preempted(
+                action=self.name,
+                status=status,
+                goal=cube_idx,
+                num_grasps=len(grasps.poses),
+                grasp_num=grasp_num,
+                grasps=grasps,
+                result=result
+            )
         else:
-            yield self.set_aborted()
+            yield self.set_aborted(
+                action=self.name,
+                status=status,
+                goal=cube_idx,
+                num_grasps=len(grasps.poses),
+                grasp_num=grasp_num,
+                grasps=grasps,
+                result=result
+            )
 
     def stop(self):
         self._grasp_client.cancel_goal()

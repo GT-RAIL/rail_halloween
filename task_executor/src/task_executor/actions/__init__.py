@@ -35,7 +35,7 @@ class Actions(object):
 
     def init(self):
         for key, action in self.registry.iteritems():
-            action.init()
+            action.init(key)
 
 
 # The default actions contain all the action interfaces that are known to this
