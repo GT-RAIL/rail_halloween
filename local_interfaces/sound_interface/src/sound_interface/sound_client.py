@@ -41,9 +41,15 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
     """
 
     # Keys for the different beeps
-    BEEP_SAD = "SAD"
+    BEEP_CHEERFUL = "CHEERFUL"
+    BEEP_CONCERNED = "CONCERNED"
+    BEEP_EXCITED = "EXCITED"
     BEEP_HAPPY = "HAPPY"
+    BEEP_PLAYFUL = "PLAYFUL"
+    BEEP_PROUD = "PROUD"
+    BEEP_SAD = "SAD"
     BEEP_SHOCKED = "SHOCKED"
+    BEEP_SURPRISED = "SURPRISED"
     BEEP_UNSURE = "UNSURE"
 
     # Keys for the different affects
@@ -70,10 +76,16 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
                 'sounds'
             )
             self.beeps = {
+                SoundClient.BEEP_CHEERFUL: os.path.join(default_sound_path, 'R2D2_cheerful.wav'),
+                SoundClient.BEEP_CONCERNED: os.path.join(default_sound_path, 'R2D2_concerned.wav'),
+                SoundClient.BEEP_EXCITED: os.path.join(default_sound_path, 'R2D2_excited.wav'),
+                SoundClient.BEEP_HAPPY: os.path.join(default_sound_path, 'R2D2_happy.wav'),
+                SoundClient.BEEP_PLAYFUL: os.path.join(default_sound_path, 'R2D2_playful.wav'),
+                SoundClient.BEEP_PROUD: os.path.join(default_sound_path, 'R2D2_proud.wav'),
                 SoundClient.BEEP_SAD: os.path.join(default_sound_path, 'R2D2_sad.wav'),
-                SoundClient.BEEP_HAPPY: os.path.join(default_sound_path, 'R2D2_excited.wav'),
-                SoundClient.BEEP_UNSURE: os.path.join(default_sound_path, 'R2D2_unsure.wav'),
                 SoundClient.BEEP_SHOCKED: os.path.join(default_sound_path, 'R2D2_shocked.wav'),
+                SoundClient.BEEP_SURPRISED: os.path.join(default_sound_path, 'R2D2_surprised.wav'),
+                SoundClient.BEEP_UNSURE: os.path.join(default_sound_path, 'R2D2_unsure.wav'),
             }
 
         # Load the affects
@@ -146,8 +158,8 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         """Perform TTS using EmotionML"""
 
         # Transform the text if the affect argument calls for it
-        if affect and affect in self.affects.keys():
-            text = self.affects[affect](text)
+        if affect and affect.upper() in self.affects.keys():
+            text = self.affects[affect.upper()](text)
 
         # Create the vars for the EmotionML query
         text = SoundClient.EMOTIONML_TEMPLATE.format(speech=text)
@@ -192,13 +204,13 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     def beep(self, key, blocking=False, **kwargs):
         """Play one of the beeps and boops that we know of"""
-        if key not in self.beeps:
+        if not key or key.upper() not in self.beeps:
             return
 
         sound = SoundRequest()
         sound.sound = SoundRequest.PLAY_FILE
         sound.command = SoundRequest.PLAY_ONCE
-        sound.arg = self.beeps[key]
+        sound.arg = self.beeps[key.upper()]
         self._play(sound, blocking=blocking, **kwargs)
 
     def stop(self):

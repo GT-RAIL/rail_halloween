@@ -131,6 +131,11 @@ tasks:
   # The main fetch and deliver task that we want to make robust
   main:
     steps:
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+
     - action: torso
       params:
         height: 0.4
@@ -145,7 +150,7 @@ tasks:
 
     - action: beep
       params:
-        beep: happy
+        beep: playful
         async: true
 
     - task: approach
@@ -159,7 +164,7 @@ tasks:
 
     - action: beep
       params:
-        beep: shocked
+        beep: surprised
         async: true
 
     - task: perceive
@@ -191,7 +196,7 @@ tasks:
 
     - action: beep
       params:
-        beep: happy
+        beep: excited
         async: true
 
     - task: approach
@@ -212,7 +217,7 @@ tasks:
 
     - action: beep
       params:
-        beep: happy
+        beep: proud
         async: true
 
     - task: depart
