@@ -9,7 +9,7 @@ import rospy
 import actionlib
 
 from task_executor.actions import default_actions
-from task_executor.tasks import Task
+from task_executor.tasks import Task, TaskContext
 
 from actionlib_msgs.msg import GoalID
 from task_executor.msg import ExecuteAction
@@ -87,8 +87,9 @@ class TaskServer(object):
         # Execute the task. TODO: Include params in the execution request of a
         # task?
         task = self.tasks[goal.name]
+        context=TaskContext()
         try:
-            for variables in task.run():
+            for variables in task.run(context):
                 # First check to see if we've been preempted. If we have, then
                 # set the preempt flag and wait for the task to return
                 if self._server.is_preempt_requested() or not self._server.is_active():
@@ -100,7 +101,8 @@ class TaskServer(object):
                 if task.is_preempted() or task.is_aborted():
                     break
         except Exception as e:
-            # TODO: We need to actually do something here
+            # There was some unexpected error in the underlying code. Capture
+            # it and send it to the recovery mechanism. TODO
             pass
 
         # If we've failed for some reason. Return an error

@@ -9,6 +9,27 @@ from task_executor.abstract_step import AbstractStep
 from task_executor import ops
 
 
+# A class detailing how a `Task` should execute
+
+class TaskContext(object):
+    """
+    Objects of this class type are used to tell a task how execution should
+    proceed.
+    """
+
+    def __init__(self, start_idx=0, restart_child=False):
+        """
+        Args:
+            start_idx (int) : >= 0. The step in the task spec from where exec
+                should start
+            restart_child (bool) : If the current start_idx is a task, should
+                that be restarted, or resumed from its current location?
+        """
+        assert start_idx >= 0
+        self.start_idx = start_idx
+        self.restart_child = restart_child
+
+
 # The actual executor of tasks
 
 class Task(AbstractStep):
@@ -32,8 +53,18 @@ class Task(AbstractStep):
         # Flag to indicate if the task is stopped
         self._stopped = False
 
-    def run(self, **params):
-        rospy.loginfo("Task {}: EXECUTING.".format(self.name))
+        # State flags
+        self.step_idx = -1              # The current step_idx that is running
+        self.current_step_def = None    # The current step that is running
+        self.current_executor = None    # The current action/task executor
+
+    def run(self, context, **params):
+        """
+        All tasks accept a `TaskContext` detailing how execution should proceed
+        in case the task was paused
+        """
+        self.step_idx = context.start_idx
+        rospy.loginfo("Task {}: EXECUTING from step {}.".format(self.name, self.step_idx))
 
         # First validate the params that we might have received
         if not self._validate_params(self.params, params):
@@ -54,9 +85,9 @@ class Task(AbstractStep):
         self._stopped = False
 
         # Go through each step of the specified task plan as appropriate
-        idx = 0
-        while idx < len(self.steps):
-            step = self.steps[idx]
+        while self.step_idx < len(self.steps):
+            # Save the definition of the current step; create a local var alias
+            self.current_step_def = step = self.steps[self.step_idx]
             step_name = step.get('task', step.get('action', step.get('op')))
 
             # First resolve any and all params for this step
@@ -72,7 +103,28 @@ class Task(AbstractStep):
 
             # Otherwise, execute the action/task:
             else:
-                executor = self.actions[step['action']] if step.has_key('action') else self.tasks[step['task']]
+                if step.has_key('action'):
+                    self.current_executor = self.actions[step['action']]
+                else:  # step.has_key('task')
+                    # Create the child task context based on saved information
+                    child_context = None
+                    if self.current_executor is not None \
+                            and type(self.current_executor) == Task \
+                            and not context.restart_child:
+                        child_context = TaskContext(
+                            start_idx=self.current_executor.step_idx,
+                            restart_child=False
+                        )
+                    else:
+                        # restart_child or current_executor is None or
+                        # current_executor is not of type Task
+                        child_context = TaskContext()
+
+                    # Set the current_executor to the task at hand
+                    self.current_executor = self.tasks[step['task']]
+                    step_params['context'] = child_context
+
+                executor = self.current_executor
 
                 # Run and stop/yield as necessary
                 for variables in executor.run(**step_params):
@@ -94,11 +146,11 @@ class Task(AbstractStep):
                 if executor.is_preempted():
                     rospy.logwarn(
                         "Task {}, Step {}({}): PREEMPTED. Context: {}"
-                        .format(self.name, idx, step_name, variables)
+                        .format(self.name, self.step_idx, step_name, variables)
                     )
                     yield self.set_preempted(
                         task=self.name,
-                        step_idx=idx,
+                        step_idx=self.step_idx,
                         step_name=step_name,
                         context=variables
                     )
@@ -107,11 +159,11 @@ class Task(AbstractStep):
                 if executor.is_aborted():
                     rospy.logerr(
                         "Task {}, Step {}({}): FAIL. Context: {}"
-                        .format(self.name, idx, step_name, variables)
+                        .format(self.name, self.step_idx, step_name, variables)
                     )
                     yield self.set_aborted(
                         task=self.name,
-                        step_idx=idx,
+                        step_idx=self.step_idx,
                         step_name=step_name,
                         context=variables
                     )
@@ -121,12 +173,12 @@ class Task(AbstractStep):
             if not self._validate_variables(step.get('var', []), variables):
                 rospy.logerr(
                     "Task {}, Step {}({}): FAIL. Invalid Variables. Expected: {}. Received: {}."
-                    .format(self.name, idx, step_name, sorted(step.get('var', [])), sorted(variables.keys()))
+                    .format(self.name, self.step_idx, step_name, sorted(step.get('var', [])), sorted(variables.keys()))
                 )
                 yield self.set_aborted(
                     task=self.name,
                     cause="Invalid Variables",
-                    step_idx=idx,
+                    step_idx=self.step_idx,
                     step_name=step_name,
                     expected_vars=sorted(step.get('var', [])),
                     received_vars=sorted(variables.keys())
@@ -137,11 +189,13 @@ class Task(AbstractStep):
             for name, value in variables.iteritems():
                 var[name] = value
 
-            idx += 1
+            self.step_idx += 1
 
         # Finally, yield succeeded with the variables that should be local stack
         # of variables that we're keeping track of
         rospy.loginfo("Task {}: SUCCESS.".format(self.name))
+        self.step_idx = -1
+        self.current_step_def = self.current_executor = None
         yield self.set_succeeded(**{var_name: var[var_name] for var_name in self.var})
 
     def stop(self):

@@ -20,8 +20,8 @@ uint8 PRIORITY_NORMAL=30
 uint8 PRIORITY_INFO=40
 uint8 priority
 
-# The context of the status
-Context[] context
+# The context of the status. This is a pickled byte array
+string context
 ---
 # The result after fulfilling the request
 
@@ -41,8 +41,8 @@ uint8 RESUME_NONE=2
 uint8 resume_hint
 
 # The context of the resumption. Just in case there are things the component
-# should be aware of when the strategy finished
-Context[] context
+# should be aware of when the strategy finished. This is a pickled byte array
+string context
 
 # Statistics on the assistance
 Statistics stats
