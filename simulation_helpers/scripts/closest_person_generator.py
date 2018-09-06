@@ -65,11 +65,11 @@ class PersonGenerator(object):
             header=Header(frame_id=self.desired_pose_frame, stamp=rospy.Time.now())
         )
 
-        # The position of the person is normally distributed 1m ahead, 0m
-        # to the side, and 1.7m high. Standard deviations of 0.2m, 2m, and 0.05m
+        # The position of the person is normally distributed 2m ahead, 0m
+        # to the side, and 1.7m high. Standard deviations of 1m, 2m, and 0.05m
         # respectively. Assume a rotation of 0
         pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = \
-            (np.random.randn(3) * [0.2, 2, 0.05]) + [1.0, 0.0, 1.7]
+            (np.random.randn(3) * [1, 2, 0.05]) + [2.0, 0.0, 1.7]
         pose.pose.orientation.w = 1.0
 
         rospy.loginfo("Person created at: {}".format(
@@ -81,7 +81,7 @@ class PersonGenerator(object):
         self._closest_person = Person(
             header=pose.header,
             pose=pose.pose,
-            id=np.random.randint(100),
+            id=str(np.random.randint(100)),
             detection_context=DetectionContext(pose_source=DetectionContext.POSE_FROM_FACE)
         )
 
@@ -91,12 +91,13 @@ class PersonGenerator(object):
                 header=pose.header,
                 ns="debug",
                 id=1,
-                type=Marker.SPHERE,
+                type=Marker.CYLINDER,
                 action=Marker.ADD,
                 pose=pose.pose,
-                scale=Vector3(0.1, 0.1, 0.1),
+                scale=Vector3(0.15, 0.3, pose.pose.position.z),
                 color=ColorRGBA(0.0, 1.0, 0.0, 1.0)
             )
+            self._debug_marker.pose.position.z = pose.pose.position.z / 2
 
         return TriggerResponse(success=True)
 
