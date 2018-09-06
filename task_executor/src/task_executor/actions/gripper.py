@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class GripperAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._gripper_client = actionlib.SimpleActionClient(
             "gripper_controller/gripper_action",
             GripperCommandAction

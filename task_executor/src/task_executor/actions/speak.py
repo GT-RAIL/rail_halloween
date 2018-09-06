@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class SpeakAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._speak_client = SoundClient()
         self._stopped = False
 

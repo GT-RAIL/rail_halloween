@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._look_client = actionlib.SimpleActionClient(
             "head_controller/point_head",
             PointHeadAction

@@ -16,7 +16,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class TorsoAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._torso_client = actionlib.SimpleActionClient(
             "torso_controller/follow_joint_trajectory",
             FollowJointTrajectoryAction

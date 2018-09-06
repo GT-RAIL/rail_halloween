@@ -16,11 +16,12 @@
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
   <arg name="grasp_classifier_file" value="random_forest.pkl" />
   <arg name="segmentation_config" value="$(find task_executor)/config/zones.yaml" />
+  <arg name="tasks_config" value="$(find task_executor)/config/tasks.yaml" />
 
   <!-- Simulation vs. non simulation args -->
-  <arg name="config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
+  <arg name="data_config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
   <arg name="map_file" default="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
-  <arg name="config" default="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
+  <arg name="data_config" default="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
   <arg name="map_file" default="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
 
 
@@ -79,7 +80,13 @@
   </group>
 
   <!-- Task Execution -->
-  <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen" if="$(arg task_executor)">
-    <rosparam command="load" file="$(arg config)" />
-  </node>
+  <group if="$(arg task_executor)">
+    <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen">
+      <rosparam command="load" file="$(arg tasks_config)" />
+    </node>
+
+    <node name="database" pkg="task_executor" type="database_node.py">
+      <rosparam command="load" file="$(arg data_config)" />
+    </node>
+  </group>
 </launch>

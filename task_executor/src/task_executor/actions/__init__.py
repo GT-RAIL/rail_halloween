@@ -24,21 +24,23 @@ class Actions(object):
     def __init__(self, registry):
         self.registry = registry
 
-        # Quick sanity check because I don't trust people
+        # Quick sanity check because I don't trust people. Also set the action
+        # as an attribute for '.' based referencing
         for key, action in self.registry.iteritems():
             assert isinstance(action, AbstractStep)
+            setattr(self, key, action)
 
     def __getitem__(self, key):
         return self.registry[key]
 
-    def init(self, **kwargs):
+    def init(self):
         for key, action in self.registry.iteritems():
-            action.init(**kwargs)
+            action.init()
 
 
 # The default actions contain all the action interfaces that are known to this
 # package
-default_actions = Actions({
+default_actions_dict = {
     'move': MoveAction(),
     'torso': TorsoAction(),
     'look': LookAction(),
@@ -50,4 +52,5 @@ default_actions = Actions({
     'place': PlaceAction(),
     'beep': BeepAction(),
     'speak': SpeakAction(),
-})
+}
+default_actions = Actions(default_actions_dict)

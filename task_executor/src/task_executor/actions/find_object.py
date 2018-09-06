@@ -16,7 +16,7 @@ from fetch_grasp_suggestion.srv import AddObject, AddObjectRequest
 
 class FindObjectAction(AbstractStep):
 
-    def init(self, objects, **kwargs):
+    def init(self):
         # Objects DB
         self._objects = objects
 

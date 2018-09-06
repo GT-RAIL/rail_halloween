@@ -14,7 +14,7 @@ from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveG
 
 class ArmPoseAction(AbstractStep):
 
-    def init(self, poses, trajectories, **kwargs):
+    def init(self):
         self._pose_client = actionlib.SimpleActionClient(
             "grasp_executor/preset_position",
             PresetJointsMoveAction

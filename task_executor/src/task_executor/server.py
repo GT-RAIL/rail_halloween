@@ -44,22 +44,12 @@ class TaskServer(object):
         self._server.start()
 
     def reload(self, req):
-        # Instantiate the DB of locations and objects
-        self.locations = self._validate_locations(rospy.get_param('~locations'))
-        self.objects = self._validate_objects(rospy.get_param('~objects'))
-        self.poses = self._validate_poses(rospy.get_param('~poses'))
-        self.trajectories = self._validate_trajectories(rospy.get_param('~trajectories'))
-
+        # Get the task configs
         tasks_config = self._validate_tasks(rospy.get_param('~tasks'))
         self.tasks = { key: Task() for key, _ in tasks_config.iteritems() }
 
         # Instantiate the registry of actions
-        default_actions.init(
-            locations=self.locations,
-            objects=self.objects,
-            poses=self.poses,
-            trajectories=self.trajectories
-        )
+        default_actions.init()
 
         # Instantiate the registry of tasks
         for key, task in self.tasks.iteritems():
@@ -125,22 +115,6 @@ class TaskServer(object):
 
         # Wait a bit
         rospy.sleep(0.5)
-
-    def _validate_locations(self, locations):
-        # We don't need to validate yet. But perhaps soon
-        return locations
-
-    def _validate_objects(self, objects):
-        # We don't need to validate yet. But perhaps soon
-        return objects
-
-    def _validate_poses(self, poses):
-        # We don't need to validate yet. But perhaps soon
-        return poses
-
-    def _validate_trajectories(self, trajectories):
-        # We don't need to validate yet. But perhaps soon
-        return trajectories
 
     def _validate_tasks(self, tasks):
         # We don't need to validate yet. But perhaps soon

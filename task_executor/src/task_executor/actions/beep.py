@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class BeepAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._beep_client = SoundClient()
         self._stopped = False
 

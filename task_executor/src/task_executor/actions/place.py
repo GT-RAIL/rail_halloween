@@ -12,7 +12,7 @@ from .arm_pose import ArmPoseAction
 
 class PlaceAction(AbstractStep):
 
-    def init(self, **kwargs):
+    def init(self):
         self._drop_object_srv = rospy.ServiceProxy(
             "grasp_executor/drop_object",
             Empty
