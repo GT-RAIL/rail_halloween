@@ -12,6 +12,8 @@ from task_executor.abstract_step import AbstractStep
 
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from actionlib_msgs.msg import GoalStatus
+from task_executor.msg import Waypoint
+from task_executor.srv import GetWaypoints
 
 
 class MoveAction(AbstractStep):
@@ -19,31 +21,26 @@ class MoveAction(AbstractStep):
 
     def init(self):
         self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-        self._locations = locations
+        self._get_waypoints_srv = rospy.ServiceProxy("database/waypoints", GetWaypoints)
 
         rospy.loginfo("Connecting to move_base...")
         self._move_base_client.wait_for_server()
         rospy.loginfo("...move_base connected")
 
+        rospy.loginfo("Connecting to database services...")
+        self._get_waypoints_srv.wait_for_service()
+        rospy.loginfo("...database services connected")
+
     def run(self, location):
         # Parse out the waypoints
-        coords = None
-        if type(location) == str:
-            db_name, location = location.split('.', 1)
-            if db_name == 'locations':
-                coords = self._locations[location]
-        elif type(location) == dict:
-            coords = [location]
-        elif type(location) == list or type(location) == tuple:
-            coords = location
-
+        coords = self._parse_location(location)
         if coords is None:
             error_msg = "Unknown format for location: {}".format(location)
             rospy.logerr(error_msg)
             yield self.set_aborted(exception=Exception(error_msg))
             raise StopIteration()
 
-        rospy.logdebug("Moving to location: {}".format(coords))
+        rospy.logdebug("Moving to location(s): {}".format(coords))
 
         status = GoalStatus.LOST
         for coord in coords:
@@ -51,11 +48,11 @@ class MoveAction(AbstractStep):
 
             # Create and send the goal
             goal = MoveBaseGoal()
-            goal.target_pose.pose.position.x = coord['x']
-            goal.target_pose.pose.position.y = coord['y']
-            goal.target_pose.pose.orientation.z = sin(coord['theta']/2.0)
-            goal.target_pose.pose.orientation.w = cos(coord['theta']/2.0)
-            goal.target_pose.header.frame_id = coord['frame']
+            goal.target_pose.pose.position.x = coord.x
+            goal.target_pose.pose.position.y = coord.y
+            goal.target_pose.pose.orientation.z = sin(coord.theta/2.0)
+            goal.target_pose.pose.orientation.w = cos(coord.theta/2.0)
+            goal.target_pose.header.frame_id = coord.frame
             goal.target_pose.header.stamp = rospy.Time.now()
             self._move_base_client.send_goal(goal)
 
@@ -78,3 +75,16 @@ class MoveAction(AbstractStep):
 
     def stop(self):
         self._move_base_client.cancel_goal()
+
+    def _parse_location(self, location):
+        coords = None
+        if type(location) == str:
+            db_name, location = location.split('.', 1)
+            if db_name == 'locations':
+                coords = self._get_waypoints_srv(location).waypoints
+        elif type(location) == dict:
+            coords = [Waypoint(**location),]
+        elif type(location) == list or type(location) == tuple:
+            coords = [Waypoint(**x) for x in location]
+
+        return coords

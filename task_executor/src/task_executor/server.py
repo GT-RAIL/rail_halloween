@@ -42,6 +42,7 @@ class TaskServer(object):
 
     def start(self):
         self._server.start()
+        rospy.loginfo("Executor node ready...")
 
     def reload(self, req):
         # Get the task configs

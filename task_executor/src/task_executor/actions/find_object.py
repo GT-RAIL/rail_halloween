@@ -12,13 +12,17 @@ from std_srvs.srv import Empty
 from rail_manipulation_msgs.msg import SegmentedObjectList
 from rail_manipulation_msgs.srv import SegmentObjects
 from fetch_grasp_suggestion.srv import AddObject, AddObjectRequest
+from task_executor.srv import GetObjectConstraints
 
 
 class FindObjectAction(AbstractStep):
 
     def init(self):
         # Objects DB
-        self._objects = objects
+        self._get_object_constraints_srv = rospy.ServiceProxy(
+            "database/object_constraints",
+            GetObjectConstraints
+        )
 
         # The segmentation interface
         self._segment_objects_srv = rospy.ServiceProxy(
@@ -48,6 +52,10 @@ class FindObjectAction(AbstractStep):
         self._planning_scene_add_srv.wait_for_service()
         self._planning_scene_clear_srv.wait_for_service()
         rospy.loginfo("...planning_scene connected")
+
+        rospy.loginfo("Connecting to database services...")
+        self._get_object_constraints_srv.wait_for_service()
+        rospy.loginfo("...database services connected")
 
     def run(self, obj):
         # Fetch the object from the database and determing the bounds and
@@ -99,11 +107,12 @@ class FindObjectAction(AbstractStep):
     def _find_obj(self, obj, segmented_objects):
         """
         Find the object with key `obj` in the `segmented_objects` based on the
-        details of that object in `self._objects`. Our find is rudimentary;
+        details of that object in the database. Our find is rudimentary; it is
         based solely on the expected location and bounds of the object
         """
-        bounds = self._objects[obj].get('bounds')
-        location = self._objects[obj].get('location')
+        obj_constraints = self._get_object_constraints_srv(obj).constraints
+        bounds = obj_constraints.bounds if obj_constraints.use_bounds else None
+        location = obj_constraints.location if obj_constraints.use_location else None
 
         found_idx, found_obj = -1, None
         for idx, segmented_object in enumerate(segmented_objects.objects):
@@ -113,23 +122,23 @@ class FindObjectAction(AbstractStep):
             # Check to see if the point cloud is in approximately the expected
             # location
             if location is not None and (
-                    segmented_object.center.x < location['xmin'] or
-                    segmented_object.center.x > location['xmax'] or
-                    segmented_object.center.y < location['ymin'] or
-                    segmented_object.center.y > location['ymax'] or
-                    segmented_object.center.z < location['zmin'] or
-                    segmented_object.center.z > location['zmax']):
+                    segmented_object.center.x < location.xmin or
+                    segmented_object.center.x > location.xmax or
+                    segmented_object.center.y < location.ymin or
+                    segmented_object.center.y > location.ymax or
+                    segmented_object.center.z < location.zmin or
+                    segmented_object.center.z > location.zmax):
                 continue
 
             # Check to see if the point cloud has approximately the expected
             # dimensions
             if bounds is not None and (
-                    segmented_object.bounding_volume.dimensions.x < bounds['xmin'] or
-                    segmented_object.bounding_volume.dimensions.x > bounds['xmax'] or
-                    segmented_object.bounding_volume.dimensions.y < bounds['ymin'] or
-                    segmented_object.bounding_volume.dimensions.y > bounds['ymax'] or
-                    segmented_object.bounding_volume.dimensions.z < bounds['zmin'] or
-                    segmented_object.bounding_volume.dimensions.z > bounds['zmax']):
+                    segmented_object.bounding_volume.dimensions.x < bounds.xmin or
+                    segmented_object.bounding_volume.dimensions.x > bounds.xmax or
+                    segmented_object.bounding_volume.dimensions.y < bounds.ymin or
+                    segmented_object.bounding_volume.dimensions.y > bounds.ymax or
+                    segmented_object.bounding_volume.dimensions.z < bounds.zmin or
+                    segmented_object.bounding_volume.dimensions.z > bounds.zmax):
                 continue
 
             # I think we've found the object!
