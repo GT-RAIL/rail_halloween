@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   rail_people_detection_msgs
   rospy
   std_msgs
+  task_executor
 )
 
 ## System dependencies are found with CMake's conventions

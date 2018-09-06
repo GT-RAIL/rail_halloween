@@ -13,6 +13,7 @@ from task_executor.tasks import Task
 
 from actionlib_msgs.msg import GoalID
 from task_executor.msg import ExecuteAction
+from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceGoal
 from std_srvs.srv import Trigger, TriggerResponse
 
 
@@ -32,6 +33,10 @@ class TaskServer(object):
         self._reload_service = rospy.Service('~reload', Trigger, self.reload)
         self.reload(None)
 
+        # Instantiate a connection to the arbitration server
+        self._arbitration_client = \
+            actionlib.SimpleActionClient("arbitrator", RequestAssistanceAction)
+
         # Instantiate the action server
         self._server = actionlib.SimpleActionServer(
             rospy.get_name(),
@@ -41,6 +46,10 @@ class TaskServer(object):
         )
 
     def start(self):
+        rospy.loginfo("Connecting to assistance arbitrator...")
+        self._arbitration_client.wait_for_server()
+        rospy.loginfo("...assistance arbitrator connected")
+
         self._server.start()
         rospy.loginfo("Executor node ready...")
 

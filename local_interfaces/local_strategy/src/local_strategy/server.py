@@ -9,9 +9,14 @@ import rospy
 import actionlib
 
 from actionlib_msgs.msg import GoalStatus
-from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceResult
+from assistance_msgs.msg import RequestAssistanceAction
 from rail_people_detection_msgs.msg import Person, DetectionContext
 
+from task_executor.actions import default_actions
+
+
+# The server performs local behaviours to resume execution after contact with
+# local humans
 
 class LocalRecoveryServer(object):
     """
@@ -38,12 +43,27 @@ class LocalRecoveryServer(object):
             self._on_closest_person
         )
 
+        # Initialize the actions that we are interested in using
+        self.actions = default_actions
+        self.actions.init()
+
     def start(self):
         self._server.start()
+        rospy.loginfo("Local strategy node ready...")
 
     def execute(self, goal):
         """Execute the request for assistance"""
-        pass
+        result = self._server.get_default_result()
+        result.stats.request_received = rospy.Time.now()
+
+        # TODO: The actual error recovery mechanism
+        # First we look for a person
+
+        # Then we solicit help from them
+        result.stats.request_acked = rospy.Time.now()
+
+        result.stats.request_complete = rospy.Time.now()
+        self._server.set_succeeded(result)
 
     def stop(self):
         pass

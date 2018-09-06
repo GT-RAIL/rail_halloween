@@ -3,26 +3,29 @@
   <arg name="sim" default="false" />
   <arg name="debug" default="false" />
 
-  <!-- Args to start different nodes -->
+  <!-- Args to start different capabilities -->
   <arg name="start_all" default="false" />
-  <arg name="task_executor" default="$(arg start_all)" />
   <arg name="navigation" default="$(arg start_all)" />
   <arg name="perception" default="$(arg start_all)" />
   <arg name="arm" default="$(arg start_all)" />
   <arg name="people" default="$(arg start_all)" />
   <arg name="sound" default="$(arg start_all)" />
+  <arg name="task_executor" default="$(arg start_all)" />
+  <arg name="arbitrator" default="$(arg task_executor)" />
+  <arg name="local_strategy" default="$(arg task_executor)" />
+  <arg name="remote_strategy" default="$(arg task_executor)" />
 
   <!-- Common args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
   <arg name="grasp_classifier_file" value="random_forest.pkl" />
   <arg name="segmentation_config" value="$(find task_executor)/config/zones.yaml" />
-  <arg name="tasks_config" value="$(find task_executor)/config/tasks.yaml" />
+  <arg name="task_config" value="$(find task_executor)/config/tasks.yaml" />
 
   <!-- Simulation vs. non simulation args -->
-  <arg name="data_config" default="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
-  <arg name="map_file" default="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
-  <arg name="data_config" default="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
-  <arg name="map_file" default="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
+  <arg name="data_config" value="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
+  <arg name="map_file" value="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
+  <arg name="data_config" value="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
+  <arg name="map_file" value="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
 
 
   <!-- Navigation -->
@@ -79,14 +82,18 @@
     <node name="sound_play" pkg="sound_play" type="soundplay_node.py" />
   </group>
 
-  <!-- Task Execution -->
-  <group if="$(arg task_executor)">
-    <node name="task_executor" pkg="task_executor" type="server_node.py" output="screen">
-      <rosparam command="load" file="$(arg tasks_config)" />
-    </node>
+  <!-- Local recovery strategy -->
+  <include file="$(find local_strategy)/launch/recovery_strategy.launch" if="$(arg local_strategy)">
+  </include>
 
-    <node name="database" pkg="task_executor" type="database_node.py">
-      <rosparam command="load" file="$(arg data_config)" />
-    </node>
-  </group>
+  <!-- Assistance arbitration -->
+  <include file="$(find assistance_arbitrator)/launch/arbitrator.launch" if="$(arg arbitrator)">
+  </include>
+
+  <!-- Task Execution -->
+  <include file="$(find task_executor)/launch/task_executor.launch" if="$(arg task_executor)">
+    <arg name="sim" value="$(arg sim)" />
+    <arg name="task_config" value="$(arg task_config)" />
+    <arg name="data_config" value="$(arg data_config)" />
+  </include>
 </launch>
