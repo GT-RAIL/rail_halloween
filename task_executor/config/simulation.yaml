@@ -182,6 +182,11 @@ tasks:
       params:
         height: 0.0
 
+    - action: beep
+      params:
+        beep: happy
+        async: true
+
     - task: approach
       params:
         pre_loc: locations.pre_table1
@@ -191,6 +196,11 @@ tasks:
       params:
         pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
+    - action: beep
+      params:
+        beep: shocked
+        async: true
+
     - task: perceive
       params:
         obj: objects.cube
@@ -198,15 +208,30 @@ tasks:
       - cube_idx
       - grasps
 
+    - action: beep
+      params:
+        beep: unsure
+        async: true
+
     - action: pick
       params:
         cube_idx: var.cube_idx
         grasps: var.grasps
 
+    - action: beep
+      params:
+        beep: happy
+        async: true
+
     - task: depart
       params:
         loc: locations.table1
         post_loc: locations.post_table1
+
+    - action: beep
+      params:
+        beep: happy
+        async: true
 
     - task: approach
       params:
@@ -217,9 +242,23 @@ tasks:
       params:
         pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
 
+    - action: beep
+      params:
+        beep: unsure
+        async: true
+
     - action: place
+
+    - action: beep
+      params:
+        beep: happy
+        async: true
 
     - task: depart
       params:
         loc: locations.table2
         post_loc: locations.post_table2
+
+    - action: beep
+      params:
+        beep: happy

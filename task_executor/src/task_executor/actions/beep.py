@@ -16,7 +16,7 @@ class BeepAction(AbstractStep):
         self._beep_client = SoundClient()
         self._stopped = False
 
-    def run(self, beep):
+    def run(self, beep, async=False):
         # Check to see if we know about this beep type
         if type(beep) != str \
                 or beep.upper() not in self._beep_client.get_beep_names():
@@ -29,8 +29,14 @@ class BeepAction(AbstractStep):
         beep = beep.upper()
         rospy.loginfo("Playing beep: {}".format(beep))
 
-        # Send the command to play the beep and wait
+        # Send the command to play the beep and wait if not async. If async,
+        # set as succeeded and exit
         self._beep_client.beep(beep, blocking=False)
+        if async:
+            yield self.set_succeeded()
+            raise StopIteration()
+
+        # If we are to block until the client is done running...
         while self._beep_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             if self._stopped:
                 break
