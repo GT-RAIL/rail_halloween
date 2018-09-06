@@ -56,6 +56,8 @@ class LocalRecoveryServer(object):
         result = self._server.get_default_result()
         result.stats.request_received = rospy.Time.now()
 
+        rospy.loginfo("Assistance Request: {}".format(goal))
+
         # TODO: The actual error recovery mechanism
         # First we look for a person
 

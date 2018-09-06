@@ -1,7 +1,7 @@
 # The goal to send when requesting for help
 
-# A header indicating the time and the seq of the assistance request
-std_msgs/Header header
+# A header indicating the time of the assistance request
+time stamp
 
 # The component that created the request
 string component

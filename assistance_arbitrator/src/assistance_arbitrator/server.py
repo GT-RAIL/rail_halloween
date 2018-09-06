@@ -44,12 +44,15 @@ class AssistanceArbitrationServer(object):
         """Arbitrate an incoming request for assistance"""
         request_received = rospy.Time.now()
 
-        # Forward directly to the local strategy client
+        # Forward directly to the local strategy client. Preempt if a preempt
+        # request has also appeared
         self._local_strategy_client.send_goal(goal)
-        self._local_strategy_client.wait_for_result()
-        status = self._local_strategy_client.get_state()
+        while not self._local_strategy_client.wait_for_result(rospy.Duration(0.5)):
+            if self._server.is_preempt_requested():
+                self._local_strategy_client.cancel_goal()
 
         # Update the result
+        status = self._local_strategy_client.get_state()
         result = self._local_strategy_client.get_result()
         result.stats.request_received = request_received
 

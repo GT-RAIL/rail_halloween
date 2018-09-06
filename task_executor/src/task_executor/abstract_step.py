@@ -44,6 +44,11 @@ class AbstractStep(object):
         self._status = GoalStatus.PREEMPTED
         return kwargs
 
+    @property
+    def status(self):
+        """Current status of this step"""
+        return self._status
+
     def is_running(self):
         """
         Checks to see if the current step is running. Counterpoint to

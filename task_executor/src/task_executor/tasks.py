@@ -17,7 +17,7 @@ class TaskContext(object):
     proceed.
     """
 
-    def __init__(self, start_idx=0, restart_child=False):
+    def __init__(self, start_idx=0, restart_child=True):
         """
         Args:
             start_idx (int) : >= 0. The step in the task spec from where exec
@@ -99,6 +99,7 @@ class Task(AbstractStep):
 
             # Check to see if this is an op. If so, run the op
             if step.has_key('op'):
+                self.current_step_def = self.executor = None
                 variables = getattr(ops, step['op'])(**step_params)
 
             # Otherwise, execute the action/task:
@@ -200,6 +201,18 @@ class Task(AbstractStep):
 
     def stop(self):
         self._stopped = True
+
+    def get_executor(self):
+        """
+        Return a `AbstractStep` that is either a task in the middle of an op, or
+        an action.
+        """
+        if self.current_executor is None:
+            return self
+        elif type(self.current_executor) == Task:
+            return self.current_executor.get_executor()
+        else:
+            return self.current_executor
 
     def _validate_params(self, expected_params, actual_params):
         return sorted(actual_params.keys()) == sorted(expected_params)
