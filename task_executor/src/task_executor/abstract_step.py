@@ -102,3 +102,16 @@ class AbstractStep(object):
         Stop the step. How this is handled by the client is up to the client.
         """
         raise NotImplementedError()
+
+    def __call__(self, **params):
+        """
+        Calls the run generator internally and returns this node's status. This
+        is a blocking call.
+
+        Returns:
+            actionlib_msgs/GoalStatus status_code
+        """
+        for variables in self.run(**params):
+            pass
+
+        return self.status

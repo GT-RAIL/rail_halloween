@@ -4,17 +4,21 @@
 from __future__ import print_function, division
 
 import pickle
+import numpy as np
 
 from threading import Lock
 
 import rospy
 import actionlib
+import tf
 
 from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import RequestAssistanceAction
 from rail_people_detection_msgs.msg import Person, DetectionContext
+from task_executor.msg import Bounds
 
 from task_executor.actions import default_actions
+from sound_interface import SoundClient
 
 
 # The server performs local behaviours to resume execution after contact with
@@ -34,6 +38,9 @@ class LocalRecoveryServer(object):
             self.execute,
             auto_start=False
         )
+
+        # tf
+        self._tf_listener = tf.TransformListener()
 
         # Person detections
         self.selected_person = None             # This is person that we select
@@ -59,11 +66,16 @@ class LocalRecoveryServer(object):
         result.stats.request_received = rospy.Time.now()
 
         context = pickle.loads(goal.context)
-        rospy.loginfo("Assistance Request: {} ({}) - {}"
+        rospy.loginfo("Serving Assistance Request for: {} ({}) - {}"
                       .format(goal.component, goal.component_status, context.keys()))
 
-        # TODO: The actual error recovery mechanism
+        # The actual error recovery mechanism
+        # Sad beep first
+        self.actions.beep(beep=SoundClient.BEEP_SAD, async=True)
+
         # First we look for a person
+        self._look_for_person()
+        self.actions.beep(beep=SoundClient.BEEP_EXCITED)
 
         # Then we solicit help from them
         result.stats.request_acked = rospy.Time.now()
@@ -73,6 +85,41 @@ class LocalRecoveryServer(object):
 
     def stop(self):
         pass
+
+    def _look_for_person(self):
+        # Define the region of interest where we expect to find a person
+        roi = Bounds(xmin=0.4, xmax=3.6, ymin=-2.4, ymax=2.4, zmin=1.4, zmax=2.0)
+        step_sizes = { 'x': 0.8, 'y': 1.2, 'z': 0.3 }
+
+        # Set the find person flag and iterate through the volume that we've
+        # defined. Make sure to exit the moment the person is found
+        self._select_closest_person = True
+        while self._select_closest_person:
+
+            z = roi.zmin
+            while z <= roi.zmax and self._select_closest_person:
+
+                x = roi.xmin
+                while x <= roi.xmax and self._select_closest_person:
+
+                    y = roi.ymin
+                    while y <= roi.ymax and self._select_closest_person:
+                        location = {'x': x, 'y': y, 'z': z, 'frame': 'base_link'}
+                        self.actions.look(pose=location)
+                        rospy.sleep(1.5)
+                        y += step_sizes['y']
+
+                    x += step_sizes['x']
+                    if not (z + step_sizes['z'] > roi.zmax and x > roi.xmax) \
+                            and self._select_closest_person:
+                        self.actions.beep(beep=SoundClient.BEEP_UNSURE, async=True)
+
+                z += step_sizes['z']
+
+            if self._select_closest_person:
+                self.actions.beep(beep=SoundClient.BEEP_CONCERNED, async=True)
+
+    # Subscribers
 
     def _on_closest_person(self, msg):
         self._last_closest_person = msg

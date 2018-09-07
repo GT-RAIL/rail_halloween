@@ -56,8 +56,10 @@
   <depend>geometry_msgs</depend>
   <depend>rail_people_detection_msgs</depend>
   <depend>rospy</depend>
+  <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>task_executor</depend>
+  <depend>tf</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
