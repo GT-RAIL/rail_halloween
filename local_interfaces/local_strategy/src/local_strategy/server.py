@@ -3,6 +3,8 @@
 
 from __future__ import print_function, division
 
+import pickle
+
 from threading import Lock
 
 import rospy
@@ -56,7 +58,9 @@ class LocalRecoveryServer(object):
         result = self._server.get_default_result()
         result.stats.request_received = rospy.Time.now()
 
-        rospy.loginfo("Assistance Request: {}".format(goal))
+        context = pickle.loads(goal.context)
+        rospy.loginfo("Assistance Request: {} ({}) - {}"
+                      .format(goal.component, goal.component_status, context.keys()))
 
         # TODO: The actual error recovery mechanism
         # First we look for a person

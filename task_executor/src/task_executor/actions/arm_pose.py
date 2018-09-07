@@ -26,7 +26,7 @@ class ArmPoseAction(AbstractStep):
         self._get_arm_pose_srv = rospy.ServiceProxy("database/arm_pose", GetArmPose)
         self._get_trajectory_srv = rospy.ServiceProxy("database/trajectory", GetTrajectory)
 
-        self._max_attempts = 5
+        self._max_attempts = 1
 
         rospy.loginfo("Connecting to arm_pose_executor...")
         self._pose_client.wait_for_server()

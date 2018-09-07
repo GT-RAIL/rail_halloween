@@ -6,8 +6,8 @@ time stamp
 # The component that created the request
 string component
 
-# The current status of the component
-actionlib_msgs/GoalStatus component_status
+# The current actionlib_msgs/GoalStatus status of the component
+uint8 component_status
 
 # The priority of the request. Lower is higher. This does not guarantee that
 # requests with a higher priority will be addressed immediately. That decision

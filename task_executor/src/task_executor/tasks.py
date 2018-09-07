@@ -146,8 +146,8 @@ class Task(AbstractStep):
                 # If the reason we stopped is a failure, then return
                 if executor.is_preempted():
                     rospy.logwarn(
-                        "Task {}, Step {}({}): PREEMPTED. Context: {}"
-                        .format(self.name, self.step_idx, step_name, variables)
+                        "Task {}, Step {}({}): PREEMPTED. Context Keys: {}"
+                        .format(self.name, self.step_idx, step_name, variables.keys())
                     )
                     yield self.set_preempted(
                         task=self.name,
@@ -159,8 +159,8 @@ class Task(AbstractStep):
 
                 if executor.is_aborted():
                     rospy.logerr(
-                        "Task {}, Step {}({}): FAIL. Context: {}"
-                        .format(self.name, self.step_idx, step_name, variables)
+                        "Task {}, Step {}({}): FAIL. Context Keys: {}"
+                        .format(self.name, self.step_idx, step_name, variables.keys())
                     )
                     yield self.set_aborted(
                         task=self.name,

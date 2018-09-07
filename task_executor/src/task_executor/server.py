@@ -112,13 +112,13 @@ class TaskServer(object):
 
                 # If the task has been preempted, then stop executing it
                 if task.is_preempted():
-                    rospy.logwarn("Task {}: PREEMPTED. Context: {}".format(task.name, variables))
+                    rospy.logwarn("Task {}: PREEMPTED. Context Keys: {}".format(task.name, variables.keys()))
                     self._server.set_preempted(result)
                     return
 
                 # If the task has failed, request assistance and resume based
                 if task.is_aborted():
-                    rospy.logerr("Task {}: FAIL. Context: {}".format(task.name, variables))
+                    rospy.logerr("Task {}: FAIL. Context Keys: {}".format(task.name, variables.keys()))
                     request_assistance = True
 
             except Exception as e:
@@ -153,11 +153,11 @@ class TaskServer(object):
                 assist_status = self._arbitration_client.get_state()
                 assist_result = self._arbitration_client.get_result()
 
-                if status == GoalStatus.PREEMPTED:
+                if assist_status == GoalStatus.PREEMPTED:
                     rospy.logwarn("Assistance request PREEMPTED. Exiting.")
                     self._server.set_preempted(result)
                     return
-                elif status != GoalStatus.SUCCEEDED:  # Most likely ABORTED
+                elif assist_status != GoalStatus.SUCCEEDED:  # Most likely ABORTED
                     rospy.logerr("Assistance request ABORTED. Exiting.")
                     self._server.set_aborted(result)
                     return
@@ -177,7 +177,7 @@ class TaskServer(object):
 
         # Check to see if the task aborted
         if task.is_aborted():
-            rospy.logerr("Task {}: FAIL. Context: {}".format(task.name, variables))
+            rospy.logerr("Task {}: FAIL. Context Keys: {}".format(task.name, variables.keys()))
             self._server.set_aborted(result)
             return
 

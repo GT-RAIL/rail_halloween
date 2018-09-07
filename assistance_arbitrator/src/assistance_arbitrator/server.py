@@ -3,11 +3,13 @@
 
 from __future__ import print_function, division
 
+import pickle
+
 import rospy
 import actionlib
 
 from actionlib_msgs.msg import GoalStatus
-from assistance_msgs.msg import RequestAssistanceAction
+from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceFeedback
 
 
 # The server arbitrates who to send the request to
@@ -43,6 +45,10 @@ class AssistanceArbitrationServer(object):
     def execute(self, goal):
         """Arbitrate an incoming request for assistance"""
         request_received = rospy.Time.now()
+
+        # Pick the strategy
+        feedback = RequestAssistanceFeedback(strategy="local_strategy")
+        self._server.publish_feedback(feedback)
 
         # Forward directly to the local strategy client. Preempt if a preempt
         # request has also appeared
