@@ -65,7 +65,9 @@ class LocalRecoveryServer(object):
         result = self._server.get_default_result()
         result.stats.request_received = rospy.Time.now()
 
-        context = pickle.loads(goal.context)
+        # Abuse python type conversion to change the data-type of the context
+        # member
+        goal.context = pickle.loads(goal.context)
         rospy.loginfo("Serving Assistance Request for: {} ({}) - {}"
                       .format(goal.component, goal.component_status, context.keys()))
 
@@ -119,8 +121,6 @@ class LocalRecoveryServer(object):
             if self._select_closest_person:
                 self.actions.beep(beep=SoundClient.BEEP_CONCERNED, async=True)
 
-    # Subscribers
-
     def _on_closest_person(self, msg):
         self._last_closest_person = msg
 
@@ -133,3 +133,15 @@ class LocalRecoveryServer(object):
         if msg.detection_context.pose_source == DetectionContext.POSE_FROM_FACE:
             self.selected_person = self._last_closest_person
             self._select_closest_person = False
+
+    def _enter_compliant_mode(self):
+        pass
+
+    def _exit_compliant_mode(self):
+        pass
+
+    def _get_speech_tokens_from_goal(self, goal):
+        # Given a goal, generate the tokens relevant to asking for help.
+        # The target speech is: "<component> at step <step_num> failed."
+        # "the most likely cause is <cause>"
+        pass

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Speech for Ava
+# Interface to sounds for Ava
 
 from __future__ import print_function, division
 
