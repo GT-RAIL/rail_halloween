@@ -140,23 +140,23 @@ tasks:
       params:
         height: 0.4
 
-    - action: arm
-      params:
-        poses: poses.tuck
+    # - action: arm
+    #   params:
+    #     poses: poses.tuck
 
-    - action: torso
-      params:
-        height: 0.0
+    # - action: torso
+    #   params:
+    #     height: 0.0
 
-    - action: beep
-      params:
-        beep: playful
-        async: true
+    # - action: beep
+    #   params:
+    #     beep: playful
+    #     async: true
 
-    - task: approach
-      params:
-        pre_loc: locations.pre_table1
-        loc: locations.table1
+    # - task: approach
+    #   params:
+    #     pre_loc: locations.pre_table1
+    #     loc: locations.table1
 
     - action: look
       params:

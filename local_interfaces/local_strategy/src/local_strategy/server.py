@@ -46,13 +46,6 @@ class LocalRecoveryServer(object):
         # Initialize the actions
         self.actions.init()
 
-        # Initialize our connections to the robot driver
-        rospy.loginfo("Connecting to robot driver...")
-        self._arm_breaker_srv.wait_for_service()
-        self._base_breaker_srv.wait_for_service()
-        self._gripper_breaker_srv.wait_for_service()
-        rospy.loginfo("...robot driver connected")
-
         # Finally, start our action server to indicate that we're ready
         self._server.start()
         rospy.loginfo("Local strategy node ready...")
@@ -89,35 +82,20 @@ class LocalRecoveryServer(object):
 
         # Show exceitement and solicit help from them
         self.actions.beep(beep=SoundClient.BEEP_EXCITED)
+
+        # If they agree to provide help, then become compliant until they signal
+        # that they are done
         result.stats.request_acked = rospy.Time.now()
-        self._enter_compliant_mode()
+        self.actions.compliant_mode(enable=True)
 
         # Return when the request for help is completed
-        self._exit_compliant_mode()
+        self.actions.compliant_mode(enable=False)
         result.resume_hint = RequestAssistanceResult.RESUME_CONTINUE
         result.stats.request_complete = rospy.Time.now()
         self._server.set_succeeded(result)
 
     def stop(self):
         pass
-
-    def _enter_compliant_mode(self):
-        # Send a disable message to the base and gripper
-        self._base_breaker_srv(enable=False)
-        self._gripper_breaker_srv(enable=False)
-
-        # Disable and reenable the arm so that we have gravity comp
-        self._arm_breaker_srv(enable=False)
-        self._arm_breaker_srv(enable=True)
-
-        rospy.loginfo("Robot is now in compliant mode")
-
-    def _exit_compliant_mode(self):
-        # Reenable the base and the gripper
-        self._base_breaker_srv(enable=True)
-        self._gripper_breaker_srv(enable=True)
-
-        rospy.loginfo("Robot has exited compliant mode")
 
     def _get_speech_tokens_from_goal(self, goal):
         # Given a goal, generate the tokens relevant to asking for help.

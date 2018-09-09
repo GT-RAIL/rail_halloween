@@ -17,6 +17,7 @@ from .place import PlaceAction
 from .beep import BeepAction
 from .speak import SpeakAction
 from .find_closest_person import FindClosestPersonAction
+from .compliant_mode import CompliantModeAction
 
 
 class Actions(object):
@@ -54,5 +55,6 @@ default_actions_dict = {
     'beep': BeepAction(),
     'speak': SpeakAction(),
     'find_closest_person': FindClosestPersonAction(),
+    'compliant_mode': CompliantModeAction(),
 }
 default_actions = Actions(default_actions_dict)
