@@ -164,7 +164,10 @@ class TaskServer(object):
                 else:  # GoalStatus.SUCCEEDED
                     rospy.loginfo("Assistance request COMPLETED. Resume Hint: {}"
                                   .format(assist_result.resume_hint))
-                    if assist_result.resume_hint == RequestAssistanceResult.RESUME_RETRY:
+                    if assist_result.resume_hint == RequestAssistanceResult.RESUME_NEXT:
+                        # Set the execution context to the next step
+                        execution_context = TaskContext(start_idx=task.step_idx + 1, restart_child=True)
+                    elif assist_result.resume_hint == RequestAssistanceResult.RESUME_RETRY:
                         # Reset the execution context
                         execution_context = TaskContext(restart_child=True)
                     elif assist_result.resume_hint == RequestAssistanceResult.RESUME_CONTINUE:

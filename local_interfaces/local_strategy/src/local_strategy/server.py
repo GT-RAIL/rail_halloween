@@ -13,10 +13,10 @@ import actionlib
 import tf
 
 from actionlib_msgs.msg import GoalStatus
-from assistance_msgs.msg import RequestAssistanceAction
+from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceResult
 from rail_people_detection_msgs.msg import Person, DetectionContext
 from task_executor.msg import Bounds
-from std_srvs.srv import SetBool
+from power_msgs.srv import BreakerCommand
 
 from task_executor.actions import default_actions
 from sound_interface import SoundClient
@@ -54,9 +54,9 @@ class LocalRecoveryServer(object):
         )
 
         # Service to communicate with the breakers
-        self._arm_breaker_srv = rospy.ServiceProxy("/arm_breaker", SetBool)
-        self._base_breaker_srv = rospy.ServiceProxy("/base_breaker", SetBool)
-        self._gripper_breaker_srv = rospy.ServiceProxy("/gripper_breaker", SetBool)
+        self._arm_breaker_srv = rospy.ServiceProxy("/arm_breaker", BreakerCommand)
+        self._base_breaker_srv = rospy.ServiceProxy("/base_breaker", BreakerCommand)
+        self._gripper_breaker_srv = rospy.ServiceProxy("/gripper_breaker", BreakerCommand)
 
         # The actions that we are interested in using
         self.actions = default_actions
@@ -92,7 +92,11 @@ class LocalRecoveryServer(object):
         self.actions.beep(beep=SoundClient.BEEP_SAD, async=True)
 
         # First we look for a person
-        self._look_for_person()
+        for status in self.look_for_person():
+            if self._server.is_preempt_requested() or not self._server.is_active():
+                self._server.set_preempted(result)
+                return
+
         self.actions.beep(beep=SoundClient.BEEP_EXCITED)
 
         # Then we solicit help from them
@@ -101,13 +105,14 @@ class LocalRecoveryServer(object):
 
         # Return when the request for help is completed
         self._exit_compliant_mode()
+        result.resume_hint = RequestAssistanceResult.RESUME_CONTINUE
         result.stats.request_complete = rospy.Time.now()
         self._server.set_succeeded(result)
 
     def stop(self):
         pass
 
-    def _look_for_person(self):
+    def look_for_person(self):
         # Define the region of interest where we expect to find a person
         roi = Bounds(xmin=0.4, xmax=3.6, ymin=-2.4, ymax=2.4, zmin=1.4, zmax=2.0)
         step_sizes = { 'x': 0.8, 'y': 1.2, 'z': 0.3 }
@@ -127,7 +132,12 @@ class LocalRecoveryServer(object):
                     while y <= roi.ymax and self._select_closest_person:
                         location = {'x': x, 'y': y, 'z': z, 'frame': 'base_link'}
                         self.actions.look(pose=location)
-                        rospy.sleep(1.5)
+
+                        # Wait for a detection, but yield control
+                        start_time = rospy.Time.now()
+                        while rospy.Time.now() <= start_time + rospy.Duration(1.5):
+                            yield GoalStatus.ACTIVE
+
                         y += step_sizes['y']
 
                     x += step_sizes['x']
@@ -155,19 +165,19 @@ class LocalRecoveryServer(object):
 
     def _enter_compliant_mode(self):
         # Send a disable message to the base and gripper
-        self._base_breaker_srv(False)
-        self._gripper_breaker_srv(False)
+        self._base_breaker_srv(enable=False)
+        self._gripper_breaker_srv(enable=False)
 
         # Disable and reenable the arm so that we have gravity comp
-        self._arm_breaker_srv(False)
-        self._arm_breaker_srv(True)
+        self._arm_breaker_srv(enable=False)
+        self._arm_breaker_srv(enable=True)
 
         rospy.loginfo("Robot is now in compliant mode")
 
     def _exit_compliant_mode(self):
         # Reenable the base and the gripper
-        self._base_breaker_srv(True)
-        self._gripper_breaker_srv(True)
+        self._base_breaker_srv(enable=True)
+        self._gripper_breaker_srv(enable=True)
 
         rospy.loginfo("Robot has exited compliant mode")
 
