@@ -8,6 +8,7 @@ project(simulation_helpers)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  fetch_driver_msgs
   geometry_msgs
   rail_people_detection_msgs
   rospy
