@@ -10,7 +10,7 @@ import rospy
 
 from fetch_driver_msgs.msg import RobotState
 from power_msgs.msg import BreakerState
-from std_srvs.srv import SetBool, SetBoolResponse  # FIXME: This is not the one used on the Fetch?
+from power_msgs.srv import BreakerCommand, BreakerCommandResponse
 
 
 # This is the class that acts as the stub to the robot driver
@@ -23,7 +23,7 @@ class SimulatedRobotDriver(object):
 
     def __init__(self):
         # Internal parameters for the functions of this driver
-        self._publish_rate = 20  # Hz rate. TODO: Match the robot value
+        self._publish_rate = 50  # Hz rate.
 
         # The state of the arm, gripper, and base breakers
         self._arm_breaker_state = BreakerState(
@@ -47,48 +47,39 @@ class SimulatedRobotDriver(object):
         self._robot_state_lock = Lock()
 
         # The services to set and reset the breakers
-        self._arm_breaker_service = rospy.Service("/arm_breaker", SetBool, self.set_arm_breaker)
-        self._base_breaker_service = rospy.Service("/base_breaker", SetBool, self.set_base_breaker)
-        self._gripper_breaker_service = rospy.Service("/gripper_breaker", SetBool, self.set_gripper_breaker)
+        self._arm_breaker_service = rospy.Service("/arm_breaker", BreakerCommand, self.set_arm_breaker)
+        self._base_breaker_service = rospy.Service("/base_breaker", BreakerCommand, self.set_base_breaker)
+        self._gripper_breaker_service = rospy.Service("/gripper_breaker", BreakerCommand, self.set_gripper_breaker)
 
         # Publishers
         self._robot_state_publisher = rospy.Publisher('/robot_state', RobotState, queue_size=1)
 
     def _calculate_robot_state(self):
         # Make sure to acquire the lock to the robot state before calling this
-        # function. TODO: Make sure this matches the robot
-        self._robot_state.ready = (
-            self._arm_breaker_state.state == BreakerState.STATE_ENABLED
-            and self._base_breaker_state.state == BreakerState.STATE_ENABLED
-            and self._gripper_breaker_state.state == BreakerState.STATE_ENABLED
-        )
-        self._robot_state.runstopped = (
+        # function
+        self._robot_state.faulted = (
             self._arm_breaker_state.state == BreakerState.STATE_DISABLED
             or self._base_breaker_state.state == BreakerState.STATE_DISABLED
             or self._gripper_breaker_state.state == BreakerState.STATE_DISABLED
         )
-        self._robot_state.faulted = not (
-            self._robot_state.ready
-            or self._robot_state.runstopped
-        )
 
     def set_arm_breaker(self, req):
         with self._robot_state_lock:
-            self._arm_breaker_state.state = BreakerState.STATE_ENABLED if req.data else BreakerState.STATE_DISABLED
+            self._arm_breaker_state.state = BreakerState.STATE_ENABLED if req.enable else BreakerState.STATE_DISABLED
             self._calculate_robot_state()
-        return SetBoolResponse(success=True)
+            return BreakerCommandResponse(self._arm_breaker_state)
 
     def set_base_breaker(self, req):
         with self._robot_state_lock:
-            self._base_breaker_state.state = BreakerState.STATE_ENABLED if req.data else BreakerState.STATE_DISABLED
+            self._base_breaker_state.state = BreakerState.STATE_ENABLED if req.enable else BreakerState.STATE_DISABLED
             self._calculate_robot_state()
-        return SetBoolResponse(success=True)
+            return BreakerCommandResponse(self._base_breaker_state)
 
     def set_gripper_breaker(self, req):
         with self._robot_state_lock:
-            self._gripper_breaker_state.state =BreakerState.STATE_ENABLED if req.data else BreakerState.STATE_DISABLED
+            self._gripper_breaker_state.state =BreakerState.STATE_ENABLED if req.enable else BreakerState.STATE_DISABLED
             self._calculate_robot_state()
-        return SetBoolResponse(success=True)
+            return BreakerCommandResponse(self._gripper_breaker_state)
 
     def spin(self):
         rate = rospy.Rate(self._publish_rate)
