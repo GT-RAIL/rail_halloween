@@ -27,7 +27,6 @@
   <arg name="data_config" value="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
   <arg name="map_file" value="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
 
-
   <!-- Navigation -->
   <group if="$(arg navigation)">
     <include file="$(find fetch_navigation)/launch/fetch_nav.launch">
@@ -84,16 +83,23 @@
 
   <!-- Local recovery strategy -->
   <include file="$(find local_strategy)/launch/recovery_strategy.launch" if="$(arg local_strategy)">
+    <arg name="sim" value="$(arg sim)" />
   </include>
 
   <!-- Assistance arbitration -->
   <include file="$(find assistance_arbitrator)/launch/arbitrator.launch" if="$(arg arbitrator)">
+    <arg name="sim" value="$(arg sim)" />
   </include>
 
   <!-- Task Execution -->
-  <include file="$(find task_executor)/launch/task_executor.launch" if="$(arg task_executor)">
-    <arg name="sim" value="$(arg sim)" />
-    <arg name="task_config" value="$(arg task_config)" />
-    <arg name="data_config" value="$(arg data_config)" />
-  </include>
+  <group if="$(arg task_executor)">
+    <include file="$(find task_executor)/launch/task_executor.launch">
+      <arg name="sim" value="$(arg sim)" />
+      <arg name="task_config" value="$(arg task_config)" />
+      <arg name="data_config" value="$(arg data_config)" />
+    </include>
+
+    <!-- Simulate the robot driver if this is in simulation -->
+    <node name="robot_driver" pkg="simulation_helpers" type="simulated_robot_driver.py" if="$(arg sim)" />
+  </group>
 </launch>

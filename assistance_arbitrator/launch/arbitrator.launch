@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <launch>
+  <arg name="sim" default="false" />
+
   <!-- Launch the arbitration server -->
   <node name="arbitrator" pkg="assistance_arbitrator" type="server_node.py" output="screen" />
 </launch>

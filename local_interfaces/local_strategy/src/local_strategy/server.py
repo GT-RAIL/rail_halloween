@@ -16,6 +16,7 @@ from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import RequestAssistanceAction
 from rail_people_detection_msgs.msg import Person, DetectionContext
 from task_executor.msg import Bounds
+from std_srvs.srv import SetBool
 
 from task_executor.actions import default_actions
 from sound_interface import SoundClient
@@ -52,11 +53,26 @@ class LocalRecoveryServer(object):
             self._on_closest_person
         )
 
-        # Initialize the actions that we are interested in using
+        # Service to communicate with the breakers
+        self._arm_breaker_srv = rospy.ServiceProxy("/arm_breaker", SetBool)
+        self._base_breaker_srv = rospy.ServiceProxy("/base_breaker", SetBool)
+        self._gripper_breaker_srv = rospy.ServiceProxy("/gripper_breaker", SetBool)
+
+        # The actions that we are interested in using
         self.actions = default_actions
-        self.actions.init()
 
     def start(self):
+        # Initialize the actions
+        self.actions.init()
+
+        # Initialize our connections to the robot driver
+        rospy.loginfo("Connecting to robot driver...")
+        self._arm_breaker_srv.wait_for_service()
+        self._base_breaker_srv.wait_for_service()
+        self._gripper_breaker_srv.wait_for_service()
+        rospy.loginfo("...robot driver connected")
+
+        # Finally, start our action server to indicate that we're ready
         self._server.start()
         rospy.loginfo("Local strategy node ready...")
 
@@ -69,7 +85,7 @@ class LocalRecoveryServer(object):
         # member
         goal.context = pickle.loads(goal.context)
         rospy.loginfo("Serving Assistance Request for: {} ({}) - {}"
-                      .format(goal.component, goal.component_status, context.keys()))
+                      .format(goal.component, goal.component_status, goal.context.keys()))
 
         # The actual error recovery mechanism
         # Sad beep first
@@ -81,7 +97,10 @@ class LocalRecoveryServer(object):
 
         # Then we solicit help from them
         result.stats.request_acked = rospy.Time.now()
+        self._enter_compliant_mode()
 
+        # Return when the request for help is completed
+        self._exit_compliant_mode()
         result.stats.request_complete = rospy.Time.now()
         self._server.set_succeeded(result)
 
@@ -135,10 +154,22 @@ class LocalRecoveryServer(object):
             self._select_closest_person = False
 
     def _enter_compliant_mode(self):
-        pass
+        # Send a disable message to the base and gripper
+        self._base_breaker_srv(False)
+        self._gripper_breaker_srv(False)
+
+        # Disable and reenable the arm so that we have gravity comp
+        self._arm_breaker_srv(False)
+        self._arm_breaker_srv(True)
+
+        rospy.loginfo("Robot is now in compliant mode")
 
     def _exit_compliant_mode(self):
-        pass
+        # Reenable the base and the gripper
+        self._base_breaker_srv(True)
+        self._gripper_breaker_srv(True)
+
+        rospy.loginfo("Robot has exited compliant mode")
 
     def _get_speech_tokens_from_goal(self, goal):
         # Given a goal, generate the tokens relevant to asking for help.
