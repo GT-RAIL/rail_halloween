@@ -60,9 +60,6 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>task_executor</depend>
-  <depend>tf</depend>
-
-  <exec_depend>simulation_helpers</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

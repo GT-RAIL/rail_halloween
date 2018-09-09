@@ -80,6 +80,8 @@ The different keys and values in the errors that are sent with the assistance re
 - **step_name** - the name of the task step that was executing when we exited. Only task
 - **expected_vars** - the expected vars that the task should have provided. Only task
 - **received_vars** - the vars that the task actually provided. Only task
+- **max_duration** - the max duration allowed (in seconds, float) to find the nearest person. Only find_closest_person
+- **search_duration** - the duration (in seconds, float) spent searching for the nearest person. Only find_closest_person
 
 
 ## TODO

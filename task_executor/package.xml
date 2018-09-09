@@ -66,6 +66,7 @@
   <depend>trajectory_msgs</depend>
 
   <exec_depend>message_generation</exec_depend>
+  <exec_depend>simulation_helpers</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

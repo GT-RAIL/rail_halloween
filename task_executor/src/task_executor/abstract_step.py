@@ -109,9 +109,10 @@ class AbstractStep(object):
         is a blocking call.
 
         Returns:
-            actionlib_msgs/GoalStatus status_code
+            status - actionlib_msgs/GoalStatus status_code
+            variables - the last yielded dictionary from the run command
         """
         for variables in self.run(**params):
             pass
 
-        return self.status
+        return (self.status, variables,)

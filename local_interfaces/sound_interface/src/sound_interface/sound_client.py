@@ -225,7 +225,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         sound.command = SoundRequest.PLAY_STOP
         sound.arg = ""
 
-        self._play(sound)
+        self._play(sound, blocking=True)
 
     def _play(self, sound, blocking, **kwargs):
         # Send the command

@@ -16,6 +16,7 @@ from .arm_pose import ArmPoseAction
 from .place import PlaceAction
 from .beep import BeepAction
 from .speak import SpeakAction
+from .find_closest_person import FindClosestPersonAction
 
 
 class Actions(object):
@@ -52,5 +53,6 @@ default_actions_dict = {
     'place': PlaceAction(),
     'beep': BeepAction(),
     'speak': SpeakAction(),
+    'find_closest_person': FindClosestPersonAction(),
 }
 default_actions = Actions(default_actions_dict)
