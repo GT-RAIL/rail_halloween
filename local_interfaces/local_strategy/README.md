@@ -38,9 +38,11 @@ The different keys and values in the errors that are sent with the assistance re
 - **goal** - transformed version of argument sent to run
     - arm:pose_waypoints - the series of waypoints to take the arm to
     - beep:beep - name of the beep key
+    - find_closest_person:max_duration - the max amount of time, float, within which to find a person
     - find_grasps:segmented_obj - of type rail_manipulation_msgs/SegmentedObject
     - find_object:obj - the string name of the object in the DB
     - gripper:command - open/close command sent
+    - listen:expected_cmd - the speech command that we were expecting
     - look:pose - dictionary of the pose to look at
     - move:coords - list of waypoints to visit
     - pick:cube_idx - the index of the cube in the segmented objects list
@@ -80,8 +82,8 @@ The different keys and values in the errors that are sent with the assistance re
 - **step_name** - the name of the task step that was executing when we exited. Only task
 - **expected_vars** - the expected vars that the task should have provided. Only task
 - **received_vars** - the vars that the task actually provided. Only task
-- **max_duration** - the max duration allowed (in seconds, float) to find the nearest person. Only find_closest_person
 - **search_duration** - the duration (in seconds, float) spent searching for the nearest person. Only find_closest_person
+- **received_cmd** - the command received from the speech listener. Only listen
 
 
 ## TODO

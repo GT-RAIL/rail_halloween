@@ -10,6 +10,7 @@
   <arg name="arm" default="$(arg start_all)" />
   <arg name="people" default="$(arg start_all)" />
   <arg name="sound" default="$(arg start_all)" />
+  <arg name="speech" default="$(arg start_all)" />
   <arg name="task_executor" default="$(arg start_all)" />
   <arg name="arbitrator" default="$(arg task_executor)" />
   <arg name="local_strategy" default="$(arg task_executor)" />
@@ -26,6 +27,9 @@
   <arg name="map_file" value="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
   <arg name="data_config" value="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
   <arg name="map_file" value="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
+
+  <!-- Other args -->
+  <arg name="speech_gui" default="$(arg sim)" />
 
   <!-- Navigation -->
   <group if="$(arg navigation)">
@@ -79,6 +83,13 @@
   <!-- Sound Play -->
   <group if="$(arg sound)">
     <node name="sound_play" pkg="sound_play" type="soundplay_node.py" />
+  </group>
+
+  <!-- Speech recognition -->
+  <group if="$(arg speech)">
+    <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
+      <arg name="speech_gui" value="$(arg speech_gui)" />
+    </include>
   </group>
 
   <!-- Local recovery strategy -->

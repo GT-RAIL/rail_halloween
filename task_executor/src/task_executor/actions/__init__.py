@@ -5,19 +5,20 @@ from __future__ import print_function
 
 from task_executor.abstract_step import AbstractStep
 
-from .move import MoveAction
-from .torso import TorsoAction
-from .look import LookAction
-from .gripper import GripperAction
-from .find_object import FindObjectAction
-from .find_grasps import FindGraspsAction
-from .pick import PickAction
 from .arm_pose import ArmPoseAction
-from .place import PlaceAction
 from .beep import BeepAction
-from .speak import SpeakAction
-from .find_closest_person import FindClosestPersonAction
 from .compliant_mode import CompliantModeAction
+from .find_closest_person import FindClosestPersonAction
+from .find_grasps import FindGraspsAction
+from .find_object import FindObjectAction
+from .gripper import GripperAction
+from .listen import ListenAction
+from .look import LookAction
+from .move import MoveAction
+from .pick import PickAction
+from .place import PlaceAction
+from .speak import SpeakAction
+from .torso import TorsoAction
 
 
 class Actions(object):
@@ -43,18 +44,19 @@ class Actions(object):
 # The default actions contain all the action interfaces that are known to this
 # package
 default_actions_dict = {
-    'move': MoveAction(),
-    'torso': TorsoAction(),
-    'look': LookAction(),
-    'gripper': GripperAction(),
-    'find_object': FindObjectAction(),
-    'find_grasps': FindGraspsAction(),
-    'pick': PickAction(),
     'arm': ArmPoseAction(),
-    'place': PlaceAction(),
     'beep': BeepAction(),
-    'speak': SpeakAction(),
-    'find_closest_person': FindClosestPersonAction(),
     'compliant_mode': CompliantModeAction(),
+    'find_closest_person': FindClosestPersonAction(),
+    'find_grasps': FindGraspsAction(),
+    'find_object': FindObjectAction(),
+    'gripper': GripperAction(),
+    'listen': ListenAction(),
+    'look': LookAction(),
+    'move': MoveAction(),
+    'pick': PickAction(),
+    'place': PlaceAction(),
+    'speak': SpeakAction(),
+    'torso': TorsoAction(),
 }
 default_actions = Actions(default_actions_dict)

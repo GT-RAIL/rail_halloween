@@ -99,34 +99,21 @@ tasks:
   # Task used for testing subsets of the main task
   test:
     steps:
-    - action: speak
-      params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
+    - action: listen
+      var:
+      - cmd
 
-    - action: speak
+    - action: listen
       params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
-        affect: sad
+        expected_cmd: GREETING
+      var:
+      - cmd
 
-    - action: speak
+    - action: listen
       params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
-        affect: happy
-
-    - action: speak
-      params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
-        affect: angry
-
-    - action: speak
-      params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
-        affect: calm
-
-    - action: speak
-      params:
-        text: "A robot may not injure a human being or, through inaction, allow a human being to come to harm."
-        affect: nervous
+        expected_cmd: HEAR_CHECK
+      var:
+      - cmd
 
   # The main fetch and deliver task that we want to make robust
   main:
