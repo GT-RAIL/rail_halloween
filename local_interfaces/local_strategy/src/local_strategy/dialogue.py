@@ -46,6 +46,9 @@ class DialogueManager(object):
     POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD = 0.03
     POST_LOOK_SPEAK_WAIT = 1.5
 
+    # Return values
+    REQUEST_HELP_RESPONSE_KEY = 'agree_to_help'
+
     # Speech commands
     SPEECH_GREETING = 'GREETING'
     SPEECH_HEAR_CHECK = 'HEAR_CHECK'
@@ -65,6 +68,8 @@ class DialogueManager(object):
 Excuse me, I have encountered an error and need help in my task. Could you
 assist me?
     """
+    SAY_DID_NOT_UNDERSTAND = "Sorry, I did not understand that"
+    SAY_THATS_OK = "That's OK"
     SAY_THANKS = "Thank you!"
     SAY_INITIAL_REQUEST = """
 I am failing to complete {component}, which is step {step_num} in my task plan.
@@ -98,7 +103,7 @@ action", "Restart Task", and "Stop Executing"
 
         # Idle behaviours. These are normally always available, however, they
         # can be locked out during interactions
-        self._idle_behaviour_lock = Lock()
+        self._listen_behaviour_lock = Lock()
         self._idle_behaviour_thread = Thread(target=self.run_idle_behaviours)
 
     def start(self):
@@ -112,7 +117,7 @@ action", "Restart Task", and "Stop Executing"
         speech_generator = self.actions.listen.run()
         while not rospy.is_shutdown():
             rospy.sleep(0.1)
-            if not self._idle_behaviour_lock.acquire(False):
+            if not self._listen_behaviour_lock.acquire(False):
                 continue
 
             # Query the speech recognition interface for speech. If the speech
@@ -131,10 +136,12 @@ action", "Restart Task", and "Stop Executing"
                 speech_generator = self.actions.listen.run()
 
             # Remember to release the lock
-            self._idle_behaviour_lock.release()
+            self._listen_behaviour_lock.release()
 
-    def request_help(self, request, person):
-        with self._idle_behaviour_lock:
+    def request_help(self, person):
+        # Ternary variable. None: unknown, True: will help, False: won't help
+        person_will_help = None
+        with self._listen_behaviour_lock:
             # Set the person and start looking at them
             self._should_look_at_person = True
             self.person = person
@@ -144,10 +151,35 @@ action", "Restart Task", and "Stop Executing"
             while rospy.Time.now() - start_time <= rospy.Duration(DialogueManager.POST_LOOK_SPEAK_WAIT):
                 yield {}
 
-            for variables in self.actions.speak.run(text=DialogueManager.SAY_REQUEST_HELP):
-                yield variables
+            self.actions.speak(text=DialogueManager.SAY_REQUEST_HELP)
 
             # Wait for a response
+            while person_will_help is None:
+                for variables in self.actions.listen.run(
+                    expected_cmd=[DialogueManager.SPEECH_ASSIST_AGREE, DialogueManager.SPEECH_ASSIST_DISAGREE]
+                ):
+                    yield variables
+
+                if self.actions.listen.is_aborted():
+                    cmd = variables['received_cmd']
+                    rospy.loginfo("Received unexpected cmd: {}".format(cmd))
+                    self.actions.speak(text=DialogueManager.SAY_DID_NOT_UNDERSTAND)
+                else:
+                    cmd = variables['cmd']
+                    if cmd == DialogueManager.SPEECH_ASSIST_DISAGREE:
+                        self.actions.speak(
+                            text="{}. {}".format(
+                                DialogueManager.SAY_THATS_OK,
+                                DialogueManager.SAY_BYEBYE
+                            )
+                        )
+                        self.person = None
+                        person_will_help = False
+                    else:  # cmd == DialogueManager.SPEECH_ASSIST_AGREE
+                        self.actions.speak(text=DialogueManager.SAY_THANKS)
+                        person_will_help = True
+
+            yield { DialogueManager.REQUEST_HELP_RESPONSE_KEY: person_will_help }
 
     def _on_closest_person(self, msg):
         # We have nothing to do if we're not tracking a person
@@ -165,12 +197,12 @@ action", "Restart Task", and "Stop Executing"
 
         # If we should look at the person, run the look command
         if self._should_look_at_person \
-                and np.sqrt(
+                and (old_person is None or np.sqrt(
                     (old_person.pose.position.x - self.person.pose.position.x) ** 2
                     + (old_person.pose.position.y - self.person.pose.position.y) ** 2
                     + (old_person.pose.position.z - self.person.pose.position.z) ** 2
-                ) >= DialogueManager.POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD:
-            self.actions.look({
+                ) >= DialogueManager.POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD):
+            self.actions.look(pose={
                 'x': self.person.pose.position.x,
                 'y': self.person.pose.position.y,
                 'z': self.person.pose.position.z,

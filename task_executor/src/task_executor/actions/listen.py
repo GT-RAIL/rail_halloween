@@ -34,8 +34,8 @@ class ListenAction(AbstractStep):
         rospy.loginfo("...speech recognition connected")
 
     def run(self, expected_cmd=None):
-        # Run until we hear a command. If expected_cmd is not None, then abort
-        # and return an error
+        # Run until we hear a command. If expected_cmd is not None, and the
+        # received command is not in the list of expected_cmd, then abort
         rospy.loginfo("Action {}: Listening.{}"
                       .format(
                         self.name,
@@ -60,13 +60,13 @@ class ListenAction(AbstractStep):
                 goal=expected_cmd,
                 received_cmd=received_cmd
             )
-        elif expected_cmd is not None and expected_cmd != received_cmd:
+        elif expected_cmd is not None and received_cmd not in expected_cmd:
             yield self.set_aborted(
                 action=self.name,
                 goal=expected_cmd,
                 received_cmd=received_cmd
             )
-        else:  # expected_cmd is None or expected_cmd == received_cmd
+        else:  # expected_cmd is None or received_cmd in expected_cmd
             yield self.set_succeeded(cmd=received_cmd)
 
     def stop(self):

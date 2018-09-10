@@ -179,8 +179,8 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             'VOICE': 'dfki-prudence-hsmm',
             'OUTPUT_TYPE': 'AUDIO',
             'AUDIO': 'WAVE',
-            'effect_Robot_selected': 'on',
-            'effect_Robot_parameters': 'amount:60.0',
+            # 'effect_Robot_selected': 'on',
+            # 'effect_Robot_parameters': 'amount:60.0',
         }
 
         # Close the old speech file, if it exists

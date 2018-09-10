@@ -85,6 +85,16 @@ class LocalRecoveryServer(object):
 
         # Show exceitement and solicit help from them
         self.actions.beep(beep=SoundClient.BEEP_EXCITED)
+        for response in self.dialogue_manager.request_help(person):
+            if self._server.is_preempt_requested() or not self._server.is_active():
+                self._server.set_preempted(result)
+                return
+
+        # If the person rejected the request for help, abort
+        if not response[DialogueManager.REQUEST_HELP_RESPONSE_KEY]:
+            result.context = pickle.dumps({ 'person': person, 'response': response })
+            self._server.set_aborted(result)
+            return
 
         # If they agree to provide help, then become compliant until they signal
         # that they are done
