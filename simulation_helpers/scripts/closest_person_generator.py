@@ -15,6 +15,7 @@ from geometry_msgs.msg import PoseStamped, Vector3
 from visualization_msgs.msg import Marker
 
 from std_srvs.srv import Trigger, TriggerResponse
+from simulation_helpers.srv import CreatePerson, CreatePersonResponse
 
 
 class PersonGenerator(object):
@@ -37,7 +38,7 @@ class PersonGenerator(object):
         self._closest_person = None
 
         # Services and topics
-        self._create_person_srv = rospy.Service("~create_person", Trigger, self._create_person)
+        self._create_person_srv = rospy.Service("~create_person", CreatePerson, self._create_person)
         self._destroy_person_srv = rospy.Service("~destroy_person", Trigger, self._destroy_person)
         self._closest_person_pub = rospy.Publisher("~closest_person", Person, queue_size=1)
 
@@ -81,7 +82,7 @@ class PersonGenerator(object):
         self._closest_person = Person(
             header=pose.header,
             pose=pose.pose,
-            id=str(np.random.randint(100)),
+            id=str(np.random.randint(100)) if not req.id else req.id,
             detection_context=DetectionContext(pose_source=DetectionContext.POSE_FROM_FACE)
         )
 
@@ -89,8 +90,8 @@ class PersonGenerator(object):
         if self.debug_enabled:
             self._debug_marker = Marker(
                 header=pose.header,
-                ns="debug",
-                id=1,
+                ns="person_debug",
+                id=int(self._closest_person.id),
                 type=Marker.CYLINDER,
                 action=Marker.ADD,
                 pose=pose.pose,
@@ -99,7 +100,7 @@ class PersonGenerator(object):
             )
             self._debug_marker.pose.position.z = pose.pose.position.z / 2
 
-        return TriggerResponse(success=True)
+        return CreatePersonResponse(person=self._closest_person)
 
     def _destroy_person(self, req):
         # First destroy the debug marker
