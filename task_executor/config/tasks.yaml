@@ -99,21 +99,9 @@ tasks:
   # Task used for testing subsets of the main task
   test:
     steps:
-    - action: listen
-      var:
-      - cmd
-
-    - action: listen
+    - action: move
       params:
-        expected_cmd: GREETING
-      var:
-      - cmd
-
-    - action: listen
-      params:
-        expected_cmd: HEAR_CHECK
-      var:
-      - cmd
+        location: locations.pre_table1
 
   # The main fetch and deliver task that we want to make robust
   main:

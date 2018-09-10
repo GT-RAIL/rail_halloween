@@ -1,6 +1,6 @@
 waypoints:
   pre_table1:
-  - {x: 4.905, y: -29.033, theta: 1.872, frame: "map"}
+  - {x: 6.927, y: -27.866, theta: 1.757, frame: "map"}
   table1:
   - {x: 4.881, y: -28.146, theta: 1.93, frame: "map"}
   post_table1:
