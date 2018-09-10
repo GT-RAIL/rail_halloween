@@ -62,6 +62,49 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
     # Mary TTS server URL
     MARY_SERVER_URL = "http://localhost:59125/process"
 
+    @staticmethod
+    def make_happy(text):
+        """Make the text happy!"""
+        return ('<emotion><category name="happy" />{}</emotion>'.format(text))
+
+    @staticmethod
+    def make_sad(text):
+        """Make the text sad :("""
+        return ('<emotion><category name="sad" />{}</emotion>'.format(text))
+
+    @staticmethod
+    def make_angry(text):
+        """Make the text angry"""
+        return ('<emotion><category name="angry" />{}</emotion>'.format(text))
+
+    @staticmethod
+    def make_calm(text):
+        """Make the text calm"""
+        return (
+            """
+        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
+            {}
+            <dimension name="arousal" value="0.3"/><!-- lower arousal -->
+            <dimension name="pleasure" value="0.9"/><!-- high positive valence -->
+            <dimension name="dominance" value="0.8"/><!-- high potency    -->
+        </emotion>
+            """.format(text)
+        )
+
+    @staticmethod
+    def make_nervous(text):
+        """Make the text nervous"""
+        return (
+            """
+        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
+            {}
+            <dimension name="arousal" value="0.9"/><!-- high arousal -->
+            <dimension name="pleasure" value="0.2"/><!-- negative valence -->
+            <dimension name="dominance" value="0.2"/><!-- low potency    -->
+        </emotion>
+            """.format(text)
+        )
+
     def __init__(self, beeps=None):
         # Want to reimplement SoundClient so that we are always using the action
         # interface to the sound_play_node.
@@ -90,11 +133,11 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
         # Load the affects
         self.affects = {
-            SoundClient.AFFECT_SAD: self.make_sad,
-            SoundClient.AFFECT_HAPPY: self.make_happy,
-            SoundClient.AFFECT_NERVOUS: self.make_nervous,
-            SoundClient.AFFECT_CALM: self.make_calm,
-            SoundClient.AFFECT_ANGRY: self.make_angry,
+            SoundClient.AFFECT_SAD: SoundClient.make_sad,
+            SoundClient.AFFECT_HAPPY: SoundClient.make_happy,
+            SoundClient.AFFECT_NERVOUS: SoundClient.make_nervous,
+            SoundClient.AFFECT_CALM: SoundClient.make_calm,
+            SoundClient.AFFECT_ANGRY: SoundClient.make_angry,
         }
 
         # Need to connect to the server
@@ -119,42 +162,6 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
     def get_affect_names(self):
         """Get the keys to the different affects that are available"""
         return self.affects.keys()
-
-    def make_happy(self, text):
-        """Make the text happy!"""
-        return ('<emotion><category name="happy" />{}</emotion>'.format(text))
-
-    def make_sad(self, text):
-        """Make the text sad :("""
-        return ('<emotion><category name="sad" />{}</emotion>'.format(text))
-
-    def make_angry(self, text):
-        """Make the text angry"""
-        return ('<emotion><category name="angry" />{}</emotion>'.format(text))
-
-    def make_calm(self, text):
-        """Make the text calm"""
-        return (
-            """
-        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">{}
-            <dimension name="arousal" value="0.3"/><!-- lower arousal -->
-            <dimension name="pleasure" value="0.9"/><!-- high positive valence -->
-            <dimension name="dominance" value="0.8"/><!-- high potency    -->
-        </emotion>
-            """.format(text)
-        )
-
-    def make_nervous(self, text):
-        """Make the text nervous"""
-        return (
-            """
-        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">{}
-            <dimension name="arousal" value="0.9"/><!-- high arousal -->
-            <dimension name="pleasure" value="0.2"/><!-- negative valence -->
-            <dimension name="dominance" value="0.2"/><!-- low potency    -->
-        </emotion>
-            """.format(text)
-        )
 
     def say(self, text, affect="", blocking=False, **kwargs):
         """Perform TTS using EmotionML"""

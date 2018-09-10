@@ -8,11 +8,18 @@ In order to perform TTS, the packages in this folder use [Mary TTS](http://mary.
 
 **Prerequisites**:
 
+Detailed instructions for JAVA at [link](https://www.atlantic.net/hipaa-compliant-cloud-hosting-services/how-to-install-java-ubuntu-14-04/).
+
 ```bash
 # Need Java 7+ and Maven 3+
+sudo apt-get install python-software-properties
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
 sudo apt-get install maven oracle-java8-installer
 sudo -H pip install requests
 ```
+
+**MARY TTS**
 
 Installing MaryTTS (in a folder of your choice. For the rest of these instructions, I'm going to assume this folder is `$MARYTTS_ROOT`):
 

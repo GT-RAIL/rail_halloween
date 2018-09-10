@@ -15,6 +15,8 @@ from power_msgs.srv import BreakerCommand
 from task_executor.actions import default_actions
 from sound_interface import SoundClient
 
+from .dialogue import DialogueManager
+
 
 # The server performs local behaviours to resume execution after contact with
 # local humans
@@ -34,17 +36,18 @@ class LocalRecoveryServer(object):
             auto_start=False
         )
 
-        # Service to communicate with the breakers
-        self._arm_breaker_srv = rospy.ServiceProxy("/arm_breaker", BreakerCommand)
-        self._base_breaker_srv = rospy.ServiceProxy("/base_breaker", BreakerCommand)
-        self._gripper_breaker_srv = rospy.ServiceProxy("/gripper_breaker", BreakerCommand)
-
         # The actions that we are interested in using
         self.actions = default_actions
+
+        # The dialogue manager
+        self.dialogue_manager = DialogueManager()
 
     def start(self):
         # Initialize the actions
         self.actions.init()
+
+        # Initialize the dialogue manager
+        self.dialogue_manager.start()
 
         # Finally, start our action server to indicate that we're ready
         self._server.start()
@@ -95,10 +98,4 @@ class LocalRecoveryServer(object):
         self._server.set_succeeded(result)
 
     def stop(self):
-        pass
-
-    def _get_speech_tokens_from_goal(self, goal):
-        # Given a goal, generate the tokens relevant to asking for help.
-        # The target speech is: "<component> at step <step_num> failed."
-        # "the most likely cause is <cause>"
         pass
