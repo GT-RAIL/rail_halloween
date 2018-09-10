@@ -17,28 +17,33 @@ from task_executor.srv import GetObjectConstraints
 
 class FindObjectAction(AbstractStep):
 
+    OBJECT_CONSTRAINTS_SERVICE_NAME = "database/object_constraints"
+    SEGMENT_OBJECTS_SERVICE_NAME = "rail_segmentation/segment_objects"
+    PLANNING_SCENE_ADD_SERVICE_NAME = "grasp_executor/add_object"
+    PLANNING_SCENE_CLEAR_SERVICE_NAME = "grasp_executor/clear_objects"
+
     def init(self, name):
         self.name = name
 
         # Objects DB
         self._get_object_constraints_srv = rospy.ServiceProxy(
-            "database/object_constraints",
+            FindObjectAction.OBJECT_CONSTRAINTS_SERVICE_NAME,
             GetObjectConstraints
         )
 
         # The segmentation interface
         self._segment_objects_srv = rospy.ServiceProxy(
-            "rail_segmentation/segment_objects",
+            FindObjectAction.SEGMENT_OBJECTS_SERVICE_NAME,
             SegmentObjects
         )
 
         # The planning scene interface
         self._planning_scene_add_srv = rospy.ServiceProxy(
-            "grasp_executor/add_object",
+            FindObjectAction.PLANNING_SCENE_ADD_SERVICE_NAME,
             AddObject
         )
         self._planning_scene_clear_srv = rospy.ServiceProxy(
-            "grasp_executor/clear_objects",
+            FindObjectAction.PLANNING_SCENE_CLEAR_SERVICE_NAME,
             Empty
         )
 

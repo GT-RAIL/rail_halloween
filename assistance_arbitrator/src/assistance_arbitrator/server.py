@@ -21,10 +21,14 @@ class AssistanceArbitrationServer(object):
     remote human.
     """
 
+    LOCAL_STRATEGY_ACTION_SERVER = "local_strategy"
+
     def __init__(self):
         # Instantiate the action clients connecting to each recovery strategy
-        self._local_strategy_client = \
-            actionlib.SimpleActionClient("local_strategy", RequestAssistanceAction)
+        self._local_strategy_client = actionlib.SimpleActionClient(
+            AssistanceArbitrationServer.LOCAL_STRATEGY_ACTION_SERVER,
+            RequestAssistanceAction
+        )
 
         # Instantiate the action server to provide the arbitration
         self._server = actionlib.SimpleActionServer(
@@ -47,7 +51,9 @@ class AssistanceArbitrationServer(object):
         request_received = rospy.Time.now()
 
         # Pick the strategy
-        feedback = RequestAssistanceFeedback(strategy="local_strategy")
+        feedback = RequestAssistanceFeedback(
+            strategy=AssistanceArbitrationServer.LOCAL_STRATEGY_ACTION_SERVER
+        )
         self._server.publish_feedback(feedback)
 
         # Forward directly to the local strategy client. Preempt if a preempt

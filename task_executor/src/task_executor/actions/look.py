@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 # The look action in a task plan
 
 import rospy
@@ -12,13 +12,17 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractStep):
 
+    HEAD_ACTION_SERVER = "head_controller/point_head"
+    HEAD_ACTION_DURATION = 0.5
+
     def init(self, name):
         self.name = name
         self._look_client = actionlib.SimpleActionClient(
-            "head_controller/point_head",
+            LookAction.HEAD_ACTION_SERVER,
             PointHeadAction
         )
-        self._duration = 0.5
+
+        self._duration = LookAction.HEAD_ACTION_DURATION
 
         rospy.loginfo("Connecting to head_controller...")
         self._look_client.wait_for_server()

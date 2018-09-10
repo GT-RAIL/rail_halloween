@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 # The torso action in a task plan
 
 import numpy as np
@@ -16,16 +16,22 @@ from actionlib_msgs.msg import GoalStatus
 
 class TorsoAction(AbstractStep):
 
+    JOINT_STATES_TOPIC = "/joint_states"
+    TORSO_ACTION_SERVER = "torso_controller/follow_joint_trajectory"
+    TORSO_JOINT_NAME = "torso_lift_joint"
+    TORSO_ACTION_DURATION = 5.0
+    TORSO_GOAL_TOLERANCE = 3e-2  # A tolerance in torso joint position
+
     def init(self, name):
         self.name = name
         self._torso_client = actionlib.SimpleActionClient(
-            "torso_controller/follow_joint_trajectory",
+            TorsoAction.TORSO_ACTION_SERVER,
             FollowJointTrajectoryAction
         )
-        self._joint_names = ["torso_lift_joint"]
+        self._joint_names = [TorsoAction.TORSO_JOINT_NAME]
 
-        self._duration = 5.0
-        self._tolerance = 3e-2  # A 3 cm tolerance in torso joint is OK
+        self._tolerance = TorsoAction.TORSO_GOAL_TOLERANCE
+        self._duration = TorsoAction.TORSO_ACTION_DURATION
 
         rospy.loginfo("Connecting to torso_controller...")
         self._torso_client.wait_for_server()
@@ -34,7 +40,11 @@ class TorsoAction(AbstractStep):
         # Create a subscriber to check if we even have to move to the desired
         # torso height
         self._current_torso_height = 0.0
-        self._joints_sub = rospy.Subscriber("/joint_states", JointState, self._on_joints)
+        self._joints_sub = rospy.Subscriber(
+            TorsoAction.JOINT_STATES_TOPIC,
+            JointState,
+            self._on_joints
+        )
 
     def run(self, height):
         rospy.loginfo("Action {}: Torso to height {}".format(self.name, height))
@@ -89,7 +99,7 @@ class TorsoAction(AbstractStep):
 
     def _on_joints(self, msg):
         try:
-            idx = msg.name.index("torso_lift_joint")
+            idx = msg.name.index(TorsoAction.TORSO_JOINT_NAME)
             self._current_torso_height = msg.position[idx]
         except ValueError as e:
             pass

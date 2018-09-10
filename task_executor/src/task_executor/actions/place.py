@@ -12,14 +12,16 @@ from .arm_pose import ArmPoseAction
 
 class PlaceAction(AbstractStep):
 
+    DROP_OBJECT_SERVICE_NAME = "grasp_executor/drop_object"
+    DROP_POSE_NAME = "poses.drop"  # This is from the poses database
+
     def init(self, name):
         self.name = name
         self._drop_object_srv = rospy.ServiceProxy(
-            "grasp_executor/drop_object",
+            PlaceAction.DROP_OBJECT_SERVICE_NAME,
             Empty
         )
         self._arm_pose = ArmPoseAction()
-        self._drop_pose_name = "poses.drop"  # This is from the poses database
 
         # Set a stop flag
         self._stopped = False
@@ -35,7 +37,7 @@ class PlaceAction(AbstractStep):
         self._stopped = False
 
         # First move to the desired pose
-        for variables in self._arm_pose.run(self._drop_pose_name):
+        for variables in self._arm_pose.run(PlaceAction.DROP_POSE_NAME):
             yield self.set_running(**variables)
 
         # Check to see if the arm pose failed

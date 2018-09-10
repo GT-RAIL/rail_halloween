@@ -16,17 +16,31 @@ from task_executor.srv import GetArmPose, GetTrajectory
 
 class ArmPoseAction(AbstractStep):
 
+    POSE_ACTION_SERVER = "grasp_executor/preset_position"
+    ARM_POSES_SERVICE_NAME = "database/arm_pose"
+    TRAJECTORIES_SERVICE_NAME = "database/trajectory"
+    MAX_ATTEMPTS = 5
+    ARM_JOINT_NAMES = [
+        "shoulder_pan_joint",
+        "shoulder_lift_joint",
+        "upperarm_roll_joint",
+        "elbow_flex_joint",
+        "forearm_roll_joint",
+        "wrist_flex_joint",
+        "wrist_roll_joint",
+    ]
+
     def init(self, name):
         self.name = name
 
         self._pose_client = actionlib.SimpleActionClient(
-            "grasp_executor/preset_position",
+            ArmPoseAction.POSE_ACTION_SERVER,
             PresetJointsMoveAction
         )
-        self._get_arm_pose_srv = rospy.ServiceProxy("database/arm_pose", GetArmPose)
-        self._get_trajectory_srv = rospy.ServiceProxy("database/trajectory", GetTrajectory)
+        self._get_arm_pose_srv = rospy.ServiceProxy(ArmPoseAction.ARM_POSES_SERVICE_NAME, GetArmPose)
+        self._get_trajectory_srv = rospy.ServiceProxy(ArmPoseAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
 
-        self._max_attempts = 5
+        self._max_attempts = ArmPoseAction.MAX_ATTEMPTS
 
         rospy.loginfo("Connecting to arm_pose_executor...")
         self._pose_client.wait_for_server()
@@ -58,15 +72,7 @@ class ArmPoseAction(AbstractStep):
 
             # Create and send the goal
             goal = PresetJointsMoveGoal()
-            goal.name.extend([
-                "shoulder_pan_joint",
-                "shoulder_lift_joint",
-                "upperarm_roll_joint",
-                "elbow_flex_joint",
-                "forearm_roll_joint",
-                "wrist_flex_joint",
-                "wrist_roll_joint",
-            ])
+            goal.name.extend(ArmPoseAction.ARM_JOINT_NAMES)
             goal.position = pose.angles
             assert len(goal.name) == len(goal.position)
 

@@ -4,12 +4,15 @@
 from __future__ import print_function, division
 
 import pickle
+import numpy as np
 
 import rospy
 import actionlib
 
-from sound_client import SoundClient
+from sound_interface import SoundClient
 from task_executor.actions import default_actions
+
+from rail_people_detection_msgs.msg import Person
 
 
 # The main manager class
@@ -32,6 +35,9 @@ class DialogueManager(object):
     When the person is done, the manager should also handle the dialog to resume
     execution according to the policies outlined in RequestAssistanceResult
     """
+
+    # Topic name constants
+    CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
 
     # Template texts
     REQUEST_HELP = """
@@ -59,11 +65,52 @@ action", "Restart Task", and "Stop Executing"
         self.actions = default_actions
 
         # Variable to keep track of the person to interact with
-        self._person = None
+        self.person = None
+
+        # The listener to the nearest person so that we can always look at them
+        self._closest_person_sub = rospy.Subscriber(
+            DialogueManager.CLOSEST_PERSON_TOPIC,
+            Person,
+            self._on_closest_person
+        )
+        self._should_look_at_person = False
 
     def start(self):
         # Initialize the actions
         self.actions.init()
 
     def request_help(self, request, person):
+        # Set the person and start looking at them
+        self._should_look_at_person = True
+        self.person = person
+
+        # Wait a bit, then send out an auditory request for assistance
         pass
+
+    def _on_closest_person(self, msg):
+        # We have nothing to do if we're not tracking a person
+        if self.person is None:
+            return
+
+        # We are tracking a person, so make sure that the person we're tracking
+        # matches the ID of the current closest person
+        if self.person.id != msg.id:
+            return
+
+        # Update the person
+        old_person = self.person
+        self.person = msg
+
+        # If we should look at the person, run the look command
+        if self._should_look_at_person \
+                and np.sqrt(
+                    (old_person.pose.position.x - self.person.pose.position.x) ** 2
+                    + (old_person.pose.position.y - self.person.pose.position.y) ** 2
+                    + (old_person.pose.position.z - self.person.pose.position.z) ** 2
+                ) >= 0.03:
+            self.actions.look({
+                'x': self.person.pose.position.x,
+                'y': self.person.pose.position.y,
+                'z': self.person.pose.position.z,
+                'frame': self.person.header.frame_id,
+            })

@@ -13,10 +13,12 @@ from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal, \
 
 class PickAction(AbstractStep):
 
+    PICK_ACTION_SERVER = "grasp_executor/execute_grasp"
+
     def init(self, name):
         self.name = name
         self._grasp_client = actionlib.SimpleActionClient(
-            "grasp_executor/execute_grasp",
+            PickAction.PICK_ACTION_SERVER,
             ExecuteGraspAction
         )
 

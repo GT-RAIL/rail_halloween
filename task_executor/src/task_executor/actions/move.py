@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 # The move action in a task plan
 
 from __future__ import print_function, division
@@ -19,10 +19,13 @@ from task_executor.srv import GetWaypoints
 class MoveAction(AbstractStep):
     """Move to a location"""
 
+    MOVE_ACTION_SERVER = "move_base"
+    WAYPOINTS_SERVICE_NAME = "database/waypoints"
+
     def init(self, name):
         self.name = name
-        self._move_base_client = actionlib.SimpleActionClient("move_base", MoveBaseAction)
-        self._get_waypoints_srv = rospy.ServiceProxy("database/waypoints", GetWaypoints)
+        self._move_base_client = actionlib.SimpleActionClient(MoveAction.MOVE_ACTION_SERVER, MoveBaseAction)
+        self._get_waypoints_srv = rospy.ServiceProxy(MoveAction.WAYPOINTS_SERVICE_NAME, GetWaypoints)
 
         rospy.loginfo("Connecting to move_base...")
         self._move_base_client.wait_for_server()

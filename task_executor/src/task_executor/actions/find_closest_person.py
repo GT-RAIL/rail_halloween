@@ -15,6 +15,11 @@ from .beep import BeepAction
 
 class FindClosestPersonAction(AbstractStep):
 
+    CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
+    EXPECTED_PERSON_ROI = Bounds(xmin=0.4, xmax=3.6, ymin=-2.4, ymax=2.4, zmin=1.4, zmax=2.0)
+    PERSON_SEARCH_STEP_SIZES = { 'x': 0.8, 'y': 1.2, 'z': 0.3 }
+    PERSON_SEARCH_WAIT_TIME = 1.5
+
     def init(self, name):
         self.name = name
 
@@ -23,14 +28,16 @@ class FindClosestPersonAction(AbstractStep):
         self._last_closest_person = None        # These are the closest people
         self._select_closest_person = False     # Flag to trigger the save of a person
         self._closest_person_sub = rospy.Subscriber(
-            "rail_people_detector/closest_person",
+            FindClosestPersonAction.CLOSEST_PERSON_TOPIC,
             Person,
             self._on_closest_person
         )
 
         # Define the region of interest where we expect to find a person
-        self._roi = Bounds(xmin=0.4, xmax=3.6, ymin=-2.4, ymax=2.4, zmin=1.4, zmax=2.0)
-        self._step_sizes = { 'x': 0.8, 'y': 1.2, 'z': 0.3 }
+        self._roi = FindClosestPersonAction.EXPECTED_PERSON_ROI
+        self._step_sizes = FindClosestPersonAction.PERSON_SEARCH_STEP_SIZES
+
+        self._search_wait_time = FindClosestPersonAction.PERSON_SEARCH_WAIT_TIME
 
         # Child actions
         self._look_action = LookAction()
@@ -69,7 +76,7 @@ class FindClosestPersonAction(AbstractStep):
 
                         # Wait for a detection, but yield control while waiting
                         start_time = rospy.Time.now()
-                        while rospy.Time.now() <= start_time + rospy.Duration(1.5):
+                        while rospy.Time.now() <= start_time + rospy.Duration(self._search_wait_time):
                             if self._stopped:
                                 yield self.set_preempted(
                                     action=self.name,

@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 # The speech action in a task plan
 
 import rospy

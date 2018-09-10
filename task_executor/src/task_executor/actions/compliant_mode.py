@@ -11,14 +11,24 @@ from power_msgs.srv import BreakerCommand
 
 class CompliantModeAction(AbstractStep):
 
+    ARM_BREAKER_SERVICE_NAME = "/arm_breaker"
+    BASE_BREAKER_SERVICE_NAME = "/base_breaker"
+    GRIPPER_BREAKER_SERVICE_NAME = "/gripper_breaker"
+
     def init(self, name):
         self.name = name
 
         # Service to communicate with the breakers
-        self._arm_breaker_srv = rospy.ServiceProxy("/arm_breaker", BreakerCommand)
-        self._base_breaker_srv = rospy.ServiceProxy("/base_breaker", BreakerCommand)
+        self._arm_breaker_srv = rospy.ServiceProxy(
+            CompliantModeAction.ARM_BREAKER_SERVICE_NAME,
+            BreakerCommand
+        )
+        self._base_breaker_srv = rospy.ServiceProxy(
+            CompliantModeAction.BASE_BREAKER_SERVICE_NAME,
+            BreakerCommand
+        )
         self._gripper_breaker_srv = rospy.ServiceProxy(
-            "/gripper_breaker",
+            CompliantModeAction.GRIPPER_BREAKER_SERVICE_NAME,
             BreakerCommand
         )
 

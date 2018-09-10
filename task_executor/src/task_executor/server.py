@@ -29,14 +29,18 @@ class TaskServer(object):
     server with hints on how execution should proceed.
     """
 
+    ASSISTANCE_ARBITRATOR_ACTION_SERVER = "arbitrator"
+
     def __init__(self):
         # Provide a service to reload, and then reload
         self._reload_service = rospy.Service('~reload', Trigger, self.reload)
         self.reload(None)
 
         # Instantiate a connection to the arbitration server
-        self._arbitration_client = \
-            actionlib.SimpleActionClient("arbitrator", RequestAssistanceAction)
+        self._arbitration_client = actionlib.SimpleActionClient(
+            TaskServer.ASSISTANCE_ARBITRATOR_ACTION_SERVER,
+            RequestAssistanceAction
+        )
 
         # Instantiate the action server
         self._server = actionlib.SimpleActionServer(

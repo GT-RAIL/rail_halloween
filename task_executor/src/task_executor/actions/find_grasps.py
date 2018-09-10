@@ -13,21 +13,25 @@ from fetch_grasp_suggestion.srv import SuggestGrasps, PairwiseRank
 
 class FindGraspsAction(AbstractStep):
 
+    SUGGEST_GRASPS_SERVICE_NAME = "suggester/suggest_grasps"
+    PAIRWISE_RANK_SERVICE_NAME = "suggester/pairwise_rank"
+    MAX_GRASPS = 10
+
     def init(self, name):
         self.name = name
 
         # The Grasp calculation interface
         self._suggest_grasps_srv = rospy.ServiceProxy(
-            "suggester/suggest_grasps",
+            FindGraspsAction.SUGGEST_GRASPS_SERVICE_NAME,
             SuggestGrasps
         )
         self._grasps_rank_srv = rospy.ServiceProxy(
-            "suggester/pairwise_rank",
+            FindGraspsAction.PAIRWISE_RANK_SERVICE_NAME,
             PairwiseRank
         )
 
         # Set the max number of grasps to try. This can be a param lookup
-        self._max_grasps = 10
+        self._max_grasps = FindGraspsAction.MAX_GRASPS
 
         # Set a stop flag
         self._stopped = False

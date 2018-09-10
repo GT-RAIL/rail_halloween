@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 # The gripper action in a task plan
 
 import rospy
@@ -12,10 +12,15 @@ from actionlib_msgs.msg import GoalStatus
 
 class GripperAction(AbstractStep):
 
+    GRIPPER_ACTION_SERVER = "gripper_controller/gripper_action"
+    GRIPPER_MAX_EFFORT = 200
+    GRIPPER_OPEN_POSITION = 0.15
+    GRIPPER_CLOSE_POSITION = 0.0
+
     def init(self, name):
         self.name = name
         self._gripper_client = actionlib.SimpleActionClient(
-            "gripper_controller/gripper_action",
+            GripperAction.GRIPPER_ACTION_SERVER,
             GripperCommandAction
         )
 
@@ -38,10 +43,10 @@ class GripperAction(AbstractStep):
         # Create and send the goal pose
         goal = GripperCommandGoal()
         if command.lower() == 'close':
-            goal.command.position = 0.0
-            goal.command.max_effort = 200
+            goal.command.position = GripperAction.GRIPPER_CLOSE_POSITION
+            goal.command.max_effort = GripperAction.GRIPPER_MAX_EFFORT
         elif command.lower() == 'open':
-            goal.command.position = 0.15
+            goal.command.position = GripperAction.GRIPPER_OPEN_POSITION
 
         self._gripper_client.send_goal(goal)
 
