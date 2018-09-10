@@ -14,6 +14,18 @@ import actionlib
 
 from sound_play.msg import SoundRequestAction, SoundRequestGoal, SoundRequest
 
+# A temporary file creation helper
+# https://stackoverflow.com/questions/10541760/can-i-set-the-umask-for-tempfile-namedtemporaryfile-in-python
+
+def UmaskNamedTemporaryFile(*args, **kwargs):
+    fdesc = tempfile.NamedTemporaryFile(*args, **kwargs)
+    umask = os.umask(0)
+    os.umask(umask)
+    os.chmod(fdesc.name, 0o666 & ~umask)
+    return fdesc
+
+
+# The actual sound client
 
 class SoundClient(object):
     """
@@ -194,7 +206,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
                 rospy.logerr("Response Error Code: {}. Content: {}".format(r.status_code, r.content))
                 return
 
-            self._tmp_speech_file = tempfile.NamedTemporaryFile(prefix='marytts', suffix='.wav')
+            self._tmp_speech_file = UmaskNamedTemporaryFile(prefix='marytts', suffix='.wav')
             self._tmp_speech_file.write(r.content)
             self._tmp_speech_file.flush()
 
