@@ -44,7 +44,7 @@ class DialogueManager(object):
 
     # Behavioural constants
     POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD = 0.03
-    POST_LOOK_SPEAK_WAIT = 1.5
+    POST_LOOK_SPEAK_WAIT = 0.5
 
     # Return values
     REQUEST_HELP_RESPONSE_KEY = 'agree_to_help'
@@ -91,7 +91,8 @@ action", "Restart Task", and "Stop Executing"
         self.actions = default_actions
 
         # Variable to keep track of the person to interact with
-        self.person = None
+        self._person = None
+        self._is_new_person = False
 
         # The listener to the nearest person so that we can always look at them
         self._closest_person_sub = rospy.Subscriber(
@@ -105,6 +106,16 @@ action", "Restart Task", and "Stop Executing"
         # can be locked out during interactions
         self._listen_behaviour_lock = Lock()
         self._idle_behaviour_thread = Thread(target=self.run_idle_behaviours)
+
+    @property
+    def person(self):
+        return self._person
+
+    @person.setter
+    def person(self, person):
+        self._is_new_person = person is not None and \
+            (self._person is None or person.id != self._person.id)
+        self._person = person
 
     def start(self):
         # Initialize the actions
@@ -181,6 +192,10 @@ action", "Restart Task", and "Stop Executing"
 
             yield { DialogueManager.REQUEST_HELP_RESPONSE_KEY: person_will_help }
 
+    def await_help(self, request):
+        # Send the request
+        pass
+
     def _on_closest_person(self, msg):
         # We have nothing to do if we're not tracking a person
         if self.person is None:
@@ -192,12 +207,13 @@ action", "Restart Task", and "Stop Executing"
             return
 
         # Update the person
+        is_new_person = self._is_new_person
         old_person = self.person
         self.person = msg
 
         # If we should look at the person, run the look command
         if self._should_look_at_person \
-                and (old_person is None or np.sqrt(
+                and (is_new_person or np.sqrt(
                     (old_person.pose.position.x - self.person.pose.position.x) ** 2
                     + (old_person.pose.position.y - self.person.pose.position.y) ** 2
                     + (old_person.pose.position.z - self.person.pose.position.z) ** 2
