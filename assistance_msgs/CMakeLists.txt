@@ -10,6 +10,7 @@ project(assistance_msgs)
 find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   geometry_msgs
+  message_generation
   std_msgs
 )
 
@@ -106,7 +107,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES assistance_msgs
 #  CATKIN_DEPENDS actionlib_msgs geometry_msgs std_msgs
-#  DEPENDS system_lib
+  DEPENDS message_runtime
 )
 
 ###########

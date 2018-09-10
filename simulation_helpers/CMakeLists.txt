@@ -10,6 +10,7 @@ project(simulation_helpers)
 find_package(catkin REQUIRED COMPONENTS
   fetch_driver_msgs
   geometry_msgs
+  message_generation
   rail_people_detection_msgs
   rospy
   std_msgs
@@ -58,11 +59,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  CreatePerson.srv
+)
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -72,10 +72,12 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   rail_people_detection_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+    geometry_msgs
+    rail_people_detection_msgs
+    std_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -110,7 +112,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES simulation_helpers
 #  CATKIN_DEPENDS rail_people_detection_msgs rospy std_msgs tf
-#  DEPENDS system_lib
+  DEPENDS message_runtime
 )
 
 ###########

@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   fetch_grasp_suggestion
   geometry_msgs
   hlpr_speech_msgs
+  message_generation
   move_base_msgs
   rail_manipulation_msgs
   rospy
@@ -123,7 +124,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES task_executor
 #  CATKIN_DEPENDS actionlib geometry_msgs rospy
-#  DEPENDS system_lib
+  DEPENDS message_runtime
 )
 
 ###########
