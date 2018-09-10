@@ -12,10 +12,27 @@ import rospy
 import actionlib
 
 from sound_interface import SoundClient
-from task_executor.actions import default_actions
+from task_executor.actions import default_actions, \
+    ArmPoseAction, MoveAction  # FIXME
 
 from actionlib_msgs.msg import GoalStatus
 from rail_people_detection_msgs.msg import Person
+
+
+# Helper functions
+
+def find_value_in_context(key, context):
+    """
+    Finds and returns the first value for key-value pair with 'key' in the given
+    context. If not present, returns None
+    """
+    while key not in context:
+        print(context.keys())
+        if context.has_key('context'):
+            context = context['context']
+        else:
+            return None
+    return context[key]
 
 
 # The main dialogue manager class
@@ -48,6 +65,7 @@ class DialogueManager(object):
 
     # Return values
     REQUEST_HELP_RESPONSE_KEY = 'agree_to_help'
+    RESUME_HINT_RESPONSE_KEY = 'resume_hint'
 
     # Speech commands
     SPEECH_GREETING = 'GREETING'
@@ -55,6 +73,7 @@ class DialogueManager(object):
     SPEECH_SMALL_TALK = 'SMALL_TALK'
     SPEECH_ASSIST_AGREE = 'ASSIST_AGREE'
     SPEECH_ASSIST_DISAGREE = 'ASSIST_DISAGREE'
+    SPEECH_ASSISTANCE_COMPLETE = 'ASSISTANCE_COMPLETE'
     SPEECH_RESUME_CURRENT = 'RESUME_CURRENT'
     SPEECH_RESUME_NEXT = 'RESUME_NEXT'
     SPEECH_RESUME_RETRY = 'RESUME_RETRY'
@@ -71,13 +90,14 @@ assist me?
     SAY_DID_NOT_UNDERSTAND = "Sorry, I did not understand that"
     SAY_THATS_OK = "That's OK"
     SAY_THANKS = "Thank you!"
+    SAY_PLEASE_WAIT = "Please wait..."
     SAY_INITIAL_REQUEST = """
-I am failing to complete {component}, which is step {step_num} in my task plan.
-I think the cause is {cause}.
+I am failing to complete {component}, which is in step {step_num} in my task
+plan. I think the cause is {cause}.
     """
     SAY_INSTRUCTIONS = """
-You can move me however you wish to when helping me. All my joints are pliable
-right now. When you're done, say "I'm done!"
+My joints are now pliable. You can move me however you wish to when helping me.
+When you're done, say "I'm done!"
     """
     SAY_HOW_TO_PROCEED = "How should I proceed?"
     SAY_PROCEED_VALID_OPTIONS = """
@@ -115,6 +135,7 @@ action", "Restart Task", and "Stop Executing"
     def person(self, person):
         self._is_new_person = person is not None and \
             (self._person is None or person.id != self._person.id)
+        self._should_look_at_person = (person is not None)
         self._person = person
 
     def start(self):
@@ -154,7 +175,6 @@ action", "Restart Task", and "Stop Executing"
         person_will_help = None
         with self._listen_behaviour_lock:
             # Set the person and start looking at them
-            self._should_look_at_person = True
             self.person = person
 
             # Wait a bit, then send out an auditory request for assistance
@@ -166,9 +186,10 @@ action", "Restart Task", and "Stop Executing"
 
             # Wait for a response
             while person_will_help is None:
-                for variables in self.actions.listen.run(
-                    expected_cmd=[DialogueManager.SPEECH_ASSIST_AGREE, DialogueManager.SPEECH_ASSIST_DISAGREE]
-                ):
+                for variables in self.actions.listen.run(expected_cmd=[
+                    DialogueManager.SPEECH_ASSIST_AGREE,
+                    DialogueManager.SPEECH_ASSIST_DISAGREE,
+                ]):
                     yield variables
 
                 if self.actions.listen.is_aborted():
@@ -187,14 +208,117 @@ action", "Restart Task", and "Stop Executing"
                         self.person = None
                         person_will_help = False
                     else:  # cmd == DialogueManager.SPEECH_ASSIST_AGREE
-                        self.actions.speak(text=DialogueManager.SAY_THANKS)
+                        self.actions.speak(text="{}. {}".format(
+                            DialogueManager.SAY_THANKS,
+                            DialogueManager.SAY_PLEASE_WAIT
+                        ))
                         person_will_help = True
 
-            yield { DialogueManager.REQUEST_HELP_RESPONSE_KEY: person_will_help }
+        yield { DialogueManager.REQUEST_HELP_RESPONSE_KEY: person_will_help }
 
     def await_help(self, request):
-        # Send the request
-        pass
+        # Get the cause dict
+        cause_dict = self._get_cause_from_request(request)
+        rospy.loginfo("Likely causes of trouble: {}".format(cause_dict))
+
+        resume_hint = None
+        with self._listen_behaviour_lock:
+            # First speak the cause of the error
+            for variables in self.actions.speak.run(
+                text=DialogueManager.SAY_INITIAL_REQUEST.format(**cause_dict)
+            ):
+                yield variables
+
+            # Then let the person know that the robot is movable
+            for variables in self.actions.speak.run(
+                text=DialogueManager.SAY_INSTRUCTIONS
+            ):
+                yield variables
+
+            # Wait for an I'm done
+            done_flag = False
+            while not done_flag:
+                for variables in self.actions.listen.run(
+                    expected_cmd=[DialogueManager.SPEECH_ASSISTANCE_COMPLETE]
+                ):
+                    yield variables
+
+                if self.actions.listen.is_aborted():
+                    cmd = variables['received_cmd']
+                    rospy.loginfo("Received unexpected cmd: {}".format(cmd))
+                    self.actions.speak(text=DialogueManager.SAY_DID_NOT_UNDERSTAND)
+                else:
+                    done_flag = True
+                    self.actions.speak(text="{}. {}".format(
+                        DialogueManager.SAY_THANKS,
+                        DialogueManager.SAY_HOW_TO_PROCEED
+                    ))
+
+            # Finally, wait for a response
+            while resume_hint is None:
+                for variables in self.actions.listen.run(expected_cmd=[
+                    DialogueManager.SPEECH_RESUME_NONE,
+                    DialogueManager.SPEECH_RESUME_RETRY,
+                    DialogueManager.SPEECH_RESUME_NEXT,
+                    DialogueManager.SPEECH_RESUME_CURRENT,
+                ]):
+                    yield variables
+
+                if self.actions.listen.is_aborted():
+                    cmd = variables['received_cmd']
+                    rospy.loginfo("Received unexpected cmd: {}".format(cmd))
+                    for variables in self.actions.speak.run(text="{}. {}".format(
+                        DialogueManager.SAY_DID_NOT_UNDERSTAND,
+                        DialogueManager.SAY_PROCEED_VALID_OPTIONS
+                    )):
+                        yield variables
+                else:
+                    resume_hint = variables['cmd']
+                    self.actions.speak(text="{}. {}".format(
+                        DialogueManager.SAY_THANKS, DialogueManager.SAY_BYEBYE
+                    ))
+
+        yield { DialogueManager.RESUME_HINT_RESPONSE_KEY: resume_hint }
+
+    def _get_cause_from_request(self, request):
+        # TODO: This is messy. Fix it after we figure out what's happening here
+        # Create a dictionary with keys 'component', 'step_num', and 'cause'
+        cause_dict = {
+            'component': request.component,
+            'step_num': request.context['step_idx'],
+        }
+
+        # Now for a giant if-else. TODO: Make this more intelligent and better
+        # structured. This should perhaps be where the causal model comes in?
+        if request.component == 'find_object':
+            found_idx = find_value_in_context('found_idx', request.context)
+            if found_idx is not None and found_idx < 0:
+                cause_dict['cause'] = "a missing object"
+                return cause_dict
+
+        if request.component == 'arm':
+            attempt_num = find_value_in_context('attempt_num', request.context)
+            if attempt_num is not None and attempt_num + 1 >= ArmPoseAction.MAX_ATTEMPTS:
+                cause_dict['cause'] = 'a motion planner failure'
+                return cause_dict
+
+        if request.component == 'pick':
+            num_grasps = find_value_in_context('num_grasps', request.context)
+            grasp_num = find_value_in_context('grasp_num', request.context)
+            if num_grasps is not None and grasp_num is not None \
+                    and grasp_num + 1 >= num_grasps:
+                cause_dict['cause'] = 'all grasp positions failed'
+                return cause_dict
+
+        if find_value_in_context('cause', request.context) is not None:
+            cause = find_value_in_context('cause', request.context)
+            if cause.split()[0].lower() in ['unknown', 'unrecognized', 'invalid']:
+                cause_dict['cause'] = 'invalid values in the task'
+                return cause_dict
+
+        # Catch all
+        cause_dict['cause'] = 'unknown'
+        return cause_dict
 
     def _on_closest_person(self, msg):
         # We have nothing to do if we're not tracking a person

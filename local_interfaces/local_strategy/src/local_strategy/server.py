@@ -57,8 +57,10 @@ class LocalRecoveryServer(object):
         """Execute the request for assistance"""
         result = self._server.get_default_result()
         result.stats.request_received = rospy.Time.now()
-        rospy.loginfo("Serving Assistance Request for: {} ({})"
+
+        rospy.loginfo("Serving Assistance Request for: {} (status - {})"
                       .format(goal.component, goal.component_status))
+        goal.context = pickle.loads(goal.context)
 
         # The actual error recovery mechanism
         # Sad beep first
@@ -100,6 +102,11 @@ class LocalRecoveryServer(object):
         # that they are done
         result.stats.request_acked = rospy.Time.now()
         self.actions.compliant_mode(enable=True)
+        for response in self.dialogue_manager.await_help(goal):
+            if self._server.is_preempt_requested() or not self._server.is_active():
+                self.actions.compliant_mode(enable=False)
+                self._server.set_preempted(result)
+                return
 
         # Return when the request for help is completed
         self.actions.compliant_mode(enable=False)

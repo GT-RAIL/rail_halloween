@@ -26,7 +26,7 @@ The different keys and values in the errors that are sent with the assistance re
     - move:"Unknown format"
     - speak:"Invalid Args"
     - task:"Unexpected Params"
-    - task:"Invlid Variables"
+    - task:"Invalid Variables"
 - **context** - argument to run
     - arm:poses - the name or the list of poses
     - beep:beep - name of the beep
