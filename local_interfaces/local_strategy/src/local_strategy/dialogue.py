@@ -49,8 +49,8 @@ right now. When you're done, say "I'm done!"
     """
     HOW_TO_PROCEED_PROMPT = "How should I proceed?"
     PROCEED_VALID_OPTIONS = """
-I understand the phrases: "Retry the action that failed", "Continue to the next
-action", "Stop Executing", and "Start from the beginning"
+I understand the phrases: "Retry failed action", "Continue to next
+action", "Restart Task", and "Stop Executing"
     """
     BYEBYE = "Bye!"
 
