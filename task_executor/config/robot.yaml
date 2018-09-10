@@ -2,15 +2,15 @@ waypoints:
   pre_table1:
   - {x: 6.927, y: -27.866, theta: 1.757, frame: "map"}
   table1:
-  - {x: 4.881, y: -28.146, theta: 1.93, frame: "map"}
+  - {x: 6.650, y: -27.252, theta: 1.834, frame: "map"}
   post_table1:
-  - {x: 5.120, y: -28.681, theta: -1.34, frame: "map"}
+  - {x: 7.000, y: -28.636, theta: -1.315, frame: "map"}
   pre_table2:
-  - {x: 4.905, y: -29.033, theta: 1.872, frame: "map"}
+  - {x: 6.927, y: -27.866, theta: 1.757, frame: "map"}
   table2:
-  - {x: 4.881, y: -28.146, theta: 1.93, frame: "map"}
+  - {x: 6.650, y: -27.252, theta: 1.834, frame: "map"}
   post_table2:
-  - {x: 5.120, y: -28.681, theta: -1.34, frame: "map"}
+  - {x: 7.000, y: -28.636, theta: -1.315, frame: "map"}
 
 object_constraints:
   cube:
