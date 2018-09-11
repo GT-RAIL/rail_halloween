@@ -117,7 +117,7 @@ action", "Restart Task", and "Stop Executing"
 
     def reset_dialogue(self):
         # Stop any actions that we might have started
-        self.actions.look_at_closest_person.stop()
+        self.actions.look_at_closest_person(enable=False)
         self.actions.speak.stop()
 
     def run_idle_behaviours(self):

@@ -57,8 +57,8 @@ class LookAtClosestPersonAction(AbstractStep):
 
         # Reset the variables if this is a new person
         if self._desired_person_id != person_id:
-            self.enabled = False
             if self._look_thread is not None:
+                self.enabled = False
                 self._look_thread.join()
                 self._look_thread = None
             self._closest_person = None
