@@ -8,6 +8,8 @@ import argparse
 import requests
 import tempfile
 
+from pydub import AudioSegment
+
 import rospy
 import rospkg
 import actionlib
@@ -73,6 +75,9 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     # Mary TTS server URL
     MARY_SERVER_URL = "http://localhost:59125/process"
+
+    # Speech params
+    SPEECH_GAIN_DB = 15
 
     @staticmethod
     def make_happy(text):
@@ -203,12 +208,18 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         try:
             r = requests.post(SoundClient.MARY_SERVER_URL, params=query_dict)
             if r.headers['content-type'] != 'audio/x-wav':
-                rospy.logerr("Response Error Code: {}. Content: {}".format(r.status_code, r.content))
+                rospy.logerr("Response Error Code: {}. Content-Type: {}"
+                             .format(r.status_code, r.headers['content-type']))
                 return
 
+            # Increase the volume on the temp file
+            speech = AudioSegment(data=r.content)
+            speech = speech + SoundClient.SPEECH_GAIN_DB
+
+            # Write the wav data to a temp file
             self._tmp_speech_file = UmaskNamedTemporaryFile(prefix='marytts', suffix='.wav')
-            self._tmp_speech_file.write(r.content)
             self._tmp_speech_file.flush()
+            speech.export(self._tmp_speech_file.name, format='wav')
 
             # Now send the file's name over to sound play
             sound = SoundRequest()
