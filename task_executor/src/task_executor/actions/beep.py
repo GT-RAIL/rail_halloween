@@ -22,7 +22,7 @@ class BeepAction(AbstractStep):
         if type(beep) != str \
                 or beep.upper() not in self._beep_client.get_beep_names():
             rospy.logerr("Action {}: FAIL. Unrecognized: {}.".format(self.name, beep))
-            self.set_aborted(
+            yield self.set_aborted(
                 action=self.name,
                 cause="Unrecognized",
                 context=beep

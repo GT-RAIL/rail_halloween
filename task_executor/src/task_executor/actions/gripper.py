@@ -31,7 +31,7 @@ class GripperAction(AbstractStep):
     def run(self, command):
         if type(command) != str or command.lower() not in ['close', 'open']:
             rospy.logerr("Action: {}. FAIL. Unrecognized: {}".format(self.name, command))
-            self.set_aborted(
+            yield self.set_aborted(
                 action=self.name,
                 cause="Unrecognized",
                 context=command

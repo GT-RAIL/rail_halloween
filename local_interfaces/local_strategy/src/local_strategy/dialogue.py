@@ -86,7 +86,7 @@ assist me?
     SAY_PLEASE_WAIT = "Please wait..."
     SAY_INITIAL_REQUEST = """
 I am failing to complete {component}, which is in step {step_num} in my task
-plan. I think the cause is {cause}.
+plan. I think the cause is {cause}. I am disabling my joints now.
     """
     SAY_INSTRUCTIONS = """
 My joints are now pliable. You can move me however you wish to when helping me.
