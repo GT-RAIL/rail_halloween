@@ -89,12 +89,14 @@ class LocalRecoveryServer(object):
         self.actions.beep(beep=SoundClient.BEEP_EXCITED)
         for response in self.dialogue_manager.request_help(person):
             if self._server.is_preempt_requested() or not self._server.is_active():
+                self.dialogue_manager.reset_dialogue()
                 self._server.set_preempted(result)
                 return
 
         # If the person rejected the request for help, abort
         if not response[DialogueManager.REQUEST_HELP_RESPONSE_KEY]:
             result.context = pickle.dumps({ 'person': person, 'response': response })
+            self.dialogue_manager.reset_dialogue()
             self._server.set_aborted(result)
             return
 
@@ -104,6 +106,7 @@ class LocalRecoveryServer(object):
         self.actions.compliant_mode(enable=True)
         for response in self.dialogue_manager.await_help(goal):
             if self._server.is_preempt_requested() or not self._server.is_active():
+                self.dialogue_manager.reset_dialogue()
                 self.actions.compliant_mode(enable=False)
                 self._server.set_preempted(result)
                 return

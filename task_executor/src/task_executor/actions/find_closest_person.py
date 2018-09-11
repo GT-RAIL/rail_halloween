@@ -24,7 +24,7 @@ class FindClosestPersonAction(AbstractStep):
         self.name = name
 
         # Person detections
-        self._selected_person = None             # This is person that we select
+        self._selected_person = None            # This is person that we select
         self._last_closest_person = None        # These are the closest people
         self._select_closest_person = False     # Flag to trigger the save of a person
         self._closest_person_sub = rospy.Subscriber(

@@ -14,6 +14,7 @@ from .find_object import FindObjectAction
 from .gripper import GripperAction
 from .listen import ListenAction
 from .look import LookAction
+from .look_at_closest_person import LookAtClosestPersonAction
 from .move import MoveAction
 from .pick import PickAction
 from .place import PlaceAction
@@ -53,6 +54,7 @@ default_actions_dict = {
     'gripper': GripperAction(),
     'listen': ListenAction(),
     'look': LookAction(),
+    'look_at_closest_person': LookAtClosestPersonAction(),
     'move': MoveAction(),
     'pick': PickAction(),
     'place': PlaceAction(),

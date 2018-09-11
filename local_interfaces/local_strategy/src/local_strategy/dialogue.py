@@ -15,9 +15,6 @@ from sound_interface import SoundClient
 from task_executor.actions import default_actions, \
     ArmPoseAction, MoveAction  # FIXME
 
-from actionlib_msgs.msg import GoalStatus
-from rail_people_detection_msgs.msg import Person
-
 
 # Helper functions
 
@@ -56,11 +53,7 @@ class DialogueManager(object):
     execution according to the policies outlined in RequestAssistanceResult
     """
 
-    # Topic name constants
-    CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
-
     # Behavioural constants
-    POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD = 0.03
     POST_LOOK_SPEAK_WAIT = 0.5
 
     # Return values
@@ -110,33 +103,10 @@ action", "Restart Task", and "Stop Executing"
         # Load the actions that are available to us
         self.actions = default_actions
 
-        # Variable to keep track of the person to interact with
-        self._person = None
-        self._is_new_person = False
-
-        # The listener to the nearest person so that we can always look at them
-        self._closest_person_sub = rospy.Subscriber(
-            DialogueManager.CLOSEST_PERSON_TOPIC,
-            Person,
-            self._on_closest_person
-        )
-        self._should_look_at_person = False
-
         # Idle behaviours. These are normally always available, however, they
         # can be locked out during interactions
         self._listen_behaviour_lock = Lock()
         self._idle_behaviour_thread = Thread(target=self.run_idle_behaviours)
-
-    @property
-    def person(self):
-        return self._person
-
-    @person.setter
-    def person(self, person):
-        self._is_new_person = person is not None and \
-            (self._person is None or person.id != self._person.id)
-        self._should_look_at_person = (person is not None)
-        self._person = person
 
     def start(self):
         # Initialize the actions
@@ -144,6 +114,11 @@ action", "Restart Task", and "Stop Executing"
 
         # Start the idle behaviours
         self._idle_behaviour_thread.start()
+
+    def reset_dialogue(self):
+        # Stop any actions that we might have started
+        self.actions.look_at_closest_person.stop()
+        self.actions.speak.stop()
 
     def run_idle_behaviours(self):
         speech_generator = self.actions.listen.run()
@@ -175,7 +150,7 @@ action", "Restart Task", and "Stop Executing"
         person_will_help = None
         with self._listen_behaviour_lock:
             # Set the person and start looking at them
-            self.person = person
+            self.actions.look_at_closest_person(enable=True, person_id=person.id)
 
             # Wait a bit, then send out an auditory request for assistance
             start_time = rospy.Time.now()
@@ -205,7 +180,7 @@ action", "Restart Task", and "Stop Executing"
                                 DialogueManager.SAY_BYEBYE
                             )
                         )
-                        self.person = None
+                        self.reset_dialogue()
                         person_will_help = False
                     else:  # cmd == DialogueManager.SPEECH_ASSIST_AGREE
                         self.actions.speak(text="{}. {}".format(
@@ -277,7 +252,7 @@ action", "Restart Task", and "Stop Executing"
                     self.actions.speak(text="{}. {}".format(
                         DialogueManager.SAY_THANKS, DialogueManager.SAY_BYEBYE
                     ))
-                    self.person = None
+                    self.reset_dialogue()
 
         yield { DialogueManager.RESUME_HINT_RESPONSE_KEY: resume_hint }
 
@@ -320,32 +295,3 @@ action", "Restart Task", and "Stop Executing"
         # Catch all
         cause_dict['cause'] = 'unknown'
         return cause_dict
-
-    def _on_closest_person(self, msg):
-        # We have nothing to do if we're not tracking a person
-        if self.person is None:
-            return
-
-        # We are tracking a person, so make sure that the person we're tracking
-        # matches the ID of the current closest person
-        if self.person.id != msg.id:
-            return
-
-        # Update the person
-        is_new_person = self._is_new_person
-        old_person = self.person
-        self.person = msg
-
-        # If we should look at the person, run the look command
-        if self._should_look_at_person \
-                and (is_new_person or np.sqrt(
-                    (old_person.pose.position.x - self.person.pose.position.x) ** 2
-                    + (old_person.pose.position.y - self.person.pose.position.y) ** 2
-                    + (old_person.pose.position.z - self.person.pose.position.z) ** 2
-                ) >= DialogueManager.POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD):
-            self.actions.look(pose={
-                'x': self.person.pose.position.x,
-                'y': self.person.pose.position.y,
-                'z': self.person.pose.position.z,
-                'frame': self.person.header.frame_id,
-            })
