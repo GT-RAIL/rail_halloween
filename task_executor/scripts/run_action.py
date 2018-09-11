@@ -17,6 +17,7 @@ def goal_status_from_code(status):
         GoalStatus.PREEMPTED: "PREEMPTED",
         GoalStatus.ABORTED: "ABORTED",
     }
+    return mapping[status]
 
 
 def main():
@@ -41,14 +42,28 @@ def main():
     action.init(args.action)
 
     # Read the params
+    def convert_params(d):
+        new_d = {}
+        for k, v in d.iteritems():
+            if isinstance(k, unicode):
+                k = str(k)
+            new_d[k] = v
+
+            if isinstance(v, unicode):
+                new_d[k] = str(v)
+            elif isinstance(v, dict):
+                new_d[k] = convert_params(v)
+
+        return new_d
+
     params = json.loads(args.params)
-    for k, v in params.iteritems():
-        if isinstance(v, unicode):
-            params[k] = str(v)
+    params = convert_params(params)
 
     # Run the action and return the value
     status, variables = action(**params)
-    rospy.loginfo("Status: {}. Variables: {}".format(status, variables))
+    rospy.loginfo("Status: {}. Variables: {}".format(
+        goal_status_from_code(status), variables
+    ))
 
 
 if __name__ == '__main__':
