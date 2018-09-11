@@ -8,7 +8,7 @@ import pickle
 import rospy
 import actionlib
 
-from task_executor.actions import default_actions
+from task_executor.actions import get_default_actions
 from task_executor.tasks import Task, TaskContext
 
 from actionlib_msgs.msg import GoalID, GoalStatus
@@ -32,6 +32,9 @@ class TaskServer(object):
     ASSISTANCE_ARBITRATOR_ACTION_SERVER = "arbitrator"
 
     def __init__(self):
+        # Instantiate the action clients
+        self.actions = get_default_actions()
+
         # Provide a service to reload, and then reload
         self._reload_service = rospy.Service('~reload', Trigger, self.reload)
         self.reload(None)
@@ -64,14 +67,14 @@ class TaskServer(object):
         self.tasks = { key: Task() for key, _ in tasks_config.iteritems() }
 
         # Instantiate the registry of actions
-        default_actions.init()
+        self.actions.init()
 
         # Instantiate the registry of tasks
         for key, task in self.tasks.iteritems():
             task.init(
                 name=key,
                 tasks=self.tasks,
-                actions=default_actions,
+                actions=self.actions,
                 **tasks_config[key]
             )
 

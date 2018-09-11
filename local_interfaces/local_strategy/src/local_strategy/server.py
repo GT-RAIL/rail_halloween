@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceResult
 from power_msgs.srv import BreakerCommand
 
-from task_executor.actions import default_actions
+from task_executor.actions import get_default_actions
 from sound_interface import SoundClient
 
 from .dialogue import DialogueManager
@@ -37,7 +37,7 @@ class LocalRecoveryServer(object):
         )
 
         # The actions that we are interested in using
-        self.actions = default_actions
+        self.actions = get_default_actions()
 
         # The dialogue manager
         self.dialogue_manager = DialogueManager()

@@ -26,7 +26,11 @@ class Actions(object):
     """Registry of actions"""
 
     def __init__(self, registry):
-        self.registry = registry
+        """
+        Args:
+            registry (dict) : This is a dict of name -> Action class mappings
+        """
+        self.registry = { key: klass() for key, klass in registry.iteritems() }
 
         # Quick sanity check because I don't trust people. Also set the action
         # as an attribute for '.' based referencing
@@ -45,20 +49,22 @@ class Actions(object):
 # The default actions contain all the action interfaces that are known to this
 # package
 default_actions_dict = {
-    'arm': ArmPoseAction(),
-    'beep': BeepAction(),
-    'compliant_mode': CompliantModeAction(),
-    'find_closest_person': FindClosestPersonAction(),
-    'find_grasps': FindGraspsAction(),
-    'find_object': FindObjectAction(),
-    'gripper': GripperAction(),
-    'listen': ListenAction(),
-    'look': LookAction(),
-    'look_at_closest_person': LookAtClosestPersonAction(),
-    'move': MoveAction(),
-    'pick': PickAction(),
-    'place': PlaceAction(),
-    'speak': SpeakAction(),
-    'torso': TorsoAction(),
+    'arm': ArmPoseAction,
+    'beep': BeepAction,
+    'compliant_mode': CompliantModeAction,
+    'find_closest_person': FindClosestPersonAction,
+    'find_grasps': FindGraspsAction,
+    'find_object': FindObjectAction,
+    'gripper': GripperAction,
+    'listen': ListenAction,
+    'look': LookAction,
+    'look_at_closest_person': LookAtClosestPersonAction,
+    'move': MoveAction,
+    'pick': PickAction,
+    'place': PlaceAction,
+    'speak': SpeakAction,
+    'torso': TorsoAction,
 }
-default_actions = Actions(default_actions_dict)
+
+def get_default_actions():
+    return Actions(default_actions_dict)

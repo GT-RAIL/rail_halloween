@@ -12,7 +12,7 @@ import rospy
 import actionlib
 
 from sound_interface import SoundClient
-from task_executor.actions import default_actions, \
+from task_executor.actions import get_default_actions, \
     ArmPoseAction, MoveAction  # FIXME
 
 
@@ -101,7 +101,7 @@ action", "Restart Task", and "Stop Executing"
 
     def __init__(self):
         # Load the actions that are available to us
-        self.actions = default_actions
+        self.actions = get_default_actions()
 
         # Idle behaviours. These are normally always available, however, they
         # can be locked out during interactions
