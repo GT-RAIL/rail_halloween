@@ -182,7 +182,7 @@ class TaskServer(object):
                         execution_context = TaskContext(start_idx=task.step_idx, restart_child=False)
                     else:  # RequestAssistanceResult.RESUME_NONE
                         request_assistance = False
-                        variables = task.set_aborted(context=result.context)
+                        variables = task.set_aborted(result)
 
             # End while
 
