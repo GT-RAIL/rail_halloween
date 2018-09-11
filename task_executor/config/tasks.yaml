@@ -99,6 +99,14 @@ tasks:
   # Task used for testing subsets of the main task
   test:
     steps:
+    - action: arm
+      params:
+        poses: poses.tuck
+
+    - action: torso
+      params:
+        height: 0.0
+
     - action: move
       params:
         location: locations.pre_table1

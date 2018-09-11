@@ -277,6 +277,7 @@ action", "Restart Task", and "Stop Executing"
                     self.actions.speak(text="{}. {}".format(
                         DialogueManager.SAY_THANKS, DialogueManager.SAY_BYEBYE
                     ))
+                    self.person = None
 
         yield { DialogueManager.RESUME_HINT_RESPONSE_KEY: resume_hint }
 
