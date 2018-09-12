@@ -209,6 +209,8 @@ action", "Restart Task", and "Stop Executing"
 
             # Then let the person know that the robot is movable
             self.actions.toggle_breakers(enable_arm=False)
+            rospy.sleep(0.5)
+            self.actions.toggle_breakers(enable_arm=True)
             for variables in self.actions.speak.run(
                 text=DialogueManager.SAY_INSTRUCTIONS
             ):
