@@ -90,9 +90,7 @@ class LookAtClosestPersonAction(AbstractStep):
 
     def _lookat_person(self):
         while not rospy.is_shutdown() and self.enabled:
-            # Mandatory sleep just to prevent too much load. Also, don't bother
-            # doing anything if we are disabled
-            rospy.sleep(0.1)
+            # Don't bother doing anything if we are disabled
             if self._closest_person is None:
                 continue
 
