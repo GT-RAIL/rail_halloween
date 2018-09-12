@@ -100,18 +100,14 @@ class LocalRecoveryServer(object):
             self._server.set_aborted(result)
             return
 
-        # If they agree to provide help, then become compliant until they signal
-        # that they are done
+        # If they agree to provide help, then continue
         result.stats.request_acked = rospy.Time.now()
-        self.actions.compliant_mode(enable=True)
         for response in self.dialogue_manager.await_help(goal):
             if self._server.is_preempt_requested() or not self._server.is_active():
                 self.dialogue_manager.reset_dialogue()
-                self.actions.compliant_mode(enable=False)
                 self._server.set_preempted(result)
                 return
 
-        self.actions.compliant_mode(enable=False)
         if not hasattr(RequestAssistanceResult, response[DialogueManager.RESUME_HINT_RESPONSE_KEY]):
             result.context = pickle.dumps({ 'person': person, 'response': response })
             self._server.set_aborted(result)

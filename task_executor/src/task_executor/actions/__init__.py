@@ -7,7 +7,6 @@ from task_executor.abstract_step import AbstractStep
 
 from .arm_pose import ArmPoseAction
 from .beep import BeepAction
-from .compliant_mode import CompliantModeAction
 from .find_closest_person import FindClosestPersonAction
 from .find_grasps import FindGraspsAction
 from .find_object import FindObjectAction
@@ -19,6 +18,7 @@ from .move import MoveAction
 from .pick import PickAction
 from .place import PlaceAction
 from .speak import SpeakAction
+from .toggle_breakers import ToggleBreakersAction
 from .torso import TorsoAction
 
 
@@ -51,7 +51,6 @@ class Actions(object):
 default_actions_dict = {
     'arm': ArmPoseAction,
     'beep': BeepAction,
-    'compliant_mode': CompliantModeAction,
     'find_closest_person': FindClosestPersonAction,
     'find_grasps': FindGraspsAction,
     'find_object': FindObjectAction,
@@ -63,6 +62,7 @@ default_actions_dict = {
     'pick': PickAction,
     'place': PlaceAction,
     'speak': SpeakAction,
+    'toggle_breakers': ToggleBreakersAction,
     'torso': TorsoAction,
 }
 

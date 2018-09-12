@@ -67,6 +67,8 @@ class DialogueManager(object):
     SPEECH_ASSIST_AGREE = 'ASSIST_AGREE'
     SPEECH_ASSIST_DISAGREE = 'ASSIST_DISAGREE'
     SPEECH_ASSISTANCE_COMPLETE = 'ASSISTANCE_COMPLETE'
+    SPEECH_ENABLE_BASE = 'ENABLE_BASE'
+    SPEECH_DISABLE_BASE = 'DISABLE_BASE'
     SPEECH_RESUME_CURRENT = 'RESUME_CURRENT'
     SPEECH_RESUME_NEXT = 'RESUME_NEXT'
     SPEECH_RESUME_RETRY = 'RESUME_RETRY'
@@ -82,15 +84,17 @@ assist me?
     """
     SAY_DID_NOT_UNDERSTAND = "Sorry, I did not understand that"
     SAY_THATS_OK = "That's OK"
+    SAY_OK = "OK"
     SAY_THANKS = "Thank you!"
     SAY_PLEASE_WAIT = "Please wait..."
     SAY_INITIAL_REQUEST = """
 I am failing to complete {component}, which is in step {step_num} in my task
-plan. I think the cause is {cause}. I am disabling my joints now.
+plan. I think the cause is {cause}. I am disabling my arm joints now.
     """
     SAY_INSTRUCTIONS = """
-My joints are now pliable. You can move me however you wish to when helping me.
-When you're done, say "I'm done!"
+My arm joints are now pliable. You can move then however you wish to when
+helping me. You can also command me to turn off all joints. When you are done,
+say "I'm done!"
     """
     SAY_HOW_TO_PROCEED = "How should I proceed?"
     SAY_PROCEED_VALID_OPTIONS = """
@@ -118,7 +122,6 @@ action", "Restart Task", and "Stop Executing"
     def reset_dialogue(self):
         # Stop any actions that we might have started
         self.actions.look_at_closest_person(enable=False)
-        self.actions.speak.stop()
 
     def run_idle_behaviours(self):
         speech_generator = self.actions.listen.run()
@@ -205,6 +208,7 @@ action", "Restart Task", and "Stop Executing"
                 yield variables
 
             # Then let the person know that the robot is movable
+            self.actions.toggle_breakers(enable_arm=False)
             for variables in self.actions.speak.run(
                 text=DialogueManager.SAY_INSTRUCTIONS
             ):
@@ -214,7 +218,11 @@ action", "Restart Task", and "Stop Executing"
             done_flag = False
             while not done_flag:
                 for variables in self.actions.listen.run(
-                    expected_cmd=[DialogueManager.SPEECH_ASSISTANCE_COMPLETE]
+                    expected_cmd=[
+                        DialogueManager.SPEECH_ASSISTANCE_COMPLETE,
+                        DialogueManager.SPEECH_ENABLE_BASE,
+                        DialogueManager.SPEECH_DISABLE_BASE,
+                    ]
                 ):
                     yield variables
 
@@ -223,11 +231,19 @@ action", "Restart Task", and "Stop Executing"
                     rospy.loginfo("Received unexpected cmd: {}".format(cmd))
                     self.actions.speak(text=DialogueManager.SAY_DID_NOT_UNDERSTAND)
                 else:
-                    done_flag = True
-                    self.actions.speak(text="{}. {}".format(
-                        DialogueManager.SAY_THANKS,
-                        DialogueManager.SAY_HOW_TO_PROCEED
-                    ))
+                    cmd = variables['cmd']
+                    if cmd == DialogueManager.SPEECH_ASSISTANCE_COMPLETE:
+                        done_flag = True
+                        self.actions.speak(text="{}. {}".format(
+                            DialogueManager.SAY_THANKS,
+                            DialogueManager.SAY_HOW_TO_PROCEED
+                        ))
+                    elif cmd == DialogueManager.SPEECH_ENABLE_BASE:
+                        self.actions.toggle_breakers(enable_base=True)
+                        self.actions.speak(text=DialogueManager.SAY_OK)
+                    elif cmd == DialogueManager.SPEECH_DISABLE_BASE:
+                        self.actions.toggle_breakers(enable_base=False)
+                        self.actions.speak(text=DialogueManager.SAY_OK)
 
             # Finally, wait for a response
             while resume_hint is None:
@@ -254,6 +270,7 @@ action", "Restart Task", and "Stop Executing"
                     ))
                     self.reset_dialogue()
 
+        self.actions.toggle_breakers()
         yield { DialogueManager.RESUME_HINT_RESPONSE_KEY: resume_hint }
 
     def _get_cause_from_request(self, request):
