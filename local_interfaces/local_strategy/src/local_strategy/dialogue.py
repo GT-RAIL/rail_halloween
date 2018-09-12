@@ -15,6 +15,8 @@ from sound_interface import SoundClient
 from task_executor.actions import get_default_actions, \
     ArmPoseAction, MoveAction  # FIXME
 
+from assistance_msgs.msg import RequestAssistanceResult
+
 
 # Helper functions
 
