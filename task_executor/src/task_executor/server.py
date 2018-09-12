@@ -8,6 +8,7 @@ import pickle
 import rospy
 import actionlib
 
+from sound_interface import SoundClient
 from task_executor.actions import get_default_actions
 from task_executor.tasks import Task, TaskContext
 
@@ -60,6 +61,7 @@ class TaskServer(object):
 
         self._server.start()
         rospy.loginfo("Executor node ready...")
+        self.actions.beep(beep=SoundClient.BEEP_PROUD)
 
     def reload(self, req):
         # Get the task configs

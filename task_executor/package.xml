@@ -70,6 +70,7 @@
   <exec_depend>hlpr_speech_recognition</exec_depend>
   <exec_depend>message_runtime</exec_depend>
   <exec_depend>simulation_helpers</exec_depend>
+  <exec_depend>sound_interface</exec_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
