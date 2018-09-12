@@ -69,10 +69,10 @@ class DialogueManager(object):
     SPEECH_ASSISTANCE_COMPLETE = 'ASSISTANCE_COMPLETE'
     SPEECH_ENABLE_BASE = 'ENABLE_BASE'
     SPEECH_DISABLE_BASE = 'DISABLE_BASE'
-    SPEECH_RESUME_CURRENT = 'RESUME_CURRENT'
-    SPEECH_RESUME_NEXT = 'RESUME_NEXT'
-    SPEECH_RESUME_RETRY = 'RESUME_RETRY'
     SPEECH_RESUME_NONE = 'RESUME_NONE'
+    SPEECH_RESUME_CONTINUE = 'RESUME_CONTINUE'
+    SPEECH_RESUME_RETRY = 'RESUME_RETRY'
+    SPEECH_RESUME_NEXT = 'RESUME_NEXT'
 
     # Template texts
     SAY_HELLO = "Hello!"
@@ -251,9 +251,9 @@ action", "Restart Task", and "Stop Executing"
             while resume_hint is None:
                 for variables in self.actions.listen.run(expected_cmd=[
                     DialogueManager.SPEECH_RESUME_NONE,
+                    DialogueManager.SPEECH_RESUME_CONTINUE,
                     DialogueManager.SPEECH_RESUME_RETRY,
                     DialogueManager.SPEECH_RESUME_NEXT,
-                    DialogueManager.SPEECH_RESUME_CURRENT,
                 ]):
                     yield variables
 
@@ -267,6 +267,18 @@ action", "Restart Task", and "Stop Executing"
                         yield variables
                 else:
                     resume_hint = variables['cmd']
+                    if resume_hint == DialogueManager.SPEECH_RESUME_NONE:
+                        resume_hint = RequestAssistanceResult.RESUME_NONE
+                    elif resume_hint == DialogueManager.SPEECH_RESUME_CONTINUE:
+                        resume_hint = RequestAssistanceResult.RESUME_CONTINUE
+                    elif resume_hint == DialogueManager.SPEECH_RESUME_RETRY:
+                        resume_hint = RequestAssistanceResult.RESUME_RETRY
+                    elif resume_hint == DialogueManager.SPEECH_RESUME_NEXT:
+                        resume_hint = RequestAssistanceResult.RESUME_NEXT
+                    else:
+                        resume_hint = None
+                        continue
+
                     self.actions.speak(text="{}. {}".format(
                         DialogueManager.SAY_THANKS, DialogueManager.SAY_BYEBYE
                     ))

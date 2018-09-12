@@ -108,13 +108,8 @@ class LocalRecoveryServer(object):
                 self._server.set_preempted(result)
                 return
 
-        if not hasattr(RequestAssistanceResult, response[DialogueManager.RESUME_HINT_RESPONSE_KEY]):
-            result.context = pickle.dumps({ 'person': person, 'response': response })
-            self._server.set_aborted(result)
-            return
-
         # Return when the request for help is completed
-        result.resume_hint = getattr(RequestAssistanceResult, response[DialogueManager.RESUME_HINT_RESPONSE_KEY])
+        result.resume_hint = response[DialogueManager.RESUME_HINT_RESPONSE_KEY]
         result.stats.request_complete = rospy.Time.now()
         self._server.set_succeeded(result)
 
