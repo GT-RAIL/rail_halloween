@@ -310,6 +310,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 if __name__ == '__main__':
     # For testing purposes
     rospy.init_node('speaker_test')
+    SoundClient.SOUND_PLAY_SERVER = "sound_play"
     client = SoundClient()
 
     def on_speak(args):
