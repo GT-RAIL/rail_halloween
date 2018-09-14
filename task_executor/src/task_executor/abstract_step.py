@@ -5,6 +5,7 @@
 from __future__ import print_function
 
 import abc
+import rospy
 from actionlib_msgs.msg import GoalStatus
 
 class AbstractStep(object):
@@ -113,6 +114,7 @@ class AbstractStep(object):
             variables - the last yielded dictionary from the run command
         """
         for variables in self.run(**params):
-            pass
+            if rospy.is_shutdown():
+                break
 
         return (self.status, variables,)

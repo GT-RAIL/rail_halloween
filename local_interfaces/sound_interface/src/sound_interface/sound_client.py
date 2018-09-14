@@ -175,9 +175,9 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         }
 
         # Need to connect to the server
-        rospy.loginfo("Connecting to sound_play...")
+        rospy.loginfo("Connecting to {}...".format(SoundClient.SOUND_PLAY_SERVER))
         self.sound_client.wait_for_server()
-        rospy.loginfo("...sound_play connected")
+        rospy.loginfo("...{} connected".format(SoundClient.SOUND_PLAY_SERVER))
 
     def get_state(self):
         """Returns the state of the action client"""
@@ -268,7 +268,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     def _play(self, sound, blocking, **kwargs):
         # Send the command
-        rospy.loginfo("Sending sound action with (sound, command, arg): {}, {}, {}"
+        rospy.logdebug("Sending sound action with (sound, command, arg): {}, {}, {}"
                        .format(sound.sound, sound.command, sound.arg))
         goal = SoundRequestGoal(sound_request=sound)
         self.sound_client.send_goal(goal)
@@ -276,11 +276,10 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         # If blocking, wait until the sound is done
         if blocking:
             self.sound_client.wait_for_result()
-            rospy.loginfo('Response to sound action received')
+            rospy.logdebug('Response to sound action received')
 
     def _cleanup(self, evt):
         # Get the files that we want to check are safe to delete or not
-        rospy.loginfo("Checking files")
         files_to_check = set()
         while not self._tmp_speech_files.empty():
             files_to_check.add(self._tmp_speech_files.get(block=False))
@@ -288,23 +287,22 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
         # Iterate through all the processes and check if they are using
         # any of the files
-        rospy.loginfo("Checking processes for files: {}".format(files_to_check))
         files_to_leave = set()
         for proc in psutil.process_iter():
             try:
                 for filename in files_to_check:
                     if filename in [x.path for x in proc.open_files()]:
-                        rospy.loginfo("File is used by: {}".format(proc.info))
+                        rospy.logdebug("File is used by: {}".format(proc.info))
                         files_to_leave.add(filename)
                         self._tmp_speech_files.put(filename)
             except Exception as e:
                 pass
 
         # Finally delete only the files that we know we should leave
-        rospy.loginfo("Files to delete: {}".format((files_to_check - files_to_leave)))
         for filename in (files_to_check - files_to_leave):
-            rospy.loginfo("Removing temp speech file: {}".format(filename))
-            os.remove(filename)
+            if os.path.exists(filename):
+                rospy.logdebug("Removing temp speech file: {}".format(filename))
+                os.remove(filename)
 
 
 if __name__ == '__main__':

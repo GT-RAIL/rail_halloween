@@ -17,7 +17,7 @@ def goal_status_from_code(status):
         GoalStatus.PREEMPTED: "PREEMPTED",
         GoalStatus.ABORTED: "ABORTED",
     }
-    return mapping[status]
+    return mapping.get(status, status)
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
         action_parser.add_argument('params', help="params as JSON to the action")
 
     # Then parse the arguments
-    args = parser.parse_args()
+    args = parser.parse_args(rospy.myargv(sys.argv)[1:])
 
     # Initialize the action
     action = actions[args.action]
