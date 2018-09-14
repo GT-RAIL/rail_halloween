@@ -4,9 +4,11 @@
 from __future__ import print_function, division
 
 import os
+import psutil
 import argparse
 import requests
-import tempfile
+import Queue
+import numpy as np
 
 from pydub import AudioSegment
 
@@ -16,15 +18,25 @@ import actionlib
 
 from sound_play.msg import SoundRequestAction, SoundRequestGoal, SoundRequest
 
-# A temporary file creation helper
-# https://stackoverflow.com/questions/10541760/can-i-set-the-umask-for-tempfile-namedtemporaryfile-in-python
+# Helper functions
 
-def UmaskNamedTemporaryFile(*args, **kwargs):
-    fdesc = tempfile.NamedTemporaryFile(*args, **kwargs)
-    umask = os.umask(0)
-    os.umask(umask)
-    os.chmod(fdesc.name, 0o666 & ~umask)
-    return fdesc
+FILENAME_CHARS = list("abcdefghijklmnopqrstuvwxyz0123456789_")
+FILENAME_NUM_RANDOM_CHARS = 10
+
+
+def create_temp_filename(prefix, suffix):
+    """A temporary filename creation helper. It's a bit of a hack"""
+    global FILENAME_CHARS
+    global FILENAME_NUM_RANDOM_CHARS
+    name = "{}{}{}".format(
+        prefix,
+        "".join(np.random.choice(FILENAME_CHARS, FILENAME_NUM_RANDOM_CHARS)),
+        suffix
+    )
+    filename = "/tmp"
+    while os.path.exists(filename):
+        filename = os.path.join("/tmp", name)
+    return filename
 
 
 # The actual sound client
@@ -32,10 +44,7 @@ def UmaskNamedTemporaryFile(*args, **kwargs):
 class SoundClient(object):
     """
     A reimplementation of ROS's SoundClient to help with speech and sound
-    tasks. We force the use of an action client in this class. At this moment,
-    ROS's sound_play node does not allow multiple sounds to be played at the
-    same time, so the same constraint applies here. In the near future,
-    that node should be reimplemented.
+    tasks. We force the use of an action client in this class.
 
     To play a beep, you must refer to one of the constant keys in this
     package that begins with `SOUND_*`. By default, the sound files in `sounds`
@@ -78,6 +87,9 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     # Speech params
     SPEECH_GAIN_DB = 15
+
+    # ROS Constants
+    SOUND_PLAY_SERVER = "sound_server"
 
     @staticmethod
     def make_happy(text):
@@ -122,11 +134,16 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             """.format(text)
         )
 
-    def __init__(self, beeps=None):
+    def __init__(self, beeps=None, affects=None):
         # Want to reimplement SoundClient so that we are always using the action
         # interface to the sound_play_node.
-        self.sound_client = actionlib.SimpleActionClient("sound_play", SoundRequestAction)
-        self._tmp_speech_file = None
+        self.sound_client = actionlib.SimpleActionClient(
+            SoundClient.SOUND_PLAY_SERVER, SoundRequestAction
+        )
+
+        # Background thread to clear out speech files when they're done
+        self._tmp_speech_files = Queue.Queue()
+        self._tmp_speech_cleanup_thread = rospy.Timer(rospy.Duration(60), callback=self._cleanup)
 
         # Load the beeps
         self.beeps = beeps
@@ -200,39 +217,31 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             # 'effect_Robot_parameters': 'amount:60.0',
         }
 
-        # Close the old speech file, if it exists
-        if self._tmp_speech_file is not None:
-            self._tmp_speech_file.close()
-            self._tmp_speech_file = None
+        # Send a request to MARY and check the response type
+        r = requests.post(SoundClient.MARY_SERVER_URL, params=query_dict)
+        if r.headers['content-type'] != 'audio/x-wav':
+            rospy.logerr("Response Error Code: {}. Content-Type: {}"
+                         .format(r.status_code, r.headers['content-type']))
+            return
 
-        try:
-            r = requests.post(SoundClient.MARY_SERVER_URL, params=query_dict)
-            if r.headers['content-type'] != 'audio/x-wav':
-                rospy.logerr("Response Error Code: {}. Content-Type: {}"
-                             .format(r.status_code, r.headers['content-type']))
-                return
+        # Increase the volume on the temp file
+        speech = AudioSegment(data=r.content)
+        speech = speech + SoundClient.SPEECH_GAIN_DB
 
-            # Increase the volume on the temp file
-            speech = AudioSegment(data=r.content)
-            speech = speech + SoundClient.SPEECH_GAIN_DB
+        # Write the wav data to a temp file
+        speech_filename = create_temp_filename(prefix='marytts', suffix='.wav')
+        with open(speech_filename, 'wb') as fd:
+            speech.export(speech_filename, format='wav')
 
-            # Write the wav data to a temp file
-            self._tmp_speech_file = UmaskNamedTemporaryFile(prefix='marytts', suffix='.wav')
-            self._tmp_speech_file.flush()
-            speech.export(self._tmp_speech_file.name, format='wav')
+        # Now send the file's name over to sound play
+        sound = SoundRequest()
+        sound.sound = SoundRequest.PLAY_FILE
+        sound.command = SoundRequest.PLAY_ONCE
+        sound.arg = speech_filename
+        self._play(sound, blocking=blocking, **kwargs)
 
-            # Now send the file's name over to sound play
-            sound = SoundRequest()
-            sound.sound = SoundRequest.PLAY_FILE
-            sound.command = SoundRequest.PLAY_ONCE
-            sound.arg = self._tmp_speech_file.name
-            self._play(sound, blocking=blocking, **kwargs)
-
-        finally:
-            # We're done, so delete the file
-            if self._tmp_speech_file is not None and blocking:
-                self._tmp_speech_file.close()
-                self._tmp_speech_file = None
+        # Send the file to the cleanup thread now
+        self._tmp_speech_files.put(speech_filename)
 
     def beep(self, key, blocking=False, **kwargs):
         """Play one of the beeps and boops that we know of"""
@@ -259,7 +268,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     def _play(self, sound, blocking, **kwargs):
         # Send the command
-        rospy.logdebug("Sending sound action with (sound, command, arg): {}, {}, {}"
+        rospy.loginfo("Sending sound action with (sound, command, arg): {}, {}, {}"
                        .format(sound.sound, sound.command, sound.arg))
         goal = SoundRequestGoal(sound_request=sound)
         self.sound_client.send_goal(goal)
@@ -267,7 +276,35 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         # If blocking, wait until the sound is done
         if blocking:
             self.sound_client.wait_for_result()
-            rospy.logdebug('Response to sound action received')
+            rospy.loginfo('Response to sound action received')
+
+    def _cleanup(self, evt):
+        # Get the files that we want to check are safe to delete or not
+        rospy.loginfo("Checking files")
+        files_to_check = set()
+        while not self._tmp_speech_files.empty():
+            files_to_check.add(self._tmp_speech_files.get(block=False))
+            self._tmp_speech_files.task_done()
+
+        # Iterate through all the processes and check if they are using
+        # any of the files
+        rospy.loginfo("Checking processes for files: {}".format(files_to_check))
+        files_to_leave = set()
+        for proc in psutil.process_iter():
+            try:
+                for filename in files_to_check:
+                    if filename in [x.path for x in proc.open_files()]:
+                        rospy.loginfo("File is used by: {}".format(proc.info))
+                        files_to_leave.add(filename)
+                        self._tmp_speech_files.put(filename)
+            except Exception as e:
+                pass
+
+        # Finally delete only the files that we know we should leave
+        rospy.loginfo("Files to delete: {}".format((files_to_check - files_to_leave)))
+        for filename in (files_to_check - files_to_leave):
+            rospy.loginfo("Removing temp speech file: {}".format(filename))
+            os.remove(filename)
 
 
 if __name__ == '__main__':
