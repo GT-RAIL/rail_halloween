@@ -6,6 +6,19 @@ This package generates sounds for the robot.
 
 In order to perform TTS, the packages in this folder use [Mary TTS](http://mary.dfki.de/).
 
+### Docker installation (Recommended)
+
+If you have docker running, simply run:
+
+```bash
+docker run -d --rm --name marytts -p 59125:59125 gtrail/marytts:dfki-prudence-hsmm
+```
+
+This will start up MARY TTS with the `dfki-prudence-hsmm` voice installed. The image tag is meant to denote the different voices, but we only have a single voice tag in the remote docker hub at the moment.
+
+
+### Local installation
+
 **Prerequisites**:
 
 Detailed instructions for JAVA at [link](https://www.atlantic.net/hipaa-compliant-cloud-hosting-services/how-to-install-java-ubuntu-14-04/).
@@ -40,14 +53,17 @@ cd $MARYTTS_ROOT/target/marytts-5.2/bin/
 
 Select the voice(s) you want to install and hit install. Now you're ready for TTS!
 
-**Demo**:
+```bash
+# Run the Mary TTS server. It's a good idea to have an alias for this.
+$MARYTTS/target/marytts-5.2/bin/marytts-server
+```
+
+
+### Demo
 
 The following commands should each be run in their own terminal window.
 
 ```bash
-# Run the Mary TTS server. It's a good idea to have an alias for this.
-$MARYTTS/target/marytts-5.2/bin/marytts-server
-
 # Run a ROS Core
 roscore
 
