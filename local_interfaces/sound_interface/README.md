@@ -8,9 +8,10 @@ In order to perform TTS, the packages in this folder use [Mary TTS](http://mary.
 
 ### Common dependencies
 
-The code in this repository needs: `requests`, `psutil`, and `pydub`.
+The code in this repository needs: `sox`, `requests`, `psutil`, and `pydub`.
 
 ```bash
+sudo apt-get install sox
 sudo -H pip install requests psutil pydub
 ```
 
