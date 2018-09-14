@@ -10,6 +10,63 @@ Modules:
 - [`local_interfaces`](local_interfaces/) - If we decide to solicit help from a local person, then the code in this folder (main entrypoint: [`local_interfaces/local_strategy`](local_interfaces/local_strategy)) handles the presentation of the request to a human.
 - [`remote_interfaces`](remote_interfaces/) - If we decide to solicit help from a remote person, then the code in this folder (main entrypoint: [`remote_interfaces/remote_strategy`](remote_interfaces/remote_strategy)) handles the presentation of the request to a human.
 
-Installation:
+Installation (TODO):
 
-- [`rosinstall`](rosinstall/) - `rosinstall` files to setup and synchronize the different workspaces. However, we cannot use the default `wstool` for this.
+- [`install`](install/) - `rosinstall` files to setup and synchronize the different workspaces. However, we cannot use the default `wstool` for this. Also includes `requirements.txt` (TODO), etc.
+
+
+## Prerequisites
+
+The code in this repository requires the installation of the following prerequisites:
+
+```yaml
+# Prerequisites installed with `pip install <>`
+pip:
+- psutil
+- pydub
+
+# Prerequisite for tts. Instructions are in the speech_interface package in this repository
+java:
+- marytts
+
+# Prerequisite packages. Ensure these are in your ROS workspace
+ros:
+- GT-RAIL/fetch_demos
+- GT-RAIL/fetch_gazebo
+- gt-rail-internal/fetch_grasp_suggestion  # Expect a public release from Fetch soon
+- GT-RAIL/fetch_ros
+- HLP-R/hlpr_speech
+- GT-RAIL/rail_agile
+- GT-RAIL/rail_grasp_calculation
+- GT-RAIL/rail_manipulation_msgs
+- GT-RAIL/rail_object_detection  # Only really need the msgs from here
+- GT-RAIL/rail_people_detection
+- GT-RAIL/rail_segmentation
+```
+
+In the near future, these will be packaged into a script(s) placed in the `install` directory.
+
+
+## Quickstart
+
+The bulk of the code in this repository is written in service of the `task_executor` that executes a specified task. To that end, there is only a single launch file in the `task_executor` package that brings up both the dependencies of `task_executor`, as well as the executor itself:
+
+1. Start the Fetch. In the real world, simply turn on the power; in simulation
+```bash
+roslaunch fetch_gazebo playground.launch
+```
+2. Start the MoveIt, move_base, grasp planners, speech, etc
+```bash
+# Use the sim flag only in simulation
+roslaunch task_executor fetch_deliver.launch sim:=true start_all:=true task_executor:=false
+```
+3. Start the task_executor
+```bash
+# Use the sim flag only in simulation
+roslaunch task_executor fetch_deliver.launch sim:=true task_executor:=true
+```
+4. Run a task defined in `$(find task_executor)/config/tasks.yaml`
+```bash
+# For example, to run the task with the key `main` in the YAML file
+rosrun task_executor run_task.py main
+```
