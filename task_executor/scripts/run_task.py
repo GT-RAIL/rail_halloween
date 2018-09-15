@@ -9,7 +9,17 @@ import argparse
 import rospy
 import actionlib
 
+from actionlib_msgs.msg import GoalStatus
 from task_executor.msg import ExecuteAction, ExecuteGoal
+
+
+def goal_status_from_code(status):
+    mapping = {
+        GoalStatus.SUCCEEDED: "SUCCEEDED",
+        GoalStatus.PREEMPTED: "PREEMPTED",
+        GoalStatus.ABORTED: "ABORTED",
+    }
+    return mapping.get(status, status)
 
 
 def main():
@@ -27,7 +37,9 @@ def main():
     goal = ExecuteGoal(name=args.task_name)
     client.send_goal(goal)
     client.wait_for_result()
-    rospy.loginfo("Result: {}".format(client.get_state()))
+    rospy.loginfo("Result: {}".format(
+        goal_status_from_code(client.get_state())
+    ))
 
 
 if __name__ == '__main__':
