@@ -82,7 +82,7 @@
 
   <!-- Sound Play -->
   <group if="$(arg sound)">
-    <node name="sound_play" pkg="sound_play" type="soundplay_node.py" if="$(arg sim)" />
+    <node name="sound_server" pkg="sound_interface" type="server_node.py" />
   </group>
 
   <!-- Speech recognition -->
