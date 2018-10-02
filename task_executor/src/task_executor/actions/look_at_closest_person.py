@@ -19,6 +19,7 @@ class LookAtClosestPersonAction(AbstractStep):
 
     CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
     POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD = 0.02
+    HEAD_ACTION_DURATION = 0.1
 
     def init(self, name):
         self.name = name
@@ -46,6 +47,7 @@ class LookAtClosestPersonAction(AbstractStep):
 
         # Initialize the sub action
         self._look_action.init('lookat_closest_person')
+        self._look_action._duration = LookAtClosestPersonAction.HEAD_ACTION_DURATION
 
     def run(self, enable, person_id=""):
         rospy.loginfo("Action {}: {}".format(

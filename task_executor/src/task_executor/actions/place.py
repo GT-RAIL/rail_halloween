@@ -7,7 +7,7 @@ from task_executor.abstract_step import AbstractStep
 
 from std_srvs.srv import Empty
 
-from .arm_pose import ArmPoseAction
+from .arm import ArmAction
 
 
 class PlaceAction(AbstractStep):
@@ -21,7 +21,7 @@ class PlaceAction(AbstractStep):
             PlaceAction.DROP_OBJECT_SERVICE_NAME,
             Empty
         )
-        self._arm_pose = ArmPoseAction()
+        self._arm = ArmAction()
 
         # Set a stop flag
         self._stopped = False
@@ -30,19 +30,19 @@ class PlaceAction(AbstractStep):
         self._drop_object_srv.wait_for_service()
         rospy.loginfo("...drop_service connected")
 
-        self._arm_pose.init('place_pose')
+        self._arm.init('place_pose')
 
     def run(self):
         rospy.loginfo("Action {}: Placing objects in hand".format(self.name))
         self._stopped = False
 
         # First move to the desired pose
-        for variables in self._arm_pose.run(PlaceAction.DROP_POSE_NAME):
+        for variables in self._arm.run(PlaceAction.DROP_POSE_NAME):
             yield self.set_running(**variables)
 
         # Check to see if the arm pose failed
-        if not self._arm_pose.is_succeeded():
-            if self._arm_pose.is_preempted():
+        if not self._arm.is_succeeded():
+            if self._arm.is_preempted():
                 yield self.set_preempted(**variables)
             else:
                 yield self.set_aborted(**variables)
@@ -61,5 +61,5 @@ class PlaceAction(AbstractStep):
 
     def stop(self):
         # Propagate the stop signal and also set a personal stopped flag
-        self._arm_pose.stop()
+        self._arm.stop()
         self._stopped = True

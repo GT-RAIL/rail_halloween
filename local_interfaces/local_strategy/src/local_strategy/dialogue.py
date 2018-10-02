@@ -13,7 +13,7 @@ import actionlib
 
 from sound_interface import SoundClient
 from task_executor.actions import get_default_actions, \
-    ArmPoseAction, MoveAction  # FIXME
+    ArmAction  # FIXME
 
 from assistance_msgs.msg import RequestAssistanceResult
 
@@ -96,7 +96,7 @@ plan. I think the cause is {cause}. I am disabling my arm joints now.
     SAY_INSTRUCTIONS = """
 My arm joints are now pliable. You can move then however you wish to when
 helping me. You can also command me to turn off all joints. When you are done,
-say "I'm done!"
+say "I am done!"
     """
     SAY_HOW_TO_PROCEED = "How should I proceed?"
     SAY_PROCEED_VALID_OPTIONS = """
@@ -307,7 +307,7 @@ action", "Restart Task", and "Stop Executing"
 
         if request.component == 'arm':
             attempt_num = find_value_in_context('attempt_num', request.context)
-            if attempt_num is not None and attempt_num + 1 >= ArmPoseAction.MAX_ATTEMPTS:
+            if attempt_num is not None and attempt_num + 1 >= ArmAction.MAX_ATTEMPTS:
                 cause_dict['cause'] = 'a motion planner failure'
                 return cause_dict
 

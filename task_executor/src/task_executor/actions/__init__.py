@@ -5,7 +5,7 @@ from __future__ import print_function
 
 from task_executor.abstract_step import AbstractStep
 
-from .arm_pose import ArmPoseAction
+from .arm import ArmAction
 from .beep import BeepAction
 from .find_closest_person import FindClosestPersonAction
 from .find_grasps import FindGraspsAction
@@ -49,7 +49,7 @@ class Actions(object):
 # The default actions contain all the action interfaces that are known to this
 # package
 default_actions_dict = {
-    'arm': ArmPoseAction,
+    'arm': ArmAction,
     'beep': BeepAction,
     'find_closest_person': FindClosestPersonAction,
     'find_grasps': FindGraspsAction,

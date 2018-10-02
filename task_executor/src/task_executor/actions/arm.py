@@ -14,7 +14,7 @@ from task_executor.msg import ArmPose
 from task_executor.srv import GetArmPose, GetTrajectory
 
 
-class ArmPoseAction(AbstractStep):
+class ArmAction(AbstractStep):
 
     POSE_ACTION_SERVER = "grasp_executor/preset_position"
     ARM_POSES_SERVICE_NAME = "database/arm_pose"
@@ -34,13 +34,13 @@ class ArmPoseAction(AbstractStep):
         self.name = name
 
         self._pose_client = actionlib.SimpleActionClient(
-            ArmPoseAction.POSE_ACTION_SERVER,
+            ArmAction.POSE_ACTION_SERVER,
             PresetJointsMoveAction
         )
-        self._get_arm_pose_srv = rospy.ServiceProxy(ArmPoseAction.ARM_POSES_SERVICE_NAME, GetArmPose)
-        self._get_trajectory_srv = rospy.ServiceProxy(ArmPoseAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
+        self._get_arm_pose_srv = rospy.ServiceProxy(ArmAction.ARM_POSES_SERVICE_NAME, GetArmPose)
+        self._get_trajectory_srv = rospy.ServiceProxy(ArmAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
 
-        self._max_attempts = ArmPoseAction.MAX_ATTEMPTS
+        self._max_attempts = ArmAction.MAX_ATTEMPTS
 
         rospy.loginfo("Connecting to arm_pose_executor...")
         self._pose_client.wait_for_server()
@@ -72,7 +72,7 @@ class ArmPoseAction(AbstractStep):
 
             # Create and send the goal
             goal = PresetJointsMoveGoal()
-            goal.name.extend(ArmPoseAction.ARM_JOINT_NAMES)
+            goal.name.extend(ArmAction.ARM_JOINT_NAMES)
             goal.position = pose.angles
             assert len(goal.name) == len(goal.position)
 
