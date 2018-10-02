@@ -30,7 +30,7 @@ class PlaceAction(AbstractStep):
         self._drop_object_srv.wait_for_service()
         rospy.loginfo("...drop_service connected")
 
-        self._arm.init('place_pose')
+        self._arm.init('arm_place')
 
     def run(self):
         rospy.loginfo("Action {}: Placing objects in hand".format(self.name))

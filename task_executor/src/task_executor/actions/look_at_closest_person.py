@@ -6,7 +6,6 @@ import numpy as np
 from threading import Thread
 
 import rospy
-import actionlib
 
 from task_executor.abstract_step import AbstractStep
 
@@ -46,7 +45,7 @@ class LookAtClosestPersonAction(AbstractStep):
         self._look_action = LookAction()
 
         # Initialize the sub action
-        self._look_action.init('lookat_closest_person')
+        self._look_action.init('look_look_at_closest_person')
         self._look_action._duration = LookAtClosestPersonAction.HEAD_ACTION_DURATION
 
     def run(self, enable, person_id=""):

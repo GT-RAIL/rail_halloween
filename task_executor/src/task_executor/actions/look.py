@@ -29,7 +29,7 @@ class LookAction(AbstractStep):
         rospy.loginfo("...head_controller connected")
 
     def run(self, pose):
-        rospy.loginfo("Action {}: Looking at point: {}".format(self.name, pose))
+        rospy.logdebug("Action {}: Looking at point: {}".format(self.name, pose))
 
         # Create and send the goal pose
         goal = PointHeadGoal()

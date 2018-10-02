@@ -13,6 +13,8 @@ from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveG
 from task_executor.msg import ArmPose
 from task_executor.srv import GetArmPose, GetTrajectory
 
+from .look_at_gripper import LookAtGripperAction
+
 
 class ArmAction(AbstractStep):
 
@@ -42,6 +44,10 @@ class ArmAction(AbstractStep):
 
         self._max_attempts = ArmAction.MAX_ATTEMPTS
 
+        # Initialize the look at gripper module
+        self._look_at_gripper = LookAtGripperAction()
+
+        # Connect to the various services
         rospy.loginfo("Connecting to arm_pose_executor...")
         self._pose_client.wait_for_server()
         rospy.loginfo("...arm_pose_executor connected")
@@ -50,6 +56,8 @@ class ArmAction(AbstractStep):
         self._get_arm_pose_srv.wait_for_service()
         self._get_trajectory_srv.wait_for_service()
         rospy.loginfo("...database services connected")
+
+        self._look_at_gripper.init('look_at_gripper_arm')
 
     def run(self, poses):
         # Parse out the pose waypoints
@@ -64,6 +72,10 @@ class ArmAction(AbstractStep):
             raise StopIteration()
 
         rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, pose_waypoints))
+
+        # Enable the look at gripper behaviour
+        self._look_at_gripper(enable=True)
+        rospy.sleep(0.5)
 
         status = GoalStatus.LOST
         attempt_num = -1
@@ -96,6 +108,10 @@ class ArmAction(AbstractStep):
             if status != GoalStatus.SUCCEEDED:
                 break
 
+        # Stop looking at the gripper and give some time for that to propagate
+        self._look_at_gripper(enable=False)
+        rospy.sleep(0.5)
+
         # Wait for a result and yield based on how we exited
         self._pose_client.wait_for_result()
         result = self._pose_client.get_result()
@@ -122,6 +138,7 @@ class ArmAction(AbstractStep):
             )
 
     def stop(self):
+        self._look_at_gripper(enable=False)
         self._pose_client.cancel_goal()
 
     def _parse_poses(self, poses):

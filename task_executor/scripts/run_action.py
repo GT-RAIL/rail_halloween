@@ -29,6 +29,8 @@ def main():
 
     # Create the argparser
     parser = argparse.ArgumentParser()
+    parser.add_argument("--background", action="store_true",
+                        help="spin until shutdown is signaled; action is stopped then")
     subparsers = parser.add_subparsers(dest='action')
     for key, action in actions.registry.iteritems():
         action_parser = subparsers.add_parser(key, help="Action: {}".format(key))
@@ -61,6 +63,10 @@ def main():
 
     # Run the action and return the value
     status, variables = action(**params)
+    if args.background:
+        rospy.spin()
+        action.stop()
+
     rospy.loginfo("Status: {}. Variables: {}".format(
         goal_status_from_code(status), variables
     ))
