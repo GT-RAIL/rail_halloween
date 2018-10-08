@@ -9,6 +9,15 @@ tasks:
     - grasps
 
     steps:
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: beep
+      params:
+        beep: surprised
+        async: true
+
     - action: find_object
       params:
         obj: params.obj
@@ -67,6 +76,7 @@ tasks:
     - action: arm
       params:
         poses: poses.ready
+        look_at_gripper: false
 
   # Departing a pickup or dropoff location.
   depart:
@@ -140,15 +150,6 @@ tasks:
       params:
         pre_loc: locations.pre_table1
         loc: locations.table1
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: beep
-      params:
-        beep: surprised
-        async: true
 
     - task: perceive
       params:

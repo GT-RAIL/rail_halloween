@@ -59,7 +59,7 @@ class ArmAction(AbstractStep):
 
         self._look_at_gripper.init('look_at_gripper_arm')
 
-    def run(self, poses):
+    def run(self, poses, look_at_gripper=True):
         # Parse out the pose waypoints
         pose_waypoints = self._parse_poses(poses)
         if pose_waypoints is None:
@@ -74,8 +74,9 @@ class ArmAction(AbstractStep):
         rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, pose_waypoints))
 
         # Enable the look at gripper behaviour
-        self._look_at_gripper(enable=True)
-        rospy.sleep(0.5)
+        if look_at_gripper:
+            self._look_at_gripper(enable=True)
+            rospy.sleep(0.5)
 
         status = GoalStatus.LOST
         attempt_num = -1
@@ -109,8 +110,9 @@ class ArmAction(AbstractStep):
                 break
 
         # Stop looking at the gripper and give some time for that to propagate
-        self._look_at_gripper(enable=False)
-        rospy.sleep(0.5)
+        if look_at_gripper:
+            self._look_at_gripper(enable=False)
+            rospy.sleep(0.5)
 
         # Wait for a result and yield based on how we exited
         self._pose_client.wait_for_result()
