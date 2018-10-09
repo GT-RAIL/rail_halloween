@@ -2,6 +2,9 @@
 <launch>
   <arg name="sim" default="false" />
 
+  <!-- Launch the rosgraph monitor -->
+  <node name="rosgrapher" pkg="rosprofiler" type="rosgrapher" />
+
   <!-- Launch the arbitration server -->
   <node name="arbitrator" pkg="assistance_arbitrator" type="server_node.py" output="screen" />
 </launch>

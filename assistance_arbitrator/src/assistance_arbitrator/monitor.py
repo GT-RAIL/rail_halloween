@@ -14,7 +14,7 @@ import rospy
 from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import ExecutionEvent
 
-from .monitors import TraceMonitor
+from .monitors import (ROSGraphMonitor, TraceMonitor)
 
 
 # The class definition
@@ -26,6 +26,7 @@ class ExecutionMonitor(object):
     """
 
     def __init__(self):
+        self.rosgraph_monitor = ROSGraphMonitor()
         self.trace_monitor = TraceMonitor()
 
     def start(self):
