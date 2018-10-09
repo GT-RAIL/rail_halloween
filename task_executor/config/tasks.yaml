@@ -71,7 +71,6 @@ tasks:
     - action: arm
       params:
         poses: poses.ready
-        look_at_gripper: false
 
   # Departing a pickup or dropoff location.
   depart:
@@ -89,6 +88,16 @@ tasks:
       params:
         poses: poses.stow
 
+    # Clear out the costmap
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: -1.0, frame: "base_link"}
+
+    # Move to the departure staging area and tuck the arm
     - action: move
       params:
         location: params.post_loc
@@ -131,6 +140,7 @@ tasks:
     - action: arm
       params:
         poses: poses.tuck
+        look_at_gripper: true
 
     - action: torso
       params:

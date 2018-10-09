@@ -59,7 +59,7 @@ class ArmAction(AbstractStep):
 
         self._look_at_gripper.init('look_at_gripper_arm')
 
-    def run(self, poses, look_at_gripper=True):
+    def run(self, poses, look_at_gripper=False):
         # Parse out the pose waypoints
         pose_waypoints = self._parse_poses(poses)
         if pose_waypoints is None:

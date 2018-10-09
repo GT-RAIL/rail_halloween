@@ -5,11 +5,13 @@
 from __future__ import print_function
 
 import abc
+import uuid
 import pickle
+
 import rospy
 
 from actionlib_msgs.msg import GoalStatus
-from task_executor.msg import ExecutionEvent
+from assistance_msgs.msg import ExecutionEvent
 
 class AbstractStep(object):
     """All steps in a task are derived from this class"""
@@ -22,17 +24,30 @@ class AbstractStep(object):
     def __init__(self):
         # Set the attributes that all steps have
         self.name = None
+        self.uuid = str(uuid.uuid4())
         self._status = GoalStatus.LOST
+
+        # Helpers for updating the trace
         self._trace = rospy.Publisher(AbstractStep.EXECUTION_TRACE_TOPIC, ExecutionEvent, queue_size=1)
+        self._last_event = None  # tuple of (event, context,); suppress duplicates
 
     def _update_trace(self, context):
+        # Check to see if this is a trivial update
+        if (self._last_event is not None
+                and self._last_event[0].status == self.status
+                and self._last_event[1] == context):
+            return
+
+        # Publish the event
         event = ExecutionEvent(
             stamp=rospy.Time.now(),
+            uuid=self.uuid,
             name=self.name,
             status=self.status,
             context=pickle.dumps(context)
         )
         self._trace.publish(event)
+        self._last_event = (event, context,)
 
     def set_running(self, **context):
         """
