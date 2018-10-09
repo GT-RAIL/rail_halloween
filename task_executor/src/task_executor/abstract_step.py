@@ -11,12 +11,12 @@ import pickle
 import rospy
 
 from actionlib_msgs.msg import GoalStatus
-from assistance_msgs.msg import ExecutionEvent
+from assistance_msgs.msg import ExecutionEvent, TaskStepMetadata
 
 class AbstractStep(object):
     """All steps in a task are derived from this class"""
 
-    EXECUTION_TRACE_TOPIC = '/execution_trace'
+    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
 
     __metaclass__ = abc.ABCMeta
     RUNNING_GOAL_STATES = [GoalStatus.PENDING, GoalStatus.ACTIVE, GoalStatus.RECALLING, GoalStatus.PREEMPTING]
@@ -34,17 +34,20 @@ class AbstractStep(object):
     def _update_trace(self, context):
         # Check to see if this is a trivial update
         if (self._last_event is not None
-                and self._last_event[0].status == self.status
+                and self._last_event[0].task_step_metadata.status == self.status
                 and self._last_event[1] == context):
             return
 
         # Publish the event
         event = ExecutionEvent(
             stamp=rospy.Time.now(),
-            uuid=self.uuid,
             name=self.name,
-            status=self.status,
-            context=pickle.dumps(context)
+            type=ExecutionEvent.TASK_STEP_EVENT,
+            task_step_metadata=TaskStepMetadata(
+                uuid=self.uuid,
+                status=self.status,
+                context=pickle.dumps(context)
+            )
         )
         self._trace.publish(event)
         self._last_event = (event, context,)

@@ -9,6 +9,7 @@ import rospy
 import actionlib
 
 from sound_interface import SoundClient
+from task_executor.abstract_step import AbstractStep
 from task_executor.actions import get_default_actions
 from task_executor.tasks import Task, TaskContext
 

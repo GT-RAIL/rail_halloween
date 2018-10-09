@@ -140,7 +140,7 @@ class ArmAction(AbstractStep):
             )
 
     def stop(self):
-        self._look_at_gripper(enable=False)
+        self._look_at_gripper.stop()
         self._pose_client.cancel_goal()
 
     def _parse_poses(self, poses):

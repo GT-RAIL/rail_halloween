@@ -3,15 +3,13 @@
 # A header indicating the time of the trace update
 time stamp
 
-# A UUID of the step instance
-string uuid
-
-# The name of the step that this is the update of
+# A human readable name of the event
 string name
 
-# The actionlib_msgs/GoalStatus status of the component
-uint8 status
+# The type of the event
+uint8 TASK_STEP_EVENT=1
+uint8 ROSGRAPH_EVENT=2
+uint8 type
 
-# Any other context information to be included in the trace.
-# This is a pickled byte array
-string context
+# The different types of events sometimes have associated metadata
+TaskStepMetadata task_step_metadata
