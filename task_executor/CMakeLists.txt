@@ -66,6 +66,7 @@ add_message_files(
   ObjectConstraints.msg
   Bounds.msg
   ArmPose.msg
+  ExecutionEvent.msg
 )
 
 ## Generate services in the 'srv' folder

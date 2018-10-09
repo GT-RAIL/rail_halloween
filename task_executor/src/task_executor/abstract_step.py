@@ -5,45 +5,66 @@
 from __future__ import print_function
 
 import abc
+import pickle
 import rospy
+
 from actionlib_msgs.msg import GoalStatus
+from task_executor.msg import ExecutionEvent
 
 class AbstractStep(object):
     """All steps in a task are derived from this class"""
+
+    EXECUTION_TRACE_TOPIC = '/execution_trace'
 
     __metaclass__ = abc.ABCMeta
     RUNNING_GOAL_STATES = [GoalStatus.PENDING, GoalStatus.ACTIVE, GoalStatus.RECALLING, GoalStatus.PREEMPTING]
 
     def __init__(self):
+        # Set the attributes that all steps have
+        self.name = None
         self._status = GoalStatus.LOST
+        self._trace = rospy.Publisher(AbstractStep.EXECUTION_TRACE_TOPIC, ExecutionEvent, queue_size=1)
 
-    def set_running(self, **kwargs):
+    def _update_trace(self, context):
+        event = ExecutionEvent(
+            stamp=rospy.Time.now(),
+            name=self.name,
+            status=self.status,
+            context=pickle.dumps(context)
+        )
+        self._trace.publish(event)
+
+    def set_running(self, **context):
         """
         Returns a status denoting that the step is still running
         """
         self._status = GoalStatus.ACTIVE
-        return kwargs
+        self._update_trace(context)
+        return context
 
-    def set_succeeded(self, **kwargs):
+    def set_succeeded(self, **context):
         """
         Returns a status denoting that the step has succeeded
         """
         self._status = GoalStatus.SUCCEEDED
-        return kwargs
+        self._update_trace(context)
+        return context
 
-    def set_aborted(self, **kwargs):
+    def set_aborted(self, **context):
         """
         Returns a status denoting that the step has failed
         """
         self._status = GoalStatus.ABORTED
-        return kwargs
+        self._update_trace(context)
+        return context
 
-    def set_preempted(self, **kwargs):
+    def set_preempted(self, **context):
         """
         Returns a status denoting that the step was preempted
         """
         self._status = GoalStatus.PREEMPTED
-        return kwargs
+        self._update_trace(context)
+        return context
 
     @property
     def status(self):
