@@ -40,9 +40,6 @@ class Node(object):
     def __repr__(self):
         return self.__str__()
 
-    def __hash__(self):
-        return hash(self.name)
-
     def provides_topic(self, topic):
         self.topics_provided.add(topic)
         return self
@@ -77,7 +74,6 @@ class ROSGraphMonitor(object):
     """
 
     ROSGRAPH_TOPOLOGY_TOPIC = "/topology"
-    ROSGRAPH_MAX_DEPTH = 2
     TASK_EXECUTOR_SERVER_NAME = "/task_executor"
     ACTION_SUFFIXES = set(["/feedback", "/status", "/cancel", "/goal", "/result"])
     TOPICS_OF_NO_INTEREST = set([
@@ -211,13 +207,10 @@ class ROSGraphMonitor(object):
 
             # Finally add this node to the set of nodes
             nodes[node.name] = node
-# FIXME FIXME FIXME
+
         # Create the new graph from the graph message
         graph = nx.DiGraph()
-        nodes_to_check = collections.deque()
-        node_name, depth = ROSGraphMonitor.TASK_EXECUTOR_SERVER_NAME, 0
-        while depth < ROSGraphMonitor.ROSGRAPH_MAX_DEPTH:
-            node = nodes[node_name]
+        for node_name, node in nodes.iteritems():
             graph.add_node(node)
 
             # Add the action connections
@@ -227,6 +220,11 @@ class ROSGraphMonitor(object):
 
                 for action_user in action_users[action_name]:
                     graph.add_edge(node, action_user)
+                    if len(graph[node][action_user]) == 0:
+                        graph[node][action_user]['services'] = set()
+                        graph[node][action_user]['actions'] = set()
+                        graph[node][action_user]['topics'] = set()
+                    graph[node][action_user]['actions'].add(action_name)
 
             # Add the service connections
             for service_name in node.services_provided:
@@ -235,6 +233,11 @@ class ROSGraphMonitor(object):
 
                 for service_user in service_users[service_name]:
                     graph.add_edge(node, service_user)
+                    if len(graph[node][service_user]) == 0:
+                        graph[node][service_user]['services'] = set()
+                        graph[node][service_user]['actions'] = set()
+                        graph[node][service_user]['topics'] = set()
+                    graph[node][service_user]['services'].add(service_name)
 
             # Add the topic connections
             for topic_name in node.topics_provided:
@@ -243,6 +246,11 @@ class ROSGraphMonitor(object):
 
                 for topic_user in topic_users[topic_name]:
                     graph.add_edge(node, topic_user)
+                    if len(graph[node][topic_user]) == 0:
+                        graph[node][topic_user]['services'] = set()
+                        graph[node][topic_user]['actions'] = set()
+                        graph[node][topic_user]['topics'] = set()
+                    graph[node][topic_user]['topics'].add(topic_name)
 
         # Finally update the old graph with this new graph
         self.graph = graph
