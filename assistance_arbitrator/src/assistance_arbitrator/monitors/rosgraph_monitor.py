@@ -14,7 +14,7 @@ import rospy
 from assistance_msgs.msg import ExecutionEvent
 from ros_topology_msgs.msg import Connection, Node as NodeMsg, Graph as GraphMsg
 
-from .trace_monitor import TraceMonitor
+from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
 
 
 # Helper classes and functions
