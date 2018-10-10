@@ -53,6 +53,7 @@ add_message_files(
   Statistics.msg
   ExecutionEvent.msg
   TaskStepMetadata.msg
+  MonitorMetadata.msg
 )
 
 ## Generate services in the 'srv' folder

@@ -14,6 +14,8 @@ import rospy
 from assistance_msgs.msg import ExecutionEvent
 from ros_topology_msgs.msg import Connection, Node as NodeMsg, Graph as GraphMsg
 
+from .trace_monitor import TraceMonitor
+
 
 # Helper classes and functions
 def get_action_name_from_topic(topic_name):
@@ -74,6 +76,7 @@ class ROSGraphMonitor(object):
     """
 
     ROSGRAPH_TOPOLOGY_TOPIC = "/topology"
+    ROSGRAPH_MONITOR_EVENT_NAME = "rosgraph_update"
     TASK_EXECUTOR_SERVER_NAME = "/task_executor"
     ACTION_SUFFIXES = set(["/feedback", "/status", "/cancel", "/goal", "/result"])
     TOPICS_OF_NO_INTEREST = set([
@@ -113,6 +116,13 @@ class ROSGraphMonitor(object):
     def __init__(self):
         self._graph = nx.DiGraph()  # The ROS graph represented in a graph structure
         self._graph_lock = Lock()
+
+        # Publisher for events to the trace
+        self._trace = rospy.Publisher(
+            TraceMonitor.EXECUTION_TRACE_TOPIC,
+            ExecutionEvent,
+            queue_size=1
+        )
 
         # Subscribe to the topology updates
         self._topology_sub = rospy.Subscriber(
@@ -252,8 +262,14 @@ class ROSGraphMonitor(object):
                         graph[node][topic_user]['topics'] = set()
                     graph[node][topic_user]['topics'].add(topic_name)
 
-        # Finally update the old graph with this new graph
+        # Finally update the old graph with this new graph and let the trace
+        # know
         self.graph = graph
+        self._trace.publish(ExecutionEvent(
+            stamp=rospy.Time.now(),
+            name=ROSGraphMonitor.ROSGRAPH_MONITOR_EVENT_NAME,
+            type=ExecutionEvent.ROSGRAPH_EVENT
+        ))
 
 
 # For debug only
