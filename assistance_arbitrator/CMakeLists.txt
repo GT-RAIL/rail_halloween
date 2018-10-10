@@ -10,6 +10,7 @@ project(assistance_arbitrator)
 find_package(catkin REQUIRED COMPONENTS
   actionlib
   assistance_msgs
+  fetch_driver_msgs
   nav_msgs
   ros_topology_msgs
   rospy
