@@ -10,6 +10,7 @@ import rospy
 import tf
 
 from assistance_msgs.msg import ExecutionEvent, MonitorMetadata
+from nav_msgs.msg import Odometry
 
 from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
 
@@ -31,27 +32,15 @@ class LocalizationMonitor(object):
 
     MAP_FRAME = "/map"
     BASE_FRAME = "/base_link"
-
-    MOVE_BASE_LOCAL_PLANNER_PARAM = "/move_base/base_local_planner"
-    EBAND_MAX_LINEAR_VELOCITY_PARAM = "/move_base/EBandPlannerROS/max_vel_lin"
-    EBAND_MAX_ANGULAR_VELOCITY_PARAM = "/move_base/EBandPlannerROS/max_vel_th"
-    TRAJ_MAX_LINEAR_VELOCITY_PARAM = "/move_base/TrajectoryPlannerROS/max_vel_x"
-    TRAJ_MAX_ANGULAR_VELOCITY_PARAM = "/move_base/TrajectoryPlannerROS/max_vel_theta"
+    ODOM_TOPIC = "/odom"
 
     def __init__(self):
         # Initialize the tf listener
         self._listener = tf.TransformListener()
 
-        # Get the max velocity params from move_base
-        base_local_planner = rospy.get_param(LocalizationMonitor.MOVE_BASE_LOCAL_PLANNER_PARAM)
-        if base_local_planner == "eband_local_planner/EBandPlannerROS":
-            self.max_vel_linear = rospy.get_param(LocalizationMonitor.EBAND_MAX_LINEAR_VELOCITY_PARAM)
-            self.max_vel_angular = rospy.get_param(LocalizationMonitor.EBAND_MAX_ANGULAR_VELOCITY_PARAM)
-        elif base_local_planner == "base_local_planner/TrajectoryPlannerROS":
-            self.max_vel_linear = rospy.get_param(LocalizationMonitor.TRAJ_MAX_LINEAR_VELOCITY_PARAM)
-            self.max_vel_angular = rospy.get_param(LocalizationMonitor.TRAJ_MAX_ANGULAR_VELOCITY_PARAM)
-        else:
-            raise KeyError("Unknown base_local_planner: {}".format(base_local_planner))
+        # Get the odometry
+        self._last_vel = None
+        self._odom_sub = rospy.Subscriber(LocalizationMonitor.ODOM_TOPIC, Odometry, self._on_odom)
 
         # Stub values to save the last check
         self._last_position = np.zeros((3,))
@@ -71,6 +60,9 @@ class LocalizationMonitor(object):
             oneshot=False
         )
 
+    def _on_odom(self, odom_msg):
+        self._last_vel = odom_msg.twist.twist
+
     def _monitor_func(self, evt):
         # First try to lookup the transform and convert to numpy arrays
         try:
@@ -85,11 +77,11 @@ class LocalizationMonitor(object):
 
         # Check the limits
         max_bound_linear = (
-            self.max_vel_linear / LocalizationMonitor.MONITORING_LOOP_RATE
+            self._last_vel.linear.x / LocalizationMonitor.MONITORING_LOOP_RATE
             + LocalizationMonitor.MONITORING_LINEAR_ERROR_BOUND
         )
         max_bound_angular = (
-            self.max_vel_angular / LocalizationMonitor.MONITORING_LOOP_RATE
+            self._last_vel.angular.z / LocalizationMonitor.MONITORING_LOOP_RATE
             + LocalizationMonitor.MONITORING_ANGULAR_ERROR_BOUND
         )
         is_outside_bounds = False
