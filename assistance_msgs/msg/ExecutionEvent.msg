@@ -10,8 +10,15 @@ string name
 uint8 TASK_STEP_EVENT=1
 uint8 ROSGRAPH_EVENT=2
 uint8 MONITOR_EVENT=3
+uint8 WIFI_EVENT=4
 uint8 type
 
 # The different types of events sometimes have associated metadata
 TaskStepMetadata task_step_metadata
 MonitorMetadata monitor_metadata
+
+# Wifi metadata
+uint8 WIFI_GOOD_CONNECTION=0
+uint8 WIFI_POOR_CONNECTION=1
+uint8 WIFI_BAD_CONNECTION=2
+uint8 wifi_metadata

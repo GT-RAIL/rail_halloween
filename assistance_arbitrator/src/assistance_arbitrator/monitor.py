@@ -15,7 +15,8 @@ from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import ExecutionEvent
 
 from .monitors import (BaseStallMonitor, CostmapMonitor, LocalizationMonitor,
-                       RobotStateMonitor, ROSGraphMonitor, TraceMonitor)
+                       RobotStateMonitor, ROSGraphMonitor, TraceMonitor,
+                       WifiMonitor)
 
 
 # The class definition
@@ -26,13 +27,20 @@ class ExecutionMonitor(object):
     coherent stream that can be used by a diagnosis element
     """
 
+    SIMULATION_PARAMETER = "/use_sim_time"
+
     def __init__(self):
+        # All the monitors
         self.base_stall_monitor = BaseStallMonitor()
         self.costmap_monitor = CostmapMonitor()
         self.localization_monitor = LocalizationMonitor()
         self.robot_state_monitor = RobotStateMonitor()
         self.rosgraph_monitor = ROSGraphMonitor()
         self.trace_monitor = TraceMonitor()
+
+        # Robot only monitors
+        if not rospy.get_param(ExecutionMonitor.SIMULATION_PARAMETER, False):
+            self.wifi_monitor = WifiMonitor()
 
     def start(self):
         # Nothing needs to be done on a start
