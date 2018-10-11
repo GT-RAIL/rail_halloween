@@ -65,7 +65,8 @@ class RobotStateMonitor(object):
             self.logged_changes.append(changes_to_log)
             trace_event = ExecutionEvent(
                 stamp=rospy.Time.now(),
-                name=RobotStateMonitor.ROBOT_STATE_MONITOR_EVENT_NAME
+                name=RobotStateMonitor.ROBOT_STATE_MONITOR_EVENT_NAME,
+                type=ExecutionEvent.MONITOR_EVENT
             )
             trace_event.monitor_metadata.topics.append(RobotStateMonitor.ROBOT_STATE_TOPIC)
             self._trace.publish(trace_event)

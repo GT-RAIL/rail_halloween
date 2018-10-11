@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   assistance_msgs
   fetch_driver_msgs
+  geometry_msgs
   nav_msgs
   ros_topology_msgs
   rospy

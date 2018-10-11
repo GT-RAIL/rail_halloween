@@ -94,7 +94,8 @@ class LocalizationMonitor(object):
         if is_outside_bounds:
             trace_event = ExecutionEvent(
                 stamp=rospy.Time.now(),
-                name=LocalizationMonitor.LOCALIZATION_MONITOR_EVENT_NAME
+                name=LocalizationMonitor.LOCALIZATION_MONITOR_EVENT_NAME,
+                type=ExecutionEvent.MONITOR_EVENT
             )
             trace_event.monitor_metadata.nodes.append(
                 LocalizationMonitor.LOCALIZATION_MONITOR_NODE

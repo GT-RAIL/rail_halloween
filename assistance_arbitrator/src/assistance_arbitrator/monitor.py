@@ -14,8 +14,8 @@ import rospy
 from actionlib_msgs.msg import GoalStatus
 from assistance_msgs.msg import ExecutionEvent
 
-from .monitors import (CostmapMonitor, LocalizationMonitor, RobotStateMonitor,
-                       ROSGraphMonitor, TraceMonitor)
+from .monitors import (BaseStallMonitor, CostmapMonitor, LocalizationMonitor,
+                       RobotStateMonitor, ROSGraphMonitor, TraceMonitor)
 
 
 # The class definition
@@ -27,6 +27,7 @@ class ExecutionMonitor(object):
     """
 
     def __init__(self):
+        self.base_stall_monitor = BaseStallMonitor()
         self.costmap_monitor = CostmapMonitor()
         self.localization_monitor = LocalizationMonitor()
         self.robot_state_monitor = RobotStateMonitor()
