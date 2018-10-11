@@ -27,7 +27,7 @@ class BaseStallMonitor(object):
 
     BASE_COMMAND_TOPIC = "/base_controller/command"
     ODOM_TOPIC = "/odom"
-    BASE_STALL_MONITOR_EVENT_NAME = "base_stalled"
+    BASE_STALL_MONITOR_EVENT_NAME = "base_stall_update"
 
     ZERO_VELOCITY_TOLERANCE = 0.009  # A value for velocity in odom signifying 0
     DETECTION_WAIT_DURATION = rospy.Duration(30.0)  # Number of seconds to wait before considering the robot stalled
