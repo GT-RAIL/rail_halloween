@@ -37,10 +37,13 @@ string context
 #                       reset itself as a result
 # - RESUME_NEXT: skip the component that errored out and move on to the next
 #                   one. assume that 'next' applies on the highest level
+# - RESUME_PREVIOUS: rerun the component that was run before the one that
+#                   errored out. assume that 'prev' applies on the highest level
 uint8 RESUME_NONE=0
 uint8 RESUME_CONTINUE=1
 uint8 RESUME_RETRY=2
 uint8 RESUME_NEXT=3
+uint8 RESUME_PREVIOUS=4
 uint8 resume_hint
 
 # The context of the resumption. Just in case there are things the component

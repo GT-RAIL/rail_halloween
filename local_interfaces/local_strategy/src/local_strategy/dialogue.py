@@ -26,7 +26,6 @@ def find_value_in_context(key, context):
     context. If not present, returns None
     """
     while key not in context:
-        print(context.keys())
         if context.has_key('context'):
             context = context['context']
         else:
@@ -75,6 +74,7 @@ class DialogueManager(object):
     SPEECH_RESUME_CONTINUE = 'RESUME_CONTINUE'
     SPEECH_RESUME_RETRY = 'RESUME_RETRY'
     SPEECH_RESUME_NEXT = 'RESUME_NEXT'
+    SPEECH_RESUME_PREVIOUS = 'RESUME_PREVIOUS'
 
     # Template texts
     SAY_HELLO = "Hello!"
@@ -101,7 +101,7 @@ say "I am done!"
     SAY_HOW_TO_PROCEED = "How should I proceed?"
     SAY_PROCEED_VALID_OPTIONS = """
 I understand the phrases: "Retry failed action", "Continue to next
-action", "Restart Task", and "Stop Executing"
+action", "Retry previous action", "Restart Task", and "Stop Executing"
     """
     SAY_BYEBYE = "Bye!"
 
@@ -256,6 +256,7 @@ action", "Restart Task", and "Stop Executing"
                     DialogueManager.SPEECH_RESUME_CONTINUE,
                     DialogueManager.SPEECH_RESUME_RETRY,
                     DialogueManager.SPEECH_RESUME_NEXT,
+                    DialogueManager.SPEECH_RESUME_PREVIOUS,
                 ]):
                     yield variables
 
@@ -277,6 +278,8 @@ action", "Restart Task", and "Stop Executing"
                         resume_hint = RequestAssistanceResult.RESUME_RETRY
                     elif resume_hint == DialogueManager.SPEECH_RESUME_NEXT:
                         resume_hint = RequestAssistanceResult.RESUME_NEXT
+                    elif resume_hint == DialogueManager.SPEECH_RESUME_PREVIOUS:
+                        resume_hint = RequestAssistanceResult.RESUME_PREVIOUS
                     else:
                         resume_hint = None
                         continue
