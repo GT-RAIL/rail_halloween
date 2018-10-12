@@ -39,13 +39,8 @@ class MoveAction(AbstractStep):
         # Parse out the waypoints
         coords = self._parse_location(location)
         if coords is None:
-            rospy.logerr("Action {}: FAIL. Unknown format: {}".format(self.name, location))
-            yield self.set_aborted(
-                action=self.name,
-                cause="Unknown format",
-                context=location
-            )
-            raise StopIteration()
+            rospy.logerr("Action {}: FAIL. Unknown Format: {}".format(self.name, location))
+            raise KeyError(self.name, "Unknown Format", location)
 
         rospy.logdebug("Action {}: Moving to location(s): {}".format(self.name, coords))
 

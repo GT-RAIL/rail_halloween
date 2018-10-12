@@ -36,11 +36,10 @@ class ListenAction(AbstractStep):
     def run(self, expected_cmd=None):
         # Run until we hear a command. If expected_cmd is not None, and the
         # received command is not in the list of expected_cmd, then abort
-        rospy.loginfo("Action {}: Listening.{}"
-                      .format(
-                        self.name,
-                        "" if expected_cmd is None else " Expected: {}".format(expected_cmd))
-                      )
+        rospy.loginfo("Action {}: Listening.{}".format(
+            self.name,
+            "" if expected_cmd is None else " Expected: {}".format(expected_cmd)
+        ))
         self._stopped = False
 
         received_cmd = None

@@ -63,13 +63,8 @@ class ArmAction(AbstractStep):
         # Parse out the pose waypoints
         pose_waypoints = self._parse_poses(poses)
         if pose_waypoints is None:
-            rospy.logerr("Action {}: FAIL. Unknown format: {}".format(self.name, poses))
-            yield self.set_aborted(
-                action=self.name,
-                cause="Unknown format",
-                context=poses
-            )
-            raise StopIteration()
+            rospy.logerr("Action {}: FAIL. Unknown Format: {}".format(self.name, poses))
+            raise KeyError(self.name, "Unknown Format", poses)
 
         rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, pose_waypoints))
 

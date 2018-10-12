@@ -23,12 +23,7 @@ class SpeakAction(AbstractStep):
                 or (affect and affect.upper() not in self._speak_client.get_affect_names()):
             rospy.logerr("Action {}: FAIL. Invalid Args: {} (affect: {})."
                          .format(self.name, text, affect))
-            self.set_aborted(
-                action=self.name,
-                cause="Invalid Args",
-                context=(text, affect,)
-            )
-            raise StopIteration()
+            raise KeyError(self.name, "Invalid Args", (text, affect,))
 
         self._stopped = False
         affect = affect.upper()

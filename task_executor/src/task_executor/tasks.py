@@ -72,13 +72,7 @@ class Task(AbstractStep):
                 "Task {}: FAIL. Unexpected Params. Expected: {}. Received: {}."
                 .format(self.name, self.params, params)
             )
-            yield self.set_aborted(
-                task=self.name,
-                cause="Unexpected Params",
-                expected_params=self.params,
-                received_params=params
-            )
-            raise StopIteration()
+            raise KeyError(self.name, "Unexpected Params", self.params, params)
 
         # Setup to run the task
         var = dict()
@@ -176,15 +170,11 @@ class Task(AbstractStep):
                     "Task {}, Step {}({}): FAIL. Invalid Variables. Expected: {}. Received: {}."
                     .format(self.name, self.step_idx, step_name, sorted(step.get('var', [])), sorted(variables.keys()))
                 )
-                yield self.set_aborted(
-                    task=self.name,
-                    cause="Invalid Variables",
-                    step_idx=self.step_idx,
-                    step_name=step_name,
-                    expected_vars=sorted(step.get('var', [])),
-                    received_vars=sorted(variables.keys())
+                raise KeyError(
+                    self.name, self.step_idx, step_name,
+                    "Invalid Variables",
+                    sorted(step.get('var', [])), sorted(variables.keys())
                 )
-                raise StopIteration()
 
             # Update the variables that we're keeping track of
             for name, value in variables.iteritems():
