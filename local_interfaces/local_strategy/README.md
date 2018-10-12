@@ -20,6 +20,7 @@ The different keys and values in the errors that are sent with the assistance re
 - **task** - name of the task
 - **action** - name of action
 - **status** - GoalStatus code of action client
+- **context** - the pickled details from the lower levels of the tree
 - **goal** - transformed version of argument sent to run
     - arm:pose_waypoints - the series of waypoints to take the arm to
     - beep:beep - name of the beep key
@@ -61,11 +62,7 @@ The different keys and values in the errors that are sent with the assistance re
 - **grasp_num** - the index of the grasp that we were attempting when we failed. Only pick
 - **grasps** - all the grasps that we were planning to/did attempt. Only pick
 - **affect** - the affect key that we want the text to be said with. Only speak
-- **expected_params** - the expected parameters to a task. Only task
-- **received_params** - the params that were actually sent to the task. Only task
 - **step_idx** - the index of the task step that was executing when we exited. Only task
 - **step_name** - the name of the task step that was executing when we exited. Only task
-- **expected_vars** - the expected vars that the task should have provided. Only task
-- **received_vars** - the vars that the task actually provided. Only task
 - **search_duration** - the duration (in seconds, float) spent searching for the nearest person. Only find_closest_person
 - **received_cmd** - the command received from the speech listener. Only listen
