@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   fetch_driver_msgs
   geometry_msgs
   nav_msgs
+  power_msgs
   ros_topology_msgs
   rospy
 )

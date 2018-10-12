@@ -55,6 +55,7 @@
   <depend>fetch_driver_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>power_msgs</depend>
   <depend>ros_topology_msgs</depend>
   <depend>rospy</depend>
 

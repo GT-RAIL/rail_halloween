@@ -10,16 +10,16 @@ from threading import Lock
 
 import rospy
 
-from assistance_msgs.msg import ExecutionEvent
+from assistance_msgs.msg import MonitorMetadata
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 
 # The class definition
 
-class BaseStallMonitor(object):
+class BaseStallMonitor(AbstractFaultMonitor):
     """
     Monitor the commands sent to the base and compare against the actual
     movement of the base. If there is a disconnect, flag the error
@@ -33,18 +33,16 @@ class BaseStallMonitor(object):
     DETECTION_WAIT_DURATION = rospy.Duration(30.0)  # Number of seconds to wait before considering the robot stalled
 
     def __init__(self):
+        super(BaseStallMonitor, self).__init__()
+        self.set_metadata(topics=[BaseStallMonitor.BASE_COMMAND_TOPIC, BaseStallMonitor.ODOM_TOPIC])
+
         # Variables to help flag a stall
         self._last_cmd_vel = None
-        self._last_stall_detection = None
-        self._last_stall_detection_published = False
         self._cmd_lock = Lock()
 
-        # Setup the trace publisher
-        self._trace = rospy.Publisher(
-            TraceMonitor.EXECUTION_TRACE_TOPIC,
-            ExecutionEvent,
-            queue_size=1
-        )
+        self.base_is_stalled = False
+        self._last_stall_detection = None
+        self._last_stall_detection_published = False
 
         # Setup the subscribers
         self._base_cmd_sub = rospy.Subscriber(
@@ -81,6 +79,14 @@ class BaseStallMonitor(object):
         # If the commanded velocity is 0, then we don't need to do anything.
         # Make sure to reset all the detection flags too
         if cmd_vel_zero:
+            self.base_is_stalled = False
+            if self._last_stall_detection_published:
+                self.update_trace(
+                    BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
+                    (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                    { 'base_is_stalled': self.base_is_stalled }
+                )
+
             self._last_stall_detection = None
             self._last_stall_detection_published = False
             return
@@ -101,31 +107,35 @@ class BaseStallMonitor(object):
         # If the odom velocity is non 0, then there is nothing to worry about.
         # Reset everything and return
         if not odom_vel_zero:
+            self.base_is_stalled = False
+            if self._last_stall_detection_published:
+                self.update_trace(
+                    BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
+                    (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                    { 'base_is_stalled': self.base_is_stalled }
+                )
+
             self._last_stall_detection = None
             self._last_stall_detection_published = False
             return
 
         # Now for the tree of cases, one of which leads to an event being sent
         # to the trace. We don't want to spam the trace at 100 Hz.
+        self.base_is_stalled = True
         if self._last_stall_detection is None:
             self._last_stall_detection = rospy.Time.now()
         elif rospy.Time.now() >= self._last_stall_detection + BaseStallMonitor.DETECTION_WAIT_DURATION \
                 and not self._last_stall_detection_published:
             rospy.loginfo("Detected a stalled robot base")
-            trace_event = ExecutionEvent(
-                stamp=rospy.Time.now(),
-                name=BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
-                type=ExecutionEvent.MONITOR_EVENT
+            self.update_trace(
+                BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
+                (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                { 'base_is_stalled': self.base_is_stalled }
             )
-            trace_event.monitor_metadata.topics.extend([
-                BaseStallMonitor.BASE_COMMAND_TOPIC,
-                BaseStallMonitor.ODOM_TOPIC
-            ])
-            self._trace.publish(trace_event)
             self._last_stall_detection_published = True
 
 
-# For debug only
+# When running the monitor in standalone mode
 if __name__ == '__main__':
     rospy.init_node('base_stall_monitor')
     monitor = BaseStallMonitor()

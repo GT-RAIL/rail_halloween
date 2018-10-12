@@ -1,9 +1,13 @@
 #!/usr/bin/env python
-# Monitor and update the rosgraph dependencies when a request to do so is sent
+# The code in this file monitors the status of a task execution. It does so by
+# listening in on the execution trace, monitoring outputs from fault detectors,
+# and monitoring critical node outputs in the rosgraph. The output is combined
+# monitoring data that can be used by some other diagnosis node.
 
 from __future__ import print_function, division
 
-import os
+import abc
+import pickle
 import collections
 import networkx as nx
 
@@ -11,13 +15,13 @@ from threading import Lock
 
 import rospy
 
-from assistance_msgs.msg import ExecutionEvent
+from actionlib_msgs.msg import GoalStatus
 from ros_topology_msgs.msg import Connection, Node as NodeMsg, Graph as GraphMsg
-
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_msgs.msg import ExecutionEvent, MonitorMetadata
 
 
 # Helper classes and functions
+
 def get_action_name_from_topic(topic_name):
     """Get the name of the action from the topic's name"""
     for action_suffix in ROSGraphMonitor.ACTION_SUFFIXES:
@@ -67,7 +71,83 @@ class Node(object):
         return self
 
 
-# The class definition
+# The ROS class definitions
+
+
+class AbstractFaultMonitor(object):
+    """All fault monitors should derive from this base class"""
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self):
+        self.fault_status = MonitorMetadata.NOMINAL
+        self.topics = tuple()
+        self.services = tuple()
+        self.actions = tuple()
+        self.nodes = tuple()
+
+        # The trace publisher
+        self._trace = rospy.Publisher(
+            TraceMonitor.EXECUTION_TRACE_TOPIC,
+            ExecutionEvent,
+            queue_size=1
+        )
+
+    def set_metadata(self, topics=None, services=None, actions=None, nodes=None):
+        """Set the metadata of the monitor. If an arg is None, its value is not
+        updated"""
+        self.topics = tuple(topics) if topics is not None else self.topics
+        self.services = tuple(services) if services is not None else self.services
+        self.actions = tuple(actions) if actions is not None else self.actions
+        self.nodes = tuple(nodes) if nodes is not None else self.nodes
+
+    def update_trace(self, event_name, fault_status, context=None, force=False):
+        """Update the trace. If the fault_status is unchanged, do nothing,
+        unless the force flag is set"""
+        if fault_status == self.fault_status and not force:
+            return
+
+        # Update the fault_status
+        self.fault_status = fault_status
+        trace_event = ExecutionEvent(
+            stamp=rospy.Time.now(),
+            name=event_name,
+            type=ExecutionEvent.MONITOR_EVENT,
+            monitor_metadata=MonitorMetadata(
+                fault_status=self.fault_status,
+                context=(pickle.dumps(context) if context is not None else ''),
+                topics=self.topics,
+                services=self.services,
+                actions=self.actions,
+                nodes=self.nodes
+            )
+        )
+        self._trace.publish(trace_event)
+
+
+class TraceMonitor(object):
+    """
+    This class monitors the execution trace messages and compiles the data into
+    a events trace stream
+    """
+
+    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
+    MAX_TRACE_LENGTH = 9999
+
+    def __init__(self):
+        # Book-keeping variables to keep track of the trace state
+        self.trace = collections.deque(maxlen=TraceMonitor.MAX_TRACE_LENGTH)
+
+        # Setup the subscriber to track the trace
+        self._trace_sub = rospy.Subscriber(
+            TraceMonitor.EXECUTION_TRACE_TOPIC,
+            ExecutionEvent,
+            self._on_trace_event
+        )
+
+    def _on_trace_event(self, event):
+        self.trace.append(event)
+
 
 class ROSGraphMonitor(object):
     """
@@ -272,8 +352,27 @@ class ROSGraphMonitor(object):
         ))
 
 
+class ExecutionMonitor(object):
+    """
+    This class is the entrypoint into the combined information available to
+    diagnosis nodes
+    """
+
+    SIMULATION_PARAMETER = "/use_sim_time"
+
+    def __init__(self):
+        # Supplementary execution monitors
+        self.rosgraph_monitor = ROSGraphMonitor()
+        self.trace_monitor = TraceMonitor()
+
+    def start(self):
+        # Nothing needs to be done on a start
+        pass
+
+
 # For debug only
 if __name__ == '__main__':
+    # ROS Graph debug
     import matplotlib.pyplot as plt
     rospy.init_node('graph_monitor')
     monitor = ROSGraphMonitor()

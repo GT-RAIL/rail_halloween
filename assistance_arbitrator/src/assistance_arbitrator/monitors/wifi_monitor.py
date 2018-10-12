@@ -11,35 +11,35 @@ import rospy
 
 from assistance_msgs.msg import ExecutionEvent
 
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 
 # The class definition
 
-class WifiMonitor(object):
+class WifiMonitor(AbstractFaultMonitor):
     """
     Monitors the strength of the wifi signal on the robot and flags poor wifi
     if the signal strength goes below some threshold
     """
 
     WIFI_MONITOR_EVENT_NAME = "wifi_update"
+
     WIFI_POOR_SIGNAL_THRESHOLD = -67  # Signal strength in dBm below which we might have problems
     WIFI_BAD_SIGNAL_THRESHOLD = -75  # Signal strength in dBm below which we are screwed
+
     WIFI_MIN_SIGNAL = -120  # The absolute minimum wifi level
+    WIFI_GOOD_CONNECTION = 'GOOD'  # A value indicating that we have a good connection
+    WIFI_POOR_CONNECTION = 'POOR'  # A value indicating a degraded connection
+    WIFI_BAD_CONNECTION = 'BAD'    # A value indicating that our connection is awful
 
     MONITOR_DURATION = rospy.Duration(5.0)  # Duration at which to check wifi strength
     MONITOR_COMMAND = ["sudo", "iwconfig", "wlan0"]
     MONITOR_REGEX = re.compile(r'.*Signal level=(?P<signal_level>-\d+) dBm.*')
 
     def __init__(self):
-        self.signal_level = WifiMonitor.WIFI_MIN_SIGNAL
+        super(WifiMonitor, self).__init__()
 
-        # Set the trace publisher
-        self._trace = rospy.Publisher(
-            TraceMonitor.EXECUTION_TRACE_TOPIC,
-            ExecutionEvent,
-            queue_size=1
-        )
+        self.signal_level = WifiMonitor.WIFI_MIN_SIGNAL
 
         # Set the timer to monitor the Wifi
         self._monitor_timer = rospy.Timer(
@@ -66,32 +66,26 @@ class WifiMonitor(object):
             self.signal_level = WifiMonitor.WIFI_MIN_SIGNAL
 
         # Now check if we've crossed thresholds
-        event_status = None
+        wifi_status = None
         if old_level < WifiMonitor.WIFI_POOR_SIGNAL_THRESHOLD <= self.signal_level:
-            event_status = ExecutionEvent.WIFI_GOOD_CONNECTION
-            rospy.loginfo("WiFi connection is GOOD")
+            wifi_status = WifiMonitor.WIFI_GOOD_CONNECTION
         elif old_level < WifiMonitor.WIFI_BAD_SIGNAL_THRESHOLD <= self.signal_level:
-            event_status = ExecutionEvent.WIFI_POOR_CONNECTION
-            rospy.loginfo("WiFi connection is POOR")
+            wifi_status = WifiMonitor.WIFI_POOR_CONNECTION
         elif self.signal_level < WifiMonitor.WIFI_BAD_SIGNAL_THRESHOLD <= old_level:
-            event_status = ExecutionEvent.WIFI_BAD_CONNECTION
-            rospy.loginfo("WiFi connection is BAD")
+            wifi_status = WifiMonitor.WIFI_BAD_CONNECTION
         elif self.signal_level < WifiMonitor.WIFI_POOR_SIGNAL_THRESHOLD <= old_level:
-            event_status = ExecutionEvent.WIFI_POOR_CONNECTION
-            rospy.loginfo("WiFi connection is POOR")
+            wifi_status = WifiMonitor.WIFI_POOR_CONNECTION
+        rospy.loginfo("WiFi connection is {}".format(wifi_status))
 
         # Send out an event if thresholds are crossed
-        if event_status is not None:
-            trace_event = ExecutionEvent(
-                stamp=rospy.Time.now(),
-                name=WifiMonitor.WIFI_MONITOR_EVENT_NAME,
-                type=ExecutionEvent.WIFI_EVENT,
-                wifi_metadata=event_status
-            )
-            self._trace.publish(trace_event)
+        self.update_trace(
+            WifiMonitor.WIFI_MONITOR_EVENT_NAME,
+            (wifi_status != WifiMonitor.WIFI_GOOD_CONNECTION),
+            { 'wifi_status': wifi_status, 'signal_level': self.signal_level }
+        )
 
 
-# For Debug purposes only
+# When running the monitor in standalone mode
 if __name__ == '__main__':
     rospy.init_node('wifi_monitor')
     monitor = WifiMonitor()

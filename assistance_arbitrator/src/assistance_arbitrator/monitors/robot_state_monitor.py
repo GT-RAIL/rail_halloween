@@ -8,15 +8,16 @@ import collections
 
 import rospy
 
-from assistance_msgs.msg import ExecutionEvent, MonitorMetadata
+from assistance_msgs.msg import MonitorMetadata
 from fetch_driver_msgs.msg import RobotState
+from power_msgs.msg import BreakerState
 
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 
 # The class definition
 
-class RobotStateMonitor(object):
+class RobotStateMonitor(AbstractFaultMonitor):
     """
     Monitor the robot state and send out an event alert when there are
     meaningful robot state changes
@@ -24,18 +25,13 @@ class RobotStateMonitor(object):
 
     ROBOT_STATE_TOPIC = "/robot_state"
     ROBOT_STATE_MONITOR_EVENT_NAME = "robot_state_update"
-    MAX_CHANGES_TO_LOG = 9999
 
     def __init__(self):
-        self.last_breaker_states = None
-        self.logged_changes = collections.deque(maxlen=RobotStateMonitor.MAX_CHANGES_TO_LOG)
+        super(RobotStateMonitor, self).__init__()
+        self.set_metadata(topics=[RobotStateMonitor.ROBOT_STATE_TOPIC])
 
-        # Initialize the trace publisher
-        self._trace = rospy.Publisher(
-            TraceMonitor.EXECUTION_TRACE_TOPIC,
-            ExecutionEvent,
-            queue_size=1
-        )
+        # State variables
+        self.breaker_states = None
 
         # Set up the subscriber
         self._robot_state_sub = rospy.Subscriber(
@@ -45,37 +41,19 @@ class RobotStateMonitor(object):
         )
 
     def _on_robot_state(self, state_msg):
-        if self.last_breaker_states is None:
-            self.last_breaker_states = state_msg.breakers
-            return
-
-        # We only care about the breakers, so iterate through them looking for
-        # a change
-        changes_to_log = set()
-        for idx, breaker_state_msg in enumerate(state_msg.breakers):
-            if breaker_state_msg.state != self.last_breaker_states[idx].state:
-                changes_to_log.add(
-                    (breaker_state_msg.name,
-                     self.last_breaker_states[idx].state,
-                     breaker_state_msg.state)
-                )
-
-        # If the state has changed, log an event
-        if len(changes_to_log) > 0:
-            self.logged_changes.append(changes_to_log)
-            trace_event = ExecutionEvent(
-                stamp=rospy.Time.now(),
-                name=RobotStateMonitor.ROBOT_STATE_MONITOR_EVENT_NAME,
-                type=ExecutionEvent.MONITOR_EVENT
-            )
-            trace_event.monitor_metadata.topics.append(RobotStateMonitor.ROBOT_STATE_TOPIC)
-            self._trace.publish(trace_event)
-
-        # Save the last state
-        self.last_breaker_states = state_msg.breakers
+        breaker_states = {
+            breaker.name: breaker.state for breaker in state_msg.breakers
+        }
+        self.update_trace(
+            RobotStateMonitor.ROBOT_STATE_MONITOR_EVENT_NAME,
+            np.any(np.array([state for state in breaker_states.itervalues()]) != BreakerState.STATE_ENABLED),
+            { 'breaker_states': breaker_states },
+            force=(breaker_states != self.breaker_states)
+        )
+        self.breaker_states = breaker_states
 
 
-# For debug only
+# When running the monitor in standalone mode
 if __name__ == '__main__':
     rospy.init_node('robot_state_monitor')
     monitor = RobotStateMonitor()

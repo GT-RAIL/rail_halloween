@@ -11,14 +11,14 @@ import tf
 
 from geometry_msgs.msg import Point
 from nav_msgs.msg import OccupancyGrid
-from assistance_msgs.msg import ExecutionEvent
+from assistance_msgs.msg import MonitorMetadata
 
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 
 # The class definition
 
-class BaseCollisionMonitor(object):
+class BaseCollisionMonitor(AbstractFaultMonitor):
     """
     Monitor the local costmap and the robot's footprint to check if there is a
     collision
@@ -47,6 +47,10 @@ class BaseCollisionMonitor(object):
     CONST_FREE_SPACE = 0
 
     def __init__(self):
+        super(BaseCollisionMonitor, self).__init__()
+        self.set_metadata(topics=[BaseCollisionMonitor.COSTMAP_TOPIC],
+                          nodes=BaseCollisionMonitor.BASE_COLLISION_MONITOR_NODES)
+
         self.base_in_collision = False
         self._latest_costmap = None
 
@@ -58,13 +62,6 @@ class BaseCollisionMonitor(object):
 
         # tf listener
         self._listener = tf.TransformListener()
-
-        # The trace publisher
-        self._trace = rospy.Publisher(
-            TraceMonitor.EXECUTION_TRACE_TOPIC,
-            ExecutionEvent,
-            queue_size=1
-        )
 
         # The subscriber to the costmap
         self._costmap_sub = rospy.Subscriber(
@@ -157,26 +154,21 @@ class BaseCollisionMonitor(object):
             return
 
         # Check the collision of each point in the robot's footprint
-        old_collision_state = self.base_in_collision
         try:
             self.base_in_collision = self._check_collision(trans[0], trans[1], costmap)
         except Exception as e:
             rospy.logerr("Error checking collisions: {}".format(e))
             self.base_in_collision = False
 
-        # If there has been an update in the collision check, then send an event
-        if old_collision_state != self.base_in_collision:
-            trace_event = ExecutionEvent(
-                stamp=rospy.Time.now(),
-                name=BaseCollisionMonitor.BASE_COLLISION_MONITOR_EVENT_NAME,
-                type=ExecutionEvent.MONITOR_EVENT
-            )
-            trace_event.monitor_metadata.nodes.extend(BaseCollisionMonitor.BASE_COLLISION_MONITOR_NODES)
-            trace_event.monitor_metadata.topics.append(BaseCollisionMonitor.COSTMAP_TOPIC)
-            self._trace.publish(trace_event)
+        # Update the trace if necessary
+        self.update_trace(
+            BaseCollisionMonitor.BASE_COLLISION_MONITOR_EVENT_NAME,
+            (MonitorMetadata.NOMINAL if not self.base_in_collision else MonitorMetadata.FAULT),
+            { 'base_in_collision': self.base_in_collision }
+        )
 
 
-# For Debug only
+# When running the monitor in standalone mode
 if __name__ == '__main__':
     rospy.init_node('base_collision_monitor')
     monitor = BaseCollisionMonitor()

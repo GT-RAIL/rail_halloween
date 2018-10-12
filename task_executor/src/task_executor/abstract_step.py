@@ -16,9 +16,9 @@ from assistance_msgs.msg import ExecutionEvent, TaskStepMetadata
 class AbstractStep(object):
     """All steps in a task are derived from this class"""
 
-    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
-
     __metaclass__ = abc.ABCMeta
+
+    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
     RUNNING_GOAL_STATES = [GoalStatus.PENDING, GoalStatus.ACTIVE, GoalStatus.RECALLING, GoalStatus.PREEMPTING]
 
     def __init__(self):

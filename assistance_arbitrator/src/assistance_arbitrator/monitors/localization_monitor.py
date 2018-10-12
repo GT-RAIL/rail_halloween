@@ -9,10 +9,10 @@ import numpy as np
 import rospy
 import tf
 
-from assistance_msgs.msg import ExecutionEvent, MonitorMetadata
+from assistance_msgs.msg import MonitorMetadata
 from nav_msgs.msg import Odometry
 
-from assistance_arbitrator.monitors.trace_monitor import TraceMonitor
+from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 
 # The class definition
@@ -35,6 +35,9 @@ class LocalizationMonitor(object):
     ODOM_TOPIC = "/odom"
 
     def __init__(self):
+        super(LocalizationMonitor, self).__init__()
+        self.set_metadata(nodes=[LocalizationMonitor.LOCALIZATION_MONITOR_NODE])
+
         # Initialize the tf listener
         self._listener = tf.TransformListener()
 
@@ -45,13 +48,6 @@ class LocalizationMonitor(object):
         # Stub values to save the last check
         self._last_position = np.zeros((3,))
         self._last_orientation = np.zeros((4,))
-
-        # Publisher for the trace event
-        self._trace = rospy.Publisher(
-            TraceMonitor.EXECUTION_TRACE_TOPIC,
-            ExecutionEvent,
-            queue_size=1
-        )
 
         # Start the monitor
         self._monitor_timer = rospy.Timer(
@@ -75,7 +71,7 @@ class LocalizationMonitor(object):
         except (tf.LookupException, tf.ExtrapolationException):
             return
 
-        # Check the limits
+        # Check the limits from the odom reported values
         max_bound_linear = (
             self._last_vel.linear.x / LocalizationMonitor.MONITORING_LOOP_RATE
             + LocalizationMonitor.MONITORING_LINEAR_ERROR_BOUND
@@ -84,30 +80,29 @@ class LocalizationMonitor(object):
             self._last_vel.angular.z / LocalizationMonitor.MONITORING_LOOP_RATE
             + LocalizationMonitor.MONITORING_ANGULAR_ERROR_BOUND
         )
+
+        # Check the bounds on the localization update
         is_outside_bounds = False
-        if np.linalg.norm(trans - self._last_position) >= max_bound_linear:
+        diff_linear = np.linalg.norm(trans - self._last_position)
+        diff_angular = (1 - np.dot(rot, self._last_orientation) ** 2)
+        if diff_linear >= max_bound_linear:
             is_outside_bounds = True
-        if (1 - np.dot(rot, self._last_orientation)**2) >= max_bound_angular:
+        if diff_angular >= max_bound_angular:
             is_outside_bounds = True
 
-        # If outside the bounds, send an event update
-        if is_outside_bounds:
-            trace_event = ExecutionEvent(
-                stamp=rospy.Time.now(),
-                name=LocalizationMonitor.LOCALIZATION_MONITOR_EVENT_NAME,
-                type=ExecutionEvent.MONITOR_EVENT
-            )
-            trace_event.monitor_metadata.nodes.append(
-                LocalizationMonitor.LOCALIZATION_MONITOR_NODE
-            )
-            self._trace.publish(trace_event)
+        # Send an event update
+        self.update_trace(
+            LocalizationMonitor.LOCALIZATION_MONITOR_EVENT_NAME,
+            is_outside_bounds,
+            { 'diff_linear': diff_linear, 'diff_angular': diff_angular }
+        )
 
         # Update the values of the saved pose
         self._last_position = trans
         self._last_orientation = rot
 
 
-# Used for debugging only
+# When running the monitor in standalone mode
 if __name__ == '__main__':
     rospy.init_node("localization_monitor")
     monitor = LocalizationMonitor()

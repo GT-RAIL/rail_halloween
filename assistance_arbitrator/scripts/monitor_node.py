@@ -3,7 +3,7 @@
 
 import rospy
 
-from assistance_arbitrator.monitor import ExecutionMonitor
+from assistance_arbitrator.monitoring import ExecutionMonitor
 
 def main():
     rospy.init_node('execution_monitor')
