@@ -12,7 +12,7 @@ from .arm import ArmAction
 
 class PlaceAction(AbstractStep):
 
-    DROP_OBJECT_SERVICE_NAME = "grasp_executor/drop_object"
+    DROP_OBJECT_SERVICE_NAME = "/grasp_executor/drop_object"
     DROP_POSE_NAME = "poses.drop"  # This is from the poses database
 
     def init(self, name):
@@ -50,6 +50,7 @@ class PlaceAction(AbstractStep):
 
         # Then call the client to perform the grasps
         self._drop_object_srv()  # There is no feedback from this service...
+        self.notify_service_called(PlaceAction.DROP_OBJECT_SERVICE_NAME)
         if self._stopped:
             yield self.set_preempted(
                 action=self.name,

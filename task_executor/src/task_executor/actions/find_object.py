@@ -17,10 +17,10 @@ from task_executor.srv import GetObjectConstraints
 
 class FindObjectAction(AbstractStep):
 
-    OBJECT_CONSTRAINTS_SERVICE_NAME = "database/object_constraints"
-    SEGMENT_OBJECTS_SERVICE_NAME = "rail_segmentation/segment_objects"
-    PLANNING_SCENE_ADD_SERVICE_NAME = "grasp_executor/add_object"
-    PLANNING_SCENE_CLEAR_SERVICE_NAME = "grasp_executor/clear_objects"
+    OBJECT_CONSTRAINTS_SERVICE_NAME = "/database/object_constraints"
+    SEGMENT_OBJECTS_SERVICE_NAME = "/rail_segmentation/segment_objects"
+    PLANNING_SCENE_ADD_SERVICE_NAME = "/grasp_executor/add_object"
+    PLANNING_SCENE_CLEAR_SERVICE_NAME = "/grasp_executor/clear_objects"
 
     def init(self, name):
         self.name = name
@@ -74,6 +74,7 @@ class FindObjectAction(AbstractStep):
 
         # Ask for a segmentation and then identify the object that we want
         segmented_objects = self._segment_objects_srv().segmented_objects
+        self.notify_service_called(FindObjectAction.SEGMENT_OBJECTS_SERVICE_NAME)
         yield self.set_running()  # Check on the status of the server
         if self._stopped:
             yield self.set_preempted(
@@ -85,6 +86,7 @@ class FindObjectAction(AbstractStep):
 
         # Update the planning scene
         self._planning_scene_clear_srv()
+        self.notify_service_called(FindObjectAction.PLANNING_SCENE_CLEAR_SERVICE_NAME)
         yield self.set_running()  # Check on the status of the server
         if self._stopped:
             yield self.set_preempted(
@@ -100,6 +102,7 @@ class FindObjectAction(AbstractStep):
             req.centroids.append(segmented_object.centroid)
             req.indices.append(idx)
         self._planning_scene_add_srv(req)
+        self.notify_service_called(FindObjectAction.PLANNING_SCENE_ADD_SERVICE_NAME)
         yield self.set_running()  # Check on the status of the server
         if self._stopped:
             yield self.set_preempted(
@@ -143,6 +146,7 @@ class FindObjectAction(AbstractStep):
         based solely on the expected location and bounds of the object
         """
         obj_constraints = self._get_object_constraints_srv(obj).constraints
+        self.notify_service_called(FindObjectAction.OBJECT_CONSTRAINTS_SERVICE_NAME)
         bounds = obj_constraints.bounds if obj_constraints.use_bounds else None
         location = obj_constraints.location if obj_constraints.use_location else None
 

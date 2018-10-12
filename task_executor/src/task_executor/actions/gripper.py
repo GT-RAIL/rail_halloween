@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class GripperAction(AbstractStep):
 
-    GRIPPER_ACTION_SERVER = "gripper_controller/gripper_action"
+    GRIPPER_ACTION_SERVER = "/gripper_controller/gripper_action"
     GRIPPER_MAX_EFFORT = 200
     GRIPPER_OPEN_POSITION = 0.15
     GRIPPER_CLOSE_POSITION = 0.0
@@ -44,6 +44,7 @@ class GripperAction(AbstractStep):
             goal.command.position = GripperAction.GRIPPER_OPEN_POSITION
 
         self._gripper_client.send_goal(goal)
+        self.notify_action_send_goal(GripperAction.GRIPPER_ACTION_SERVER, goal)
 
         # Yield an empty dict while we're executing
         while self._gripper_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -53,6 +54,7 @@ class GripperAction(AbstractStep):
         status = self._gripper_client.get_state()
         self._gripper_client.wait_for_result()
         result = self._gripper_client.get_result()
+        self.notify_action_recv_result(GripperAction.GRIPPER_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -73,3 +75,4 @@ class GripperAction(AbstractStep):
 
     def stop(self):
         self._gripper_client.cancel_goal()
+        self.notify_action_cancel(GripperAction.GRIPPER_ACTION_SERVER)

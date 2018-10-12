@@ -16,7 +16,7 @@ from .look import LookAction
 
 class LookAtClosestPersonAction(AbstractStep):
 
-    CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
+    CLOSEST_PERSON_TOPIC = "/rail_people_detector/closest_person"
     POSITION_CHANGE_HEAD_FOLLOW_THRESHOLD = 0.02
     HEAD_ACTION_DURATION = 0.1
 

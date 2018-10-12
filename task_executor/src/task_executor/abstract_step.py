@@ -11,15 +11,26 @@ import pickle
 import rospy
 
 from actionlib_msgs.msg import GoalStatus
-from assistance_msgs.msg import ExecutionEvent, TaskStepMetadata
+from assistance_msgs.msg import ExecutionEvent, TaskStepMetadata, MonitorMetadata
 
 class AbstractStep(object):
     """All steps in a task are derived from this class"""
 
     __metaclass__ = abc.ABCMeta
 
-    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
+    # Definition of GoalStatus codes that indicate "in progress"
     RUNNING_GOAL_STATES = [GoalStatus.PENDING, GoalStatus.ACTIVE, GoalStatus.RECALLING, GoalStatus.PREEMPTING]
+
+    # The execution trace topic
+    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
+
+    # The set of action, topic, service related events we might care about
+    ACTION_SEND_GOAL_EVENT = 'task_action_send_goal'
+    ACTION_RECV_RESULT_EVENT = 'task_action_recv_result'
+    ACTION_CANCEL_EVENT = 'task_action_cancel'
+    SERVICE_CALLED_EVENT = 'task_service_called'
+    TOPIC_PUBLISHED_EVENT = 'task_topic_published'
+    TOPIC_MESSAGE_EVENT = 'task_topic_message'
 
     def __init__(self):
         # Set the attributes that all steps have
@@ -31,7 +42,7 @@ class AbstractStep(object):
         self._trace = rospy.Publisher(AbstractStep.EXECUTION_TRACE_TOPIC, ExecutionEvent, queue_size=1)
         self._last_event = None  # tuple of (event, context,); suppress duplicates
 
-    def _update_trace(self, context):
+    def _update_task_trace(self, context):
         # Check to see if this is a trivial update
         if (self._last_event is not None
                 and self._last_event[0].task_step_metadata.status == self.status
@@ -52,12 +63,33 @@ class AbstractStep(object):
         self._trace.publish(event)
         self._last_event = (event, context,)
 
+    def _update_monitor_trace(self, event_subtype, context, topics=[], services=[], actions=[]):
+        # Context must be a dictionary
+        context['step_name'] = self.name
+        context['step_uuid'] = self.uuid
+
+        # We always publish a monitoring event, because these are manually
+        # triggered event notifications in the code
+        event = ExecutionEvent(
+            stamp=rospy.Time.now(),
+            name=event_subtype,  # ACTION_SEND_GOAL_EVENT, ACTION_RECV_RESULT_EVENT, etc.
+            type=ExecutionEvent.MONITOR_EVENT,
+            monitor_metadata=MonitorMetadata(
+                fault_status=MonitorMetadata.NOMINAL,  # We never try to detect faults here
+                context=pickle.dumps(context),
+                topics=topics,
+                services=services,
+                actions=actions
+            )
+        )
+        self._trace.publish(event)
+
     def set_running(self, **context):
         """
         Returns a status denoting that the step is still running
         """
         self._status = GoalStatus.ACTIVE
-        self._update_trace(context)
+        self._update_task_trace(context)
         return context
 
     def set_succeeded(self, **context):
@@ -65,7 +97,7 @@ class AbstractStep(object):
         Returns a status denoting that the step has succeeded
         """
         self._status = GoalStatus.SUCCEEDED
-        self._update_trace(context)
+        self._update_task_trace(context)
         return context
 
     def set_aborted(self, **context):
@@ -73,7 +105,7 @@ class AbstractStep(object):
         Returns a status denoting that the step has failed
         """
         self._status = GoalStatus.ABORTED
-        self._update_trace(context)
+        self._update_task_trace(context)
         return context
 
     def set_preempted(self, **context):
@@ -81,7 +113,7 @@ class AbstractStep(object):
         Returns a status denoting that the step was preempted
         """
         self._status = GoalStatus.PREEMPTED
-        self._update_trace(context)
+        self._update_task_trace(context)
         return context
 
     @property
@@ -116,6 +148,48 @@ class AbstractStep(object):
         `AbstractStep.aborted()`
         """
         return not (self.is_running() or self.is_succeeded() or self.is_preempted())
+
+    def notify_action_send_goal(self, action_server_name, goal):
+        self._update_monitor_trace(
+            AbstractStep.ACTION_SEND_GOAL_EVENT,
+            { 'goal': goal },
+            actions=[action_server_name]
+        )
+
+    def notify_action_recv_result(self, action_server_name, status, result):
+        self._update_monitor_trace(
+            AbstractStep.ACTION_RECV_RESULT_EVENT,
+            { 'status': status, 'result': result },
+            actions=[action_server_name]
+        )
+
+    def notify_action_cancel(self, action_server_name):
+        self._update_monitor_trace(
+            AbstractStep.ACTION_CANCEL_EVENT,
+            {},
+            actions=[action_server_name]
+        )
+
+    def notify_service_called(self, service_name, context={}):
+        self._update_monitor_trace(
+            AbstractStep.SERVICE_CALLED_EVENT,
+            context,
+            services=[service_name]
+        )
+
+    def notify_topic_published(self, topic_name, msg):
+        self._update_monitor_trace(
+            AbstractStep.TOPIC_PUBLISHED_EVENT,
+            { 'msg': msg },
+            topics=[topic_name]
+        )
+
+    def notify_topic_message(self, topic_name, msg):
+        self._update_monitor_trace(
+            AbstractStep.TOPIC_MESSAGE_EVENT,
+            { 'msg': msg },
+            topics=[topic_name]
+        )
 
     @abc.abstractmethod
     def init(self, name, *args, **kwargs):

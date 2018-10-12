@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 
 class LookAction(AbstractStep):
 
-    HEAD_ACTION_SERVER = "head_controller/point_head"
+    HEAD_ACTION_SERVER = "/head_controller/point_head"
     HEAD_ACTION_DURATION = 0.5
 
     def init(self, name):
@@ -40,6 +40,7 @@ class LookAction(AbstractStep):
         goal.target.point.z = pose['z']
         goal.min_duration = rospy.Duration(self._duration)
         self._look_client.send_goal(goal)
+        self.notify_action_send_goal(LookAction.HEAD_ACTION_SERVER, goal)
 
         # Yield an empty dict while we're executing
         while self._look_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -49,6 +50,7 @@ class LookAction(AbstractStep):
         status = self._look_client.get_state()
         self._look_client.wait_for_result()
         result = self._look_client.get_result()
+        self.notify_action_recv_result(LookAction.HEAD_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -69,3 +71,4 @@ class LookAction(AbstractStep):
 
     def stop(self):
         self._look_client.cancel_goal()
+        self.notify_action_cancel(LookAction.HEAD_ACTION_SERVER)

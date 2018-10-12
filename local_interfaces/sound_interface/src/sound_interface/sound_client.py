@@ -84,12 +84,13 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
 
     # Mary TTS server URL
     MARY_SERVER_URL = "http://localhost:59125/process"
+    MARY_SERVER_TIMEOUT = 30  # Number of seconds to wait before timing out
 
     # Speech params
     SPEECH_GAIN_DB = 15
 
     # ROS Constants
-    SOUND_PLAY_SERVER = "sound_server"
+    SOUND_PLAY_SERVER = "/sound_server"
 
     @staticmethod
     def make_happy(text):
@@ -218,11 +219,15 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         }
 
         # Send a request to MARY and check the response type
-        r = requests.post(SoundClient.MARY_SERVER_URL, params=query_dict)
+        r = requests.post(
+            SoundClient.MARY_SERVER_URL,
+            params=query_dict,
+            timeout=SoundClient.MARY_SERVER_TIMEOUT
+        )
         if r.headers['content-type'] != 'audio/x-wav':
             rospy.logerr("Response Error Code: {}. Content-Type: {}"
                          .format(r.status_code, r.headers['content-type']))
-            return
+            raise ValueError("Incorrect Content Type", r.headers['content-type'], r.status_code)
 
         # Increase the volume on the temp file
         speech = AudioSegment(data=r.content)

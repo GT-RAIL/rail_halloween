@@ -15,7 +15,7 @@ from .beep import BeepAction
 
 class FindClosestPersonAction(AbstractStep):
 
-    CLOSEST_PERSON_TOPIC = "rail_people_detector/closest_person"
+    CLOSEST_PERSON_TOPIC = "/rail_people_detector/closest_person"
     EXPECTED_PERSON_ROI = Bounds(xmin=0.4, xmax=3.6, ymin=-2.4, ymax=2.4, zmin=1.4, zmax=2.0)
     PERSON_SEARCH_STEP_SIZES = { 'x': 0.8, 'y': 1.2, 'z': 0.3 }
     PERSON_SEARCH_WAIT_TIME = 1.5
@@ -127,3 +127,4 @@ class FindClosestPersonAction(AbstractStep):
         if msg.detection_context.pose_source == DetectionContext.POSE_FROM_FACE:
             self._selected_person = self._last_closest_person
             self._select_closest_person = False
+            self.notify_topic_message(FindClosestPersonAction.CLOSEST_PERSON_TOPIC, self._last_closest_person)

@@ -51,6 +51,9 @@ class ListenAction(AbstractStep):
 
             yield self.set_running()
 
+        # Make only one note of us calling the listen service
+        self.notify_service_called(ListenAction.SPEECH_CMD_SERVICE_NAME)
+
         # Check whether we were stopped. If not, check the expected_cmd and
         # return success or fail accordingly
         if self._stopped:

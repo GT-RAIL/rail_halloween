@@ -17,7 +17,7 @@ from actionlib_msgs.msg import GoalStatus
 class TorsoAction(AbstractStep):
 
     JOINT_STATES_TOPIC = "/joint_states"
-    TORSO_ACTION_SERVER = "torso_controller/follow_joint_trajectory"
+    TORSO_ACTION_SERVER = "/torso_controller/follow_joint_trajectory"
     TORSO_JOINT_NAME = "torso_lift_joint"
     TORSO_ACTION_DURATION = 5.0
     TORSO_GOAL_TOLERANCE = 3e-2  # A tolerance in torso joint position
@@ -67,6 +67,7 @@ class TorsoAction(AbstractStep):
         follow_goal.trajectory = trajectory
 
         self._torso_client.send_goal(follow_goal)
+        self.notify_action_send_goal(TorsoAction.TORSO_ACTION_SERVER, follow_goal)
 
         # Yield an empty dict while we're executing
         while self._torso_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -76,6 +77,7 @@ class TorsoAction(AbstractStep):
         status = self._torso_client.get_state()
         self._torso_client.wait_for_result()
         result = self._torso_client.get_result()
+        self.notify_action_recv_result(TorsoAction.TORSO_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -96,6 +98,7 @@ class TorsoAction(AbstractStep):
 
     def stop(self):
         self._torso_client.cancel_goal()
+        self.notify_action_cancel(TorsoAction.TORSO_ACTION_SERVER)
 
     def _on_joints(self, msg):
         try:

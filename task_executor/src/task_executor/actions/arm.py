@@ -18,9 +18,9 @@ from .look_at_gripper import LookAtGripperAction
 
 class ArmAction(AbstractStep):
 
-    POSE_ACTION_SERVER = "grasp_executor/preset_position"
-    ARM_POSES_SERVICE_NAME = "database/arm_pose"
-    TRAJECTORIES_SERVICE_NAME = "database/trajectory"
+    POSE_ACTION_SERVER = "/grasp_executor/preset_position"
+    ARM_POSES_SERVICE_NAME = "/database/arm_pose"
+    TRAJECTORIES_SERVICE_NAME = "/database/trajectory"
     MAX_ATTEMPTS = 5
     ARM_JOINT_NAMES = [
         "shoulder_pan_joint",
@@ -87,6 +87,7 @@ class ArmAction(AbstractStep):
             for attempt_num in xrange(self._max_attempts):
                 rospy.loginfo("Action {}: Attempt {}/{}".format(self.name, attempt_num + 1, self._max_attempts))
                 self._pose_client.send_goal(goal)
+                self.notify_action_send_goal(ArmAction.POSE_ACTION_SERVER, goal)
 
                 # Yield running while the client is executing
                 while self._pose_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -112,6 +113,7 @@ class ArmAction(AbstractStep):
         # Wait for a result and yield based on how we exited
         self._pose_client.wait_for_result()
         result = self._pose_client.get_result()
+        self.notify_action_recv_result(ArmAction.POSE_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -137,6 +139,7 @@ class ArmAction(AbstractStep):
     def stop(self):
         self._look_at_gripper.stop()
         self._pose_client.cancel_goal()
+        self.notify_action_cancel(ArmAction.POSE_ACTION_SERVER)
 
     def _parse_poses(self, poses):
         pose_waypoints = None
@@ -146,8 +149,10 @@ class ArmAction(AbstractStep):
             db_name, poses = poses.split('.', 1)
             if db_name == 'poses':
                 pose_waypoints = [self._get_arm_pose_srv(poses).pose,]
+                self.notify_service_called(ArmAction.ARM_POSES_SERVICE_NAME)
             elif db_name == 'trajectories':
                 pose_waypoints = self._get_trajectory_srv(poses).trajectory
+                self.notify_service_called(ArmAction.TRAJECTORIES_SERVICE_NAME)
         elif (type(poses) == list or type(poses) == tuple) \
                 and len(poses) > 0 \
                 and (type(poses[0]) == list or type(poses[0]) == tuple):

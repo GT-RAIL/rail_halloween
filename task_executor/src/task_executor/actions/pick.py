@@ -13,7 +13,7 @@ from fetch_grasp_suggestion.msg import ExecuteGraspAction, ExecuteGraspGoal, \
 
 class PickAction(AbstractStep):
 
-    PICK_ACTION_SERVER = "grasp_executor/execute_grasp"
+    PICK_ACTION_SERVER = "/grasp_executor/execute_grasp"
 
     def init(self, name):
         self.name = name
@@ -44,6 +44,7 @@ class PickAction(AbstractStep):
             goal.grasp_pose.pose = grasp_pose
             goal.grasp_pose.header.stamp = rospy.Time.now()
             self._grasp_client.send_goal(goal)
+            self.notify_action_send_goal(PickAction.PICK_ACTION_SERVER, goal)
 
             # Yield running while the client is executing
             while self._grasp_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -57,6 +58,7 @@ class PickAction(AbstractStep):
         # Wait for a result and yield based on how we exited
         self._grasp_client.wait_for_result()
         result = self._grasp_client.get_result()
+        self.notify_action_recv_result(PickAction.PICK_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -83,3 +85,4 @@ class PickAction(AbstractStep):
 
     def stop(self):
         self._grasp_client.cancel_goal()
+        self.notify_action_cancel(PickAction.PICK_ACTION_SERVER)

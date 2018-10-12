@@ -31,6 +31,7 @@ class BeepAction(AbstractStep):
         # Send the command to play the beep and wait if not async. If async,
         # set as succeeded and exit
         self._beep_client.beep(beep, blocking=False)
+        self.notify_action_send_goal(SoundClient.SOUND_PLAY_SERVER, beep)
         if async:
             yield self.set_succeeded()
             raise StopIteration()
@@ -46,6 +47,7 @@ class BeepAction(AbstractStep):
         # Wait for a result and yield based on how we exited
         status = self._beep_client.get_state()
         result = self._beep_client.get_result(blocking=True)
+        self.notify_action_recv_result(SoundClient.SOUND_PLAY_SERVER, status, result)
         if status == GoalStatus.PREEMPTED or self._stopped:
             yield self.set_preempted(
                 action=self.name,
@@ -66,3 +68,4 @@ class BeepAction(AbstractStep):
     def stop(self):
         self._stopped = True
         self._beep_client.stop()
+        self.notify_action_cancel(SoundClient.SOUND_PLAY_SERVER)

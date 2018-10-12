@@ -13,8 +13,8 @@ from fetch_grasp_suggestion.srv import SuggestGrasps, PairwiseRank
 
 class FindGraspsAction(AbstractStep):
 
-    SUGGEST_GRASPS_SERVICE_NAME = "suggester/suggest_grasps"
-    PAIRWISE_RANK_SERVICE_NAME = "suggester/pairwise_rank"
+    SUGGEST_GRASPS_SERVICE_NAME = "/suggester/suggest_grasps"
+    PAIRWISE_RANK_SERVICE_NAME = "/suggester/pairwise_rank"
     MAX_GRASPS = 10
 
     def init(self, name):
@@ -49,6 +49,7 @@ class FindGraspsAction(AbstractStep):
 
         # Given the segmentation and the objects, now ask for grasps
         grasps = self._suggest_grasps_srv(cloud=segmented_obj.point_cloud).grasp_list
+        self.notify_service_called(FindGraspsAction.SUGGEST_GRASPS_SERVICE_NAME)
         if len(grasps.poses) == 0:
             yield self.set_aborted(
                 action=self.name,
@@ -72,6 +73,7 @@ class FindGraspsAction(AbstractStep):
 
         # Now that we have grasps, pairwise rank them
         grasps = self._grasps_rank_srv().grasp_list
+        self.notify_service_called(FindGraspsAction.PAIRWISE_RANK_SERVICE_NAME)
         if len(grasps.poses) == 0:  # Something has gone horribly wrong
             yield self.set_aborted(
                 action=self.name,

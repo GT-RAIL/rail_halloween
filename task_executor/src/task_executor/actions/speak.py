@@ -31,6 +31,7 @@ class SpeakAction(AbstractStep):
 
         # Send the command to play the speech and wait
         self._speak_client.say(text, affect, blocking=False)
+        self.notify_action_send_goal(SoundClient.SOUND_PLAY_SERVER, (text, affect,))
         while self._speak_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
             if self._stopped:
                 break
@@ -40,6 +41,7 @@ class SpeakAction(AbstractStep):
         # Wait for a result and yield based on how we exited
         status = self._speak_client.get_state()
         result = self._speak_client.get_result(blocking=True)
+        self.notify_action_recv_result(SoundClient.SOUND_PLAY_SERVER, status, result)
         if status == GoalStatus.PREEMPTED or self._stopped:
             yield self.set_preempted(
                 action=self.name,
@@ -62,3 +64,4 @@ class SpeakAction(AbstractStep):
     def stop(self):
         self._stopped = True
         self._speak_client.stop()
+        self.notify_action_cancel(SoundClient.SOUND_PLAY_SERVER)

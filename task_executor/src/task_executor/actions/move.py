@@ -19,8 +19,8 @@ from task_executor.srv import GetWaypoints
 class MoveAction(AbstractStep):
     """Move to a location"""
 
-    MOVE_ACTION_SERVER = "move_base"
-    WAYPOINTS_SERVICE_NAME = "database/waypoints"
+    MOVE_ACTION_SERVER = "/move_base"
+    WAYPOINTS_SERVICE_NAME = "/database/waypoints"
 
     def init(self, name):
         self.name = name
@@ -58,6 +58,7 @@ class MoveAction(AbstractStep):
             goal.target_pose.header.frame_id = coord.frame
             goal.target_pose.header.stamp = rospy.Time.now()
             self._move_base_client.send_goal(goal)
+            self.notify_action_send_goal(MoveAction.MOVE_ACTION_SERVER, goal)
 
             # Yield running while the move_client is executing
             while self._move_base_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
@@ -71,6 +72,7 @@ class MoveAction(AbstractStep):
         # Wait for a result and yield based on how we exited
         self._move_base_client.wait_for_result()
         result = self._move_base_client.get_result()
+        self.notify_action_recv_result(MoveAction.MOVE_ACTION_SERVER, status, result)
 
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -95,6 +97,7 @@ class MoveAction(AbstractStep):
 
     def stop(self):
         self._move_base_client.cancel_goal()
+        self.notify_action_cancel(MoveAction.MOVE_ACTION_SERVER)
 
     def _parse_location(self, location):
         coords = None
@@ -102,6 +105,7 @@ class MoveAction(AbstractStep):
             db_name, location = location.split('.', 1)
             if db_name == 'locations':
                 coords = self._get_waypoints_srv(location).waypoints
+                self.notify_service_called(MoveAction.WAYPOINTS_SERVICE_NAME)
         elif type(location) == dict:
             coords = [Waypoint(**location),]
         elif type(location) == list or type(location) == tuple:

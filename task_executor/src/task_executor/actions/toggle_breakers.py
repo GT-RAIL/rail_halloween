@@ -49,14 +49,17 @@ class ToggleBreakersAction(AbstractStep):
             self._gripper_breaker_srv(enable=enable_gripper),
             BreakerState.STATE_ENABLED if enable_gripper else BreakerState.STATE_DISABLED
         )
+        self.notify_service_called(ToggleBreakersAction.GRIPPER_BREAKER_SERVICE_NAME)
         self._validate_response(
             self._arm_breaker_srv(enable=enable_arm),
             BreakerState.STATE_ENABLED if enable_arm else BreakerState.STATE_DISABLED
         )
+        self.notify_service_called(ToggleBreakersAction.ARM_BREAKER_SERVICE_NAME)
         self._validate_response(
             self._base_breaker_srv(enable=enable_base),
             BreakerState.STATE_ENABLED if enable_base else BreakerState.STATE_DISABLED
         )
+        self.notify_service_called(ToggleBreakersAction.BASE_BREAKER_SERVICE_NAME)
 
         yield self.set_succeeded()
 
