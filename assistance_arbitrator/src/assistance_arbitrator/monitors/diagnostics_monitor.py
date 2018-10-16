@@ -21,12 +21,16 @@ class DiagnosticsMonitor(AbstractFaultMonitor):
 
     DIAGNOSTICS_MONITOR_EVENT_NAME = "diagnostics_update"
     DIAGNOSTICS_TOPIC = "/diagnostics"
+    SIMULATION_PARAMETER = "/use_sim_time"
 
     def __init__(self):
         super(DiagnosticsMonitor, self).__init__()
         self.set_metadata(topics=[DiagnosticsMonitor.DIAGNOSTICS_TOPIC])
 
         self._faulty_diagnostics = {}
+
+        # Need some special logic for simulation here
+        self._in_simulation = rospy.get_param(DiagnosticsMonitor.SIMULATION_PARAMETER, False)
 
         # Create the subscriber to the diagnostics
         self._diagnostics_sub = rospy.Subscriber(
@@ -37,6 +41,10 @@ class DiagnosticsMonitor(AbstractFaultMonitor):
 
     def _on_diagnostics(self, msg):
         for diagnostic_status in msg.status:
+            # HACK: Update the name if this is in simulation
+            if self._in_simulation:
+                diagnostic_status.name = diagnostic_status.name.lstrip("robot_driver: ")
+
             # Figure out if the status of the diagnostic changed
             diagnostic_changed = False
             if diagnostic_status.level == DiagnosticStatus.OK \

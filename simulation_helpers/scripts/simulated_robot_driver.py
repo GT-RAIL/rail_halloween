@@ -7,14 +7,26 @@ from __future__ import print_function, division
 from threading import Lock
 
 import rospy
+import diagnostic_updater
 
+from diagnostic_msgs.msg import DiagnosticStatus
 from fetch_driver_msgs.msg import RobotState
 from power_msgs.msg import BreakerState
 from power_msgs.srv import BreakerCommand, BreakerCommandResponse
 
 
-# This is the class that acts as the stub to the robot driver
+# Helper function to produce diagnostic updaters
+def produce_diagnostic_func(breaker):
+    def diagnostic_func(stat):
+        stat.summary(
+            DiagnosticStatus.OK if breaker.state == BreakerState.STATE_ENABLED else DiagnosticStatus.ERROR,
+            "Enabled" if breaker.state == BreakerState.STATE_ENABLED else "Disabled"
+        )
+        return stat
+    return diagnostic_func
 
+
+# This is the class that acts as the stub to the robot driver
 class SimulatedRobotDriver(object):
     """
     In simulation, implement the minimum amount of logic necessary to correctly
@@ -45,6 +57,13 @@ class SimulatedRobotDriver(object):
             breakers=[self._arm_breaker_state, self._base_breaker_state, self._gripper_breaker_state]
         )
         self._robot_state_lock = Lock()
+
+        # Create the diagnostic updater
+        self._updater = diagnostic_updater.Updater()
+        self._updater.setHardwareID("none")
+        self._updater.add("arm_breaker", produce_diagnostic_func(self._arm_breaker_state))
+        self._updater.add("base_breaker", produce_diagnostic_func(self._base_breaker_state))
+        self._updater.add("gripper_breaker", produce_diagnostic_func(self._gripper_breaker_state))
 
         # The services to set and reset the breakers
         self._arm_breaker_service = rospy.Service("/arm_breaker", BreakerCommand, self.set_arm_breaker)
@@ -88,6 +107,7 @@ class SimulatedRobotDriver(object):
                 self._robot_state.header.stamp = rospy.Time.now()
                 self._robot_state.header.seq += 1
                 self._robot_state_publisher.publish(self._robot_state)
+                self._updater.update()
 
             rate.sleep()
 

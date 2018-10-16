@@ -358,8 +358,6 @@ class ExecutionMonitor(object):
     diagnosis nodes
     """
 
-    SIMULATION_PARAMETER = "/use_sim_time"
-
     def __init__(self):
         # Supplementary execution monitors
         self.rosgraph_monitor = ROSGraphMonitor()

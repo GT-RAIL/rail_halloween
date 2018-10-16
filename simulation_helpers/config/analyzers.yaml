@@ -12,27 +12,33 @@ analyzers:
       base_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Base Breaker
-        startswith: base_breaker
+        contains: base_breaker
+        remove_prefix: "robot_driver: "
       battery_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Battery Breaker
-        startswith: battery_breaker
+        contains: battery_breaker
+        remove_prefix: "robot_driver: "
       computer_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Computer Breaker
-        startswith: computer_breaker
+        contains: computer_breaker
+        remove_prefix: "robot_driver: "
       supply_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Supply Breaker
-        startswith: supply_breaker
+        contains: supply_breaker
+        remove_prefix: "robot_driver: "
       arm_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Arm Breaker
-        startswith: arm_breaker
+        contains: arm_breaker
+        remove_prefix: "robot_driver: "
       gripper_breaker:
         type: diagnostic_aggregator/GenericAnalyzer
         path: Gripper Breaker
-        startswith: gripper_breaker
+        contains: gripper_breaker
+        remove_prefix: "robot_driver: "
   motors:
     type: diagnostic_aggregator/AnalyzerGroup
     path: Motor Control Boards
@@ -95,8 +101,8 @@ analyzers:
         startswith: sick_tim
       #head_camera:
       #  type: diagnostic_aggregator/GenericAnalyzer
-      #  path: 
-      #  startswith: 
+      #  path:
+      #  startswith:
   peripherals:
     type: diagnostic_aggregator/AnalyzerGroup
     path: Peripherals
