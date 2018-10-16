@@ -103,7 +103,7 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
             )
         except Exception as e:
             rospy.logerr("Error checking collisions: {}".format(e))
-            self.base_in_collision = False
+            return
 
         # Update the trace if necessary
         self.update_trace(
