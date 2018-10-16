@@ -3,7 +3,6 @@
 
 from __future__ import print_function, division
 
-import pickle
 import numpy as np
 
 import rospy

@@ -110,7 +110,17 @@
       <arg name="data_config" value="$(arg data_config)" />
     </include>
 
-    <!-- Simulate the robot driver if this is in simulation -->
-    <node name="robot_driver" pkg="simulation_helpers" type="simulated_robot_driver.py" if="$(arg sim)" />
+    <!-- Simulation helpers if this is in simulation -->
+    <group if="$(arg sim)">
+      <!-- Robot Driver -->
+      <node name="robot_driver" pkg="simulation_helpers" type="simulated_robot_driver.py" />
+
+      <!-- Diagnostics -->
+      <node name="diagnostic_aggregator" pkg="diagnostic_aggregator" type="aggregator_node" args="CPP">
+        <rosparam command="load" file="$(find simulation_helpers)/config/analyzers.yaml" />
+      </node>
+
+    </group>
+
   </group>
 </launch>
