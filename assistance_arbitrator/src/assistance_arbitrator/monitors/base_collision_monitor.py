@@ -14,6 +14,7 @@ from nav_msgs.msg import OccupancyGrid
 from assistance_msgs.msg import MonitorMetadata
 
 from assistance_arbitrator.monitoring import AbstractFaultMonitor
+from assistance_arbitrator.utils import costmap_utils
 
 
 # The class definition
@@ -36,15 +37,7 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
     COSTMAP_TOPIC = "/move_base/local_costmap/costmap"
     ROBOT_RADIUS_PARAM = "/move_base/local_costmap/robot_radius"
     ROBOT_FOOTPRINT_NUM_POINTS = 20  # We're going to be naive and simply check the points themselves
-    INSCRIBED_RADIUS_PARAM = "/move_base/local_costmap/inscribed_radius"
-    CIRCUMSCRIBED_RADIUS_PARAM = "/move_base/local_costmap/circumscribed_radius"
     ROBOT_FRAME = "/base_link"
-
-    # Constants defined in move_base
-    CONST_NO_INFORMATION = 255
-    CONST_LETHAL_OBSTACLE = 254
-    CONST_INSCRIBED_INFLATED_OBSTACLE = 253
-    CONST_FREE_SPACE = 0
 
     def __init__(self):
         super(BaseCollisionMonitor, self).__init__()
@@ -55,10 +48,11 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
         self._latest_costmap = None
 
         # Get the move_base parameter values. Translating C++ -> Python here...
-        self._footprint = self._make_footprint(rospy.get_param(BaseCollisionMonitor.ROBOT_RADIUS_PARAM))
-        self._inscribed_radius = rospy.get_param(BaseCollisionMonitor.INSCRIBED_RADIUS_PARAM, 0.325)
-        self._circumscribed_radius = rospy.get_param(BaseCollisionMonitor.CIRCUMSCRIBED_RADIUS_PARAM, 0.46)
-        self._cost_translation_func = self._make_cost_translation_func()
+        self._footprint = costmap_utils.make_footprint(
+            rospy.get_param(BaseCollisionMonitor.ROBOT_RADIUS_PARAM),
+            BaseCollisionMonitor.ROBOT_FOOTPRINT_NUM_POINTS
+        )
+        self._cost_translation_func = costmap_utils.make_cost_translation_func()
 
         # tf listener
         self._listener = tf.TransformListener()
@@ -76,61 +70,6 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
             self._monitor_func,
             oneshot=False
         )
-
-    def _make_footprint(self, radius):
-        footprint = []
-        for i in xrange(BaseCollisionMonitor.ROBOT_FOOTPRINT_NUM_POINTS):
-            angle = i * 2 * np.pi / BaseCollisionMonitor.ROBOT_FOOTPRINT_NUM_POINTS
-            footprint.append(Point(
-                x=(radius * np.cos(angle)),
-                y=(radius * np.sin(angle))
-            ))
-        return footprint
-
-    def _make_cost_translation_func(self):
-        internal_table = {
-            0: BaseCollisionMonitor.CONST_FREE_SPACE,
-            -1: BaseCollisionMonitor.CONST_NO_INFORMATION,
-            99: BaseCollisionMonitor.CONST_INSCRIBED_INFLATED_OBSTACLE,
-            100: BaseCollisionMonitor.CONST_LETHAL_OBSTACLE,
-        }
-        func = lambda x: internal_table.get(x, int(1 + (251 * (x - 1)) / 97))
-        return func
-
-    def _get_map_coords(self, wx, wy, costmap):
-        ox, oy, res = (costmap.info.origin.position.x,
-                       costmap.info.origin.position.y,
-                       costmap.info.resolution)
-        size_x, size_y = costmap.info.width, costmap.info.height
-
-        # Sanity check the inputs
-        assert not (wx < ox or wy < oy), ("World coordinates {} not in map with origin {}"
-                                          .format((wx, wy,), (ox, oy,)))
-
-        # Calculate the map coordinate
-        mx = (wx - ox) / res
-        my = (wy - oy) / res
-
-        # Sanity check the outputs
-        assert (mx < size_x and my < size_y), ("Calculated coords {} larger than map size {}"
-                                               .format((mx, my,), (size_x, size_y,)))
-
-        # Return
-        return (int(mx), int(my),)
-
-    def _check_collision(self, x, y, costmap):
-        base_in_collision = False
-        for point in self._footprint:
-            px, py = x + point.x, y + point.y
-            mx, my = self._get_map_coords(px, py, costmap)
-            cost = self._cost_translation_func(costmap.data[my * costmap.info.width + mx])
-            base_in_collision = base_in_collision or (
-                cost in [BaseCollisionMonitor.CONST_NO_INFORMATION,
-                         BaseCollisionMonitor.CONST_LETHAL_OBSTACLE,
-                         BaseCollisionMonitor.CONST_INSCRIBED_INFLATED_OBSTACLE]
-            )
-
-        return base_in_collision
 
     def _on_costmap(self, costmap_msg):
         self._latest_costmap = costmap_msg
@@ -155,7 +94,13 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
 
         # Check the collision of each point in the robot's footprint
         try:
-            self.base_in_collision = self._check_collision(trans[0], trans[1], costmap)
+            self.base_in_collision = costmap_utils.check_collision(
+                trans[0],  # x
+                trans[1],  # y
+                self._footprint,
+                costmap,
+                self._cost_translation_func
+            )
         except Exception as e:
             rospy.logerr("Error checking collisions: {}".format(e))
             self.base_in_collision = False

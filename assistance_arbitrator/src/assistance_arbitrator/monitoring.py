@@ -131,7 +131,7 @@ class TraceMonitor(object):
     a events trace stream
     """
 
-    EXECUTION_TRACE_TOPIC = 'execution_monitor/trace'
+    EXECUTION_TRACE_TOPIC = '/execution_monitor/trace'
     MAX_TRACE_LENGTH = 9999
 
     def __init__(self):
