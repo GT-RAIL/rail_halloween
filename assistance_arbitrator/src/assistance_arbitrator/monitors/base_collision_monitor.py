@@ -108,7 +108,7 @@ class BaseCollisionMonitor(AbstractFaultMonitor):
         # Update the trace if necessary
         self.update_trace(
             BaseCollisionMonitor.BASE_COLLISION_MONITOR_EVENT_NAME,
-            (MonitorMetadata.NOMINAL if not self.base_in_collision else MonitorMetadata.FAULT),
+            self.base_in_collision,
             { 'base_in_collision': self.base_in_collision }
         )
 

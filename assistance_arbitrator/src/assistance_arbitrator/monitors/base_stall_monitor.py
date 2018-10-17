@@ -83,7 +83,7 @@ class BaseStallMonitor(AbstractFaultMonitor):
             if self._last_stall_detection_published:
                 self.update_trace(
                     BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
-                    (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                    self.base_is_stalled,
                     { 'base_is_stalled': self.base_is_stalled }
                 )
 
@@ -111,7 +111,7 @@ class BaseStallMonitor(AbstractFaultMonitor):
             if self._last_stall_detection_published:
                 self.update_trace(
                     BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
-                    (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                    self.base_is_stalled,
                     { 'base_is_stalled': self.base_is_stalled }
                 )
 
@@ -129,7 +129,7 @@ class BaseStallMonitor(AbstractFaultMonitor):
             rospy.loginfo("Detected a stalled robot base")
             self.update_trace(
                 BaseStallMonitor.BASE_STALL_MONITOR_EVENT_NAME,
-                (MonitorMetadata.NOMINAL if not self.base_is_stalled else MonitorMetadata.FAULT),
+                self.base_is_stalled,
                 { 'base_is_stalled': self.base_is_stalled }
             )
             self._last_stall_detection_published = True

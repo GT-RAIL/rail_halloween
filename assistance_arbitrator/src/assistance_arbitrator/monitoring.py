@@ -102,8 +102,17 @@ class AbstractFaultMonitor(object):
         self.nodes = tuple(nodes) if nodes is not None else self.nodes
 
     def update_trace(self, event_name, fault_status, context=None, force=False):
-        """Update the trace. If the fault_status is unchanged, do nothing,
-        unless the force flag is set"""
+        """
+        Update the trace. If the fault_status is unchanged, do nothing,
+        unless the force flag is set.
+
+        fault_status can be a boolean value. If so, then a value of 'True'
+        indicates the presence of a fault, while a value of 'False' indicates
+        nominal operation.
+        """
+        if type(fault_status) == bool:
+            fault_status = MonitorMetadata.NOMINAL if not fault_status else MonitorMetadata.FAULT
+
         if fault_status == self.fault_status and not force:
             return
 

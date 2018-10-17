@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-# Monitor the costmap and store the percentage of occupied vs. free space
+# Monitor the diagnostics topic and report an event if there is a change in a
+# diagnostic
 
 from __future__ import print_function, division
 
@@ -61,11 +62,7 @@ class DiagnosticsMonitor(AbstractFaultMonitor):
             if diagnostic_changed:
                 self.update_trace(
                     "{}: {}".format(DiagnosticsMonitor.DIAGNOSTICS_MONITOR_EVENT_NAME, diagnostic_status.name),
-                    (
-                        MonitorMetadata.NOMINAL
-                        if diagnostic_status.level == DiagnosticStatus.OK
-                        else MonitorMetadata.FAULT
-                    ),
+                    diagnostic_status.level != DiagnosticStatus.OK,
                     { 'diagnostic': diagnostic_status },
                     force=True
                 )

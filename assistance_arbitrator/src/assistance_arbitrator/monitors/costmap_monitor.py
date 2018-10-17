@@ -42,7 +42,7 @@ class CostmapMonitor(AbstractFaultMonitor):
         self.free_space_perc = 1 - (np.count_nonzero(costmap_msg.data) / len(costmap_msg.data))
         self.update_trace(
             CostmapMonitor.COSTMAP_MONITOR_EVENT_NAME,
-            (self.free_space_perc < CostmapMonitor.FREE_PERC_FAULT_THRESHOLD),
+            self.free_space_perc < CostmapMonitor.FREE_PERC_FAULT_THRESHOLD,
             { 'free_space_perc': self.free_space_perc }
         )
 

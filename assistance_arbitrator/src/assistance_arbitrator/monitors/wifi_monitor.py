@@ -80,7 +80,7 @@ class WifiMonitor(AbstractFaultMonitor):
         # Send out an event if thresholds are crossed
         self.update_trace(
             WifiMonitor.WIFI_MONITOR_EVENT_NAME,
-            (wifi_status != WifiMonitor.WIFI_GOOD_CONNECTION),
+            wifi_status != WifiMonitor.WIFI_GOOD_CONNECTION,
             { 'wifi_status': wifi_status, 'signal_level': self.signal_level }
         )
 

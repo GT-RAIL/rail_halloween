@@ -121,7 +121,7 @@ class GlobalPlanMonitor(AbstractFaultMonitor):
         self.plan_in_collision = plan_in_collision
         self.update_trace(
             GlobalPlanMonitor.GLOBAL_PLAN_MONITOR_EVENT_NAME,
-            (MonitorMetadata.NOMINAL if not self.plan_in_collision else MonitorMetadata.FAULT),
+            self.plan_in_collision,
             { 'plan_in_collision': self.plan_in_collision }
         )
 
