@@ -39,7 +39,7 @@ class AbstractStep(object):
         self._status = GoalStatus.LOST
 
         # Helpers for updating the trace
-        self._trace = rospy.Publisher(AbstractStep.EXECUTION_TRACE_TOPIC, ExecutionEvent, queue_size=1)
+        self._trace = rospy.Publisher(AbstractStep.EXECUTION_TRACE_TOPIC, ExecutionEvent, queue_size=10)
         self._last_event = None  # tuple of (event, context,); suppress duplicates
 
     def _update_task_trace(self, context):

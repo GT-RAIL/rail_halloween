@@ -17,7 +17,7 @@ from assistance_arbitrator.monitoring import AbstractFaultMonitor
 
 # The class definition
 
-class LocalizationMonitor(object):
+class LocalizationMonitor(AbstractFaultMonitor):
     """
     Monitors tf and sends out an alert event if the localization of the robot
     updates by more than some pre-specified threshold.

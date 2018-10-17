@@ -2,8 +2,30 @@
 <launch>
   <arg name="sim" default="false" />
 
+  <!-- Launch each of the detectors -->
+  <node name="base_collision_monitor" pkg="assistance_arbitrator" type="base_collision_monitor.py" />
+  <node name="base_stall_monitor" pkg="assistance_arbitrator" type="base_stall_monitor.py" />
+  <node name="battery_state_monitor" pkg="assistance_arbitrator" type="battery_state_monitor.py" />
+  <node name="breaker_state_monitor" pkg="assistance_arbitrator" type="breaker_state_monitor.py" />
+  <node name="costmap_monitor" pkg="assistance_arbitrator" type="costmap_monitor.py" />
+  <node name="diagnostics_monitor" pkg="assistance_arbitrator" type="diagnostics_monitor.py" />
+  <node name="global_plan_monitor" pkg="assistance_arbitrator" type="global_plan_monitor.py" />
+  <node name="localization_monitor" pkg="assistance_arbitrator" type="localization_monitor.py" />
+
+  <!-- Simulation only detectors -->
+  <group if="$(arg sim)">
+  </group>
+
+  <!-- Robot only detectors -->
+  <group unless="$(arg sim)">
+    <node name="wifi_monitor" pkg="assistance_arbitrator" type="wifi_monitor.py" />
+  </group>
+
   <!-- Launch the rosgraph monitor -->
   <node name="rosgrapher" pkg="rosprofiler" type="rosgrapher" />
+
+  <!-- Launch the execution monitor -->
+  <node name="execution_monitor" pkg="assistance_arbitrator" type="monitor_node.py" />
 
   <!-- Launch the arbitration server -->
   <node name="arbitrator" pkg="assistance_arbitrator" type="server_node.py" output="screen" />

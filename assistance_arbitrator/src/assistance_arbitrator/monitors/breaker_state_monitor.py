@@ -55,6 +55,6 @@ class BreakerStateMonitor(AbstractFaultMonitor):
 
 # When running the monitor in standalone mode
 if __name__ == '__main__':
-    rospy.init_node('robot_state_monitor')
+    rospy.init_node('breaker_state_monitor')
     monitor = BreakerStateMonitor()
     rospy.spin()

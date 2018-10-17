@@ -90,7 +90,7 @@ class AbstractFaultMonitor(object):
         self._trace = rospy.Publisher(
             TraceMonitor.EXECUTION_TRACE_TOPIC,
             ExecutionEvent,
-            queue_size=1
+            queue_size=10
         )
 
     def set_metadata(self, topics=None, services=None, actions=None, nodes=None):
