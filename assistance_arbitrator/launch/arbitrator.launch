@@ -11,6 +11,7 @@
   <node name="diagnostics_monitor" pkg="assistance_arbitrator" type="diagnostics_monitor.py" />
   <node name="global_plan_monitor" pkg="assistance_arbitrator" type="global_plan_monitor.py" />
   <node name="localization_monitor" pkg="assistance_arbitrator" type="localization_monitor.py" />
+  <node name="octomap_monitor" pkg="assistance_arbitrator" type="octomap_monitor.py" />
 
   <!-- Simulation only detectors -->
   <group if="$(arg sim)">

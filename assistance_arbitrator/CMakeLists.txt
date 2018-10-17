@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   assistance_msgs
   fetch_driver_msgs
   geometry_msgs
+  moveit_msgs
   nav_msgs
   power_msgs
   ros_topology_msgs
