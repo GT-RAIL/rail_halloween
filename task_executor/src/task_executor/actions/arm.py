@@ -95,6 +95,9 @@ class ArmAction(AbstractStep):
 
                 # Yield based on the server's status
                 status = self._pose_client.get_state()
+                self._pose_client.wait_for_result()
+                result = self._pose_client.get_result()
+                self.notify_action_recv_result(ArmAction.POSE_ACTION_SERVER, status, result)
 
                 # Exit if we have succeeded or been preempted
                 if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
@@ -110,11 +113,7 @@ class ArmAction(AbstractStep):
             self._look_at_gripper(enable=False)
             rospy.sleep(0.5)
 
-        # Wait for a result and yield based on how we exited
-        self._pose_client.wait_for_result()
-        result = self._pose_client.get_result()
-        self.notify_action_recv_result(ArmAction.POSE_ACTION_SERVER, status, result)
-
+        # Yield based on how we exited
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:

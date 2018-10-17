@@ -52,14 +52,14 @@ class PickAction(AbstractStep):
 
             # Check the status. Exit if we've succeeded
             status = self._grasp_client.get_state()
+            self._grasp_client.wait_for_result()
+            result = self._grasp_client.get_result()
+            self.notify_action_recv_result(PickAction.PICK_ACTION_SERVER, status, result)
+
             if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
                 break
 
-        # Wait for a result and yield based on how we exited
-        self._grasp_client.wait_for_result()
-        result = self._grasp_client.get_result()
-        self.notify_action_recv_result(PickAction.PICK_ACTION_SERVER, status, result)
-
+        # Yield based on how we exited
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
         elif status == GoalStatus.PREEMPTED:
