@@ -124,6 +124,51 @@ tasks:
     - action: move
       params:
         location: locations.pre_table1
+        
+        
+  # Task for setting up Halloween
+  halloween_setup:
+    Steps:
+    - action: arm
+      parms:
+        poses: poses.ready_for_candy
+        
+    - action: gripper
+      params:
+        command: 'open'
+        
+    - action: torso
+      parms:
+        height: 0.25
+        
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+  
+  
+  # Task for setting up Halloween
+  halloween_setup:
+    Steps:
+    - action: arm
+      params:
+        poses: poses.candy_bowl
+        
+    - action: gripper
+      params:
+        command: 'close'
+        
+    - action: <move to kid's candy basket>
+    
+    - action: gripper
+      params:
+        command: 'open'
+
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+        
 
   # The main fetch and deliver task that we want to make robust
   main:
