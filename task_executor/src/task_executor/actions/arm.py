@@ -3,8 +3,12 @@
 
 from __future__ import print_function, division
 
+import sys
+
 import rospy
 import actionlib
+import tf
+import moveit_commander
 
 from task_executor.abstract_step import AbstractStep
 
@@ -31,14 +35,21 @@ class ArmAction(AbstractStep):
         "wrist_flex_joint",
         "wrist_roll_joint",
     ]
+    ARM_GROUP_NAME = "arm"
 
     def init(self, name):
         self.name = name
 
+        # Initialize the moveit_commander
+        moveit_commander.roscpp_initialize(sys.argv)
+
+        # Initialize the service clients, action clients, etc.
+        self._listener = tf.TransformListener()
         self._pose_client = actionlib.SimpleActionClient(
             ArmAction.POSE_ACTION_SERVER,
             PresetJointsMoveAction
         )
+        self._move_group = moveit_commander.MoveGroupCommander(ArmAction.ARM_GROUP_NAME)
         self._get_arm_pose_srv = rospy.ServiceProxy(ArmAction.ARM_POSES_SERVICE_NAME, GetArmPose)
         self._get_trajectory_srv = rospy.ServiceProxy(ArmAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
 
@@ -160,5 +171,6 @@ class ArmAction(AbstractStep):
         elif (type(poses) == list or type(poses) == tuple) and len(poses) > 0:
             # YAML definition of a pose
             pose_waypoints = [ArmPose(angles=poses),]
+        elif (type(poses) == dict
 
         return pose_waypoints
