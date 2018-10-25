@@ -14,6 +14,7 @@ from task_executor.abstract_step import AbstractStep
 
 from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
+from moveit_msgs.msg import MoveItErrorCodes
 from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveGoal
 from task_executor.msg import ArmJointPose
 from task_executor.srv import GetArmGripperPose, GetArmJointPose, GetTrajectory
@@ -59,6 +60,8 @@ class ArmAction(AbstractStep):
         self._get_arm_joint_pose_srv = rospy.ServiceProxy(ArmAction.ARM_JOINT_POSES_SERVICE_NAME, GetArmJointPose)
         self._get_trajectory_srv = rospy.ServiceProxy(ArmAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
 
+        # Set some execution flags
+        self._stopped = False
         self._max_attempts = ArmAction.MAX_ATTEMPTS
 
         # Initialize the look at gripper module
@@ -109,15 +112,78 @@ class ArmAction(AbstractStep):
                 rospy.sleep(0.5)
 
     def _run_gripper_poses(self, parsed_poses):
-        # FIXME
-        pass
+        # Run the arm pose follower on a series of PoseStamped
+        self._stopped = False
+        attempt_num = -1
+        success = False
+        for pose in parsed_poses:
+            rospy.loginfo("Action {}: Going to gripper pose: {}".format(
+                self.name,
+                { "frame": pose.header.frame_id, "position": pose.pose.position, "orientation": pose.pose.orientation }
+            ))
+
+            # Configure the move group planners
+            self._move_group.set_planner_id(ArmAction.ARM_PLANNER_NAME)
+            self._move_group.set_planning_time(ArmAction.ARM_PLANNING_TIME)
+
+            # Try to plan and execute
+            for attempt_num in xrange(self._max_attempts):
+                # Stop any arm motion and clear previous targets
+                self._move_group.stop()
+                self._move_group.clear_pose_targets()
+
+                # Create and set the new pose target
+                pose.header.stamp = rospy.Time.now()
+                self._move_group.set_start_state_to_current_state()
+                self._move_group.set_pose_target(pose, ArmAction.ARM_EEF_FRAME)
+
+                # Then plan
+                plan = self._move_group.plan()
+                yield self.set_running()  # Check the status of the server
+                if self._stopped:
+                    yield self.set_preempted(
+                        action=self.name,
+                        goal=pose,
+                        attempt_num=attempt_num
+                    )
+                    raise StopIteration()
+
+                # Then move
+                success = self._move_group.execute(plan, wait=True)
+                yield self.set_running()  # Check the status of the server
+                if self._stopped:
+                    yield self.set_preempted(
+                        action=self.name,
+                        goal=pose,
+                        attempt_num=attempt_num
+                    )
+                    raise StopIteration()
+
+                # If this was successful, then break out
+                if success:
+                    break
+
+            # If reaching the previous pose was not successful, then break out
+            # Otherwise, move on to the next pose
+            if not success:
+                break
+
+        # Yield based on how we exited. Preempts are handled earlier
+        if success:
+            yield self.set_succeeded()
+        else:
+            yield self.set_aborted(
+                action=self.name,
+                goal=pose,
+                attempt_num=attempt_num
+            )
 
     def _run_joint_poses(self, parsed_poses):
         # Run the arm pose follower on a series of joint poses
         status = GoalStatus.LOST
         attempt_num = -1
         for pose in parsed_poses:
-            rospy.loginfo("Action {}: Going to arm pose: {}".format(self.name, pose.angles))
+            rospy.loginfo("Action {}: Going to arm joint pose: {}".format(self.name, pose.angles))
 
             # Create and send the goal
             goal = PresetJointsMoveGoal()
@@ -156,8 +222,7 @@ class ArmAction(AbstractStep):
             yield self.set_preempted(
                 action=self.name,
                 status=status,
-                orig_goal=poses,
-                goal=parsed_poses,
+                goal=pose,
                 attempt_num=attempt_num,
                 result=result
             )
@@ -165,13 +230,13 @@ class ArmAction(AbstractStep):
             yield self.set_aborted(
                 action=self.name,
                 status=status,
-                orig_goal=poses,
-                goal=parsed_poses,
+                goal=pose,
                 attempt_num=attempt_num,
                 result=result
             )
 
     def stop(self):
+        self._stopped = True
         self._look_at_gripper.stop()
         self._joint_pose_client.cancel_goal()
         self.notify_action_cancel(ArmAction.JOINT_POSE_ACTION_SERVER)
@@ -221,7 +286,7 @@ class ArmAction(AbstractStep):
                 and poses.has_key("position") and poses.has_key("orientation") and poses.has_key("frame"):
             # YAML definition of a PoseStamped EEF pose
             parsed_poses = [PoseStamped(),]
-            parsed_poses[0].header.frame_id = poses['position']
+            parsed_poses[0].header.frame_id = poses['frame']
             parsed_poses[0].pose.position.x = poses['position'].get('x', 0)
             parsed_poses[0].pose.position.y = poses['position'].get('y', 0)
             parsed_poses[0].pose.position.z = poses['position'].get('z', 0)
