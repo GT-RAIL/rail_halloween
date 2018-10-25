@@ -4,11 +4,13 @@ tasks:
     steps:
     - action: arm
       params:
-        poses: joint_poses.tuck
+        poses: joint_poses.ready
 
-    - action: torso
+  practice:
+    steps:
+    - action: beep
       params:
-        height: 0.0
+        beep: unsure
 
   # Task for setting up Halloween
   halloween_setup:
@@ -98,17 +100,33 @@ tasks:
 
     - op: assign
       params:
+        var_name: dumb_choice
+        value: false
+      var:
+      - dumb_choice
+
+    - op: assign
+      params:
         var_name: num
-        value: 3
+        value: 1
       var:
       - num
 
     - loop: pick_verify_loop
       params:
         condition: var.not_found
-        task: halloween_pick
-        params:
-          num: var.num
-        var:
-        - num
-        - not_found
+        loop_body:
+          task: halloween_pick
+          params:
+            num: var.num
+          var:
+          - num
+          - not_found
+
+    - choice: dumb_choice
+      params:
+        condition: var.dumb_choice
+        if_true:
+          task: test
+        if_false:
+          task: practice

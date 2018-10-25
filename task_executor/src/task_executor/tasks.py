@@ -83,7 +83,7 @@ class Task(AbstractStep):
             # Save the definition of the current step; create a local var alias
             self.current_step_def = step = self.steps[self.step_idx]
             step_name = step.get('task') or step.get('action') or \
-                step.get('op') or step.get('loop')
+                step.get('op') or step.get('loop') or step.get('choice')
 
             # First resolve any and all params for this step
             step_params = {
@@ -103,8 +103,8 @@ class Task(AbstractStep):
 
             # Otherwise, execute the action/task:
             else:
-                # First check to see if this a loop. If so, update defs
-                # accordingly. current_step_def remains unchanged here
+                # First check to see if this a loop or choice. If so, update
+                # defs accordingly. current_step_def remains unchanged here
                 if step.has_key('loop'):
                     condition = step_params['condition']
                     rospy.loginfo("Loop {}: Condition - {}".format(step_name, condition))
@@ -116,8 +116,22 @@ class Task(AbstractStep):
                         continue
 
                     # Update the step definition and step_params
-                    step = { name: value for name, value in step_params.iteritems() }
-                    del step['condition']
+                    step = step_params['loop_body']
+                    step_params = {
+                        name: self._resolve_param(value, var, params)
+                        for name, value in step.get('params', {}).iteritems()
+                    }
+                elif step.has_key('choice'):
+                    condition = step_params['condition']
+                    rospy.loginfo("Choice {}: Condition - {}".format(step_name, condition))
+                    assert type(condition) == bool, "Invalid choice condition"
+
+                    # Based on the condition, update the step definition and
+                    # step params
+                    if condition:
+                        step = step_params['if_true']
+                    else:
+                        step = step_params['if_false']
                     step_params = {
                         name: self._resolve_param(value, var, params)
                         for name, value in step.get('params', {}).iteritems()
