@@ -55,7 +55,7 @@ class Task(AbstractStep):
 
         # State flags
         self.step_idx = -1              # The current step_idx that is running
-        self.current_step_def = None    # The current step that is running
+        self.current_step_def = None    # The current step definition. If a control structure, entire def is preserved
         self.current_executor = None    # The current action/task executor
 
     def run(self, context, **params):
@@ -82,7 +82,8 @@ class Task(AbstractStep):
         while self.step_idx < len(self.steps):
             # Save the definition of the current step; create a local var alias
             self.current_step_def = step = self.steps[self.step_idx]
-            step_name = step.get('task') or step.get('action') or step.get('op')
+            step_name = step.get('task') or step.get('action') or \
+                step.get('op') or step.get('loop')
 
             # First resolve any and all params for this step
             step_params = {
@@ -94,10 +95,35 @@ class Task(AbstractStep):
             # Check to see if this is an op. If so, run the op
             if step.has_key('op'):
                 self.current_step_def = self.current_executor = None
-                variables = getattr(ops, step['op'])(**step_params)
+                variables = getattr(ops, step['op'])(
+                    current_variables=var,
+                    current_params=params,
+                    **step_params
+                )
 
             # Otherwise, execute the action/task:
             else:
+                # First check to see if this a loop. If so, update defs
+                # accordingly. current_step_def remains unchanged here
+                if step.has_key('loop'):
+                    condition = step_params['condition']
+                    rospy.loginfo("Loop {}: Condition - {}".format(step_name, condition))
+                    assert type(condition) == bool, "Invalid loop condition"
+
+                    # We only loop while true. If done, move to next step
+                    if not condition:
+                        self.step_idx += 1
+                        continue
+
+                    # Update the step definition and step_params
+                    step = { name: value for name, value in step_params.iteritems() }
+                    del step['condition']
+                    step_params = {
+                        name: self._resolve_param(value, var, params)
+                        for name, value in step.get('params', {}).iteritems()
+                    }
+
+                # Then, set the appropriate executor
                 if step.has_key('action'):
                     self.current_executor = self.actions[step['action']]
                 else:  # step.has_key('task')
@@ -180,7 +206,9 @@ class Task(AbstractStep):
             for name, value in variables.iteritems():
                 var[name] = value
 
-            self.step_idx += 1
+            # Only move on if we're not a loop. Loop termination happens above
+            if self.current_step_def is None or self.current_step_def.get('loop') is None:
+                self.step_idx += 1
 
         # Finally, yield succeeded with the variables that should be local stack
         # of variables that we're keeping track of

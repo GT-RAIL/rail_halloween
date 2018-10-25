@@ -14,7 +14,7 @@ tasks:
   halloween_setup:
     steps:
     - action: arm
-      parms:
+      params:
         poses: joint_poses.ready_for_candy
 
     - action: gripper
@@ -22,7 +22,7 @@ tasks:
         command: 'open'
 
     - action: torso
-      parms:
+      params:
         height: 0.25
 
     - action: beep
@@ -30,13 +30,15 @@ tasks:
         beep: cheerful
         async: true
 
-  # The main fetch and deliver task that we want to make robust
-  halloween_main:
-    steps:
-    - action: torso
-      params:
-        height: 0.25
+  halloween_pick:
+    params:
+    - num
 
+    var:
+    - num
+    - not_found
+
+    steps:
     - action: arm
       params:
         poses: joint_poses.ready
@@ -47,22 +49,66 @@ tasks:
         poses: gripper_poses.low
         look_at_gripper: false
 
-    - action: arm
-      params:
-        poses: joint_poses.ready
-        look_at_gripper: true
+    # - action: arm
+    #   params:
+    #     poses: joint_poses.ready
+    #     look_at_gripper: true
 
-    - action: arm
-      params:
-        poses: gripper_poses.med
-        look_at_gripper: false
+    # - action: arm
+    #   params:
+    #     poses: gripper_poses.med
+    #     look_at_gripper: false
 
-    - action: arm
-      params:
-        poses: joint_poses.ready
-        look_at_gripper: true
+    # - action: arm
+    #   params:
+    #     poses: joint_poses.ready
+    #     look_at_gripper: true
 
-    - action: arm
+    # - action: arm
+    #   params:
+    #     poses: gripper_poses.high
+    #     look_at_gripper: false
+
+    - op: decrement
       params:
-        poses: gripper_poses.high
-        look_at_gripper: false
+        var_name: num
+      var:
+      - num
+
+    - op: make_boolean
+      params:
+        var_name: num
+        bool_name: not_found
+      var:
+      - not_found
+
+  # The main fetch and deliver task that we want to make robust
+  halloween_main:
+    steps:
+    - action: torso
+      params:
+        height: 0.25
+
+    - op: assign
+      params:
+        var_name: not_found
+        value: true
+      var:
+      - not_found
+
+    - op: assign
+      params:
+        var_name: num
+        value: 3
+      var:
+      - num
+
+    - loop: pick_verify_loop
+      params:
+        condition: var.not_found
+        task: halloween_pick
+        params:
+          num: var.num
+        var:
+        - num
+        - not_found
