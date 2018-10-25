@@ -18,6 +18,11 @@ object_constraints:
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
 arm_gripper_poses: {}
+# arm_gripper_poses:
+#   test:
+#     frame: "base_link"
+#     position: {y: 0.5, z: 1.2}
+#     orientation: {w: 1.0}
 
 arm_joint_poses:
   tuck: [1.32, 1.47, -0.20, 1.65, 0.00, 1.66, 0.00]

@@ -24,11 +24,15 @@ from .look_at_gripper import LookAtGripperAction
 
 class ArmAction(AbstractStep):
 
+    MAX_ATTEMPTS = 5
     JOINT_POSE_ACTION_SERVER = "/grasp_executor/preset_position"
+    MOVE_GROUP_PLAN_ACTION_SERVER = "/move_group"
+    MOVE_GROUP_EXECUTE_SERVICE = "/execute_kinematic_path"
+
     ARM_GRIPPER_POSES_SERVICE_NAME = "/database/arm_gripper_pose"
     ARM_JOINT_POSES_SERVICE_NAME = "/database/arm_joint_pose"
     TRAJECTORIES_SERVICE_NAME = "/database/trajectory"
-    MAX_ATTEMPTS = 5
+
     ARM_JOINT_NAMES = [
         "shoulder_pan_joint",
         "shoulder_lift_joint",
@@ -138,7 +142,10 @@ class ArmAction(AbstractStep):
                 self._move_group.set_pose_target(pose, ArmAction.ARM_EEF_FRAME)
 
                 # Then plan
+                self.notify_action_send_goal(ArmAction.MOVE_GROUP_PLAN_ACTION_SERVER, pose)
                 plan = self._move_group.plan()
+                self.notify_action_recv_result(ArmAction.MOVE_GROUP_PLAN_ACTION_SERVER, GoalStatus.SUCCEEDED, plan)
+
                 yield self.set_running()  # Check the status of the server
                 if self._stopped:
                     yield self.set_preempted(
@@ -150,6 +157,8 @@ class ArmAction(AbstractStep):
 
                 # Then move
                 success = self._move_group.execute(plan, wait=True)
+                self.notify_service_called(ArmAction.MOVE_GROUP_EXECUTE_SERVICE)
+
                 yield self.set_running()  # Check the status of the server
                 if self._stopped:
                     yield self.set_preempted(
