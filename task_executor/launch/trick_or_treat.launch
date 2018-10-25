@@ -13,7 +13,6 @@
   <arg name="task_executor" default="$(arg start_all)" />
   <arg name="arbitrator" default="$(arg task_executor)" />
   <arg name="local_strategy" default="$(arg task_executor)" />
-  <arg name="remote_strategy" default="$(arg task_executor)" />
 
   <!-- Common args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
@@ -77,9 +76,9 @@
 
   <!-- Speech recognition -->
   <group if="$(arg speech)">
-    <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
+    <!-- <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
       <arg name="speech_gui" value="$(arg speech_gui)" />
-    </include>
+    </include> -->
   </group>
 
   <!-- Local recovery strategy -->

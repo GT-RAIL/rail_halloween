@@ -33,65 +33,36 @@ tasks:
   # The main fetch and deliver task that we want to make robust
   halloween_main:
     steps:
-    - action: beep
-      params:
-        beep: cheerful
-        async: true
-
     - action: torso
       params:
-        height: 0.4
+        height: 0.25
 
     - action: arm
       params:
-        poses: joint_poses.tuck
+        poses: joint_poses.ready
         look_at_gripper: true
 
-    - action: torso
+    - action: arm
       params:
-        height: 0.0
+        poses: gripper_poses.low
+        look_at_gripper: false
 
-    - action: beep
+    - action: arm
       params:
-        beep: playful
-        async: true
+        poses: joint_poses.ready
+        look_at_gripper: true
 
-    - action: beep
+    - action: arm
       params:
-        beep: surprised
-        async: true
+        poses: gripper_poses.med
+        look_at_gripper: false
 
-    - action: beep
+    - action: arm
       params:
-        beep: unsure
-        async: true
+        poses: joint_poses.ready
+        look_at_gripper: true
 
-    - action: beep
+    - action: arm
       params:
-        beep: happy
-        async: true
-
-    - action: beep
-      params:
-        beep: excited
-        async: true
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: beep
-      params:
-        beep: unsure
-        async: true
-
-    - action: place
-
-    - action: beep
-      params:
-        beep: proud
-        async: true
-
-    - action: beep
-      params:
-        beep: happy
+        poses: gripper_poses.high
+        look_at_gripper: false

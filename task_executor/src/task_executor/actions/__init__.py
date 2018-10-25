@@ -8,14 +8,14 @@ from task_executor.abstract_step import AbstractStep
 from .arm import ArmAction
 from .beep import BeepAction
 from .find_closest_person import FindClosestPersonAction
-from .find_grasps import FindGraspsAction
-from .find_object import FindObjectAction
+# from .find_grasps import FindGraspsAction
+# from .find_object import FindObjectAction
 from .gripper import GripperAction
-from .listen import ListenAction
+# from .listen import ListenAction
 from .look import LookAction
 from .look_at_closest_person import LookAtClosestPersonAction
 from .look_at_gripper import LookAtGripperAction
-from .move import MoveAction
+# from .move import MoveAction
 from .pick import PickAction
 from .place import PlaceAction
 from .speak import SpeakAction
@@ -56,7 +56,7 @@ default_actions_dict = {
     # 'find_grasps': FindGraspsAction,
     # 'find_object': FindObjectAction,
     'gripper': GripperAction,
-    'listen': ListenAction,
+    # 'listen': ListenAction,
     'look': LookAction,
     'look_at_closest_person': LookAtClosestPersonAction,
     'look_at_gripper': LookAtGripperAction,
