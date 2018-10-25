@@ -184,20 +184,20 @@ class ROSGraphMonitor(object):
         "/database/arm_joint_pose",
         "/database/trajectory",
         "/execute_kinematic_path",
-        # find_grasps
-        "/suggester/suggest_grasps",
-        "/suggester/pairwise_rank",
-        # find_object
-        "/database/object_constraints",
-        "/rail_segmentation/segment_objects",
-        "/grasp_executor/add_object",
-        "/grasp_executor/clear_objects",
+        # # find_grasps
+        # "/suggester/suggest_grasps",
+        # "/suggester/pairwise_rank",
+        # # find_object
+        # "/database/object_constraints",
+        # "/rail_segmentation/segment_objects",
+        # "/grasp_executor/add_object",
+        # "/grasp_executor/clear_objects",
         # listen
         "/get_last_speech_cmd",
-        # move
-        "/database/waypoints",
-        # place
-        "/grasp_executor/drop_object",
+        # # move
+        # "/database/waypoints",
+        # # place
+        # "/grasp_executor/drop_object",
         # toggle_breakers
         "/arm_breaker",
         "/base_breaker",
