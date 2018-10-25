@@ -110,13 +110,13 @@ class DatabaseServer(object):
         for name, agp_def in agp_defs.iteritems():
             arm_gripper_poses[name] = PoseStamped()
             arm_gripper_poses[name].header.frame_id = agp_def["frame"]
-            arm_gripper_poses[name].pose.position.x = agp_def["position"].get("x", 0)
-            arm_gripper_poses[name].pose.position.y = agp_def["position"].get("y", 0)
-            arm_gripper_poses[name].pose.position.z = agp_def["position"].get("z", 0)
-            arm_gripper_poses[name].pose.orientation.x = agp_def["orientation"].get("x", 0)
-            arm_gripper_poses[name].pose.orientation.y = agp_def["orientation"].get("y", 0)
-            arm_gripper_poses[name].pose.orientation.z = agp_def["orientation"].get("z", 0)
-            arm_gripper_poses[name].pose.orientation.w = agp_def["orientation"].get("w", 0)
+            arm_gripper_poses[name].pose.position.x = agp_def["position"]["x"]
+            arm_gripper_poses[name].pose.position.y = agp_def["position"]["y"]
+            arm_gripper_poses[name].pose.position.z = agp_def["position"]["z"]
+            arm_gripper_poses[name].pose.orientation.x = agp_def["orientation"]["x"]
+            arm_gripper_poses[name].pose.orientation.y = agp_def["orientation"]["y"]
+            arm_gripper_poses[name].pose.orientation.z = agp_def["orientation"]["z"]
+            arm_gripper_poses[name].pose.orientation.w = agp_def["orientation"]["w"]
 
         return arm_gripper_poses
 

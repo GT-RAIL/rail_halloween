@@ -82,7 +82,7 @@ class Task(AbstractStep):
         while self.step_idx < len(self.steps):
             # Save the definition of the current step; create a local var alias
             self.current_step_def = step = self.steps[self.step_idx]
-            step_name = step.get('task', step.get('action', step.get('op')))
+            step_name = step.get('task') or step.get('action') or step.get('op')
 
             # First resolve any and all params for this step
             step_params = {
@@ -93,7 +93,7 @@ class Task(AbstractStep):
 
             # Check to see if this is an op. If so, run the op
             if step.has_key('op'):
-                self.current_step_def = self.executor = None
+                self.current_step_def = self.current_executor = None
                 variables = getattr(ops, step['op'])(**step_params)
 
             # Otherwise, execute the action/task:
@@ -134,7 +134,7 @@ class Task(AbstractStep):
                     if executor.is_preempted() or executor.is_aborted():
                         break
 
-                    # Otherwise, yield a running
+                    # Otherwise, yield a running task
                     yield self.set_running(**variables)
 
                 # If the reason we stopped is a failure, then return

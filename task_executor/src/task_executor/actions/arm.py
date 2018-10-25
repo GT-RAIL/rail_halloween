@@ -296,12 +296,12 @@ class ArmAction(AbstractStep):
             # YAML definition of a PoseStamped EEF pose
             parsed_poses = [PoseStamped(),]
             parsed_poses[0].header.frame_id = poses['frame']
-            parsed_poses[0].pose.position.x = poses['position'].get('x', 0)
-            parsed_poses[0].pose.position.y = poses['position'].get('y', 0)
-            parsed_poses[0].pose.position.z = poses['position'].get('z', 0)
-            parsed_poses[0].pose.orientation.x = poses['orientation'].get('x', 0)
-            parsed_poses[0].pose.orientation.y = poses['orientation'].get('y', 0)
-            parsed_poses[0].pose.orientation.z = poses['orientation'].get('z', 0)
-            parsed_poses[0].pose.orientation.w = poses['orientation'].get('w', 0)
+            parsed_poses[0].pose.position.x = poses['position']['x']
+            parsed_poses[0].pose.position.y = poses['position']['y']
+            parsed_poses[0].pose.position.z = poses['position']['z']
+            parsed_poses[0].pose.orientation.x = poses['orientation']['x']
+            parsed_poses[0].pose.orientation.y = poses['orientation']['y']
+            parsed_poses[0].pose.orientation.z = poses['orientation']['z']
+            parsed_poses[0].pose.orientation.w = poses['orientation']['w']
 
         return parsed_poses
