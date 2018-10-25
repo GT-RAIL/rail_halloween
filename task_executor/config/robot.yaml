@@ -17,12 +17,14 @@ object_constraints:
     bounds: { xmin: 0.034, xmax: 0.12, ymin: 0.034, ymax: 0.12, zmin: 0.034, zmax: 0.12 }
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
-arm_poses:
+arm_gripper_poses: {}
+
+arm_joint_poses:
   tuck: [1.32, 1.47, -0.20, 1.65, 0.00, 1.66, 0.00]
   ready: [1.55, -0.91, 0.98, -1.18, 0.14, -1.06, 0.0]
   stow: [1.32, -0.46, 2.76, 1.19, 0.00, 0.82, 0.00]
   drop: [0.54, 0.06, 1.31, -1.15, 1.61, -1.68, 0.0]
-  ready_for_candy: [1.39, -0.71, 1.56, -1.40, 0.41, -1.42, 0.69] 
+  ready_for_candy: [1.39, -0.71, 1.56, -1.40, 0.41, -1.42, 0.69]
 
 trajectories:
   tuck_to_stow:

@@ -13,17 +13,19 @@ import moveit_commander
 from task_executor.abstract_step import AbstractStep
 
 from actionlib_msgs.msg import GoalStatus
+from geometry_msgs.msg import PoseStamped
 from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveGoal
-from task_executor.msg import ArmPose
-from task_executor.srv import GetArmPose, GetTrajectory
+from task_executor.msg import ArmJointPose
+from task_executor.srv import GetArmGripperPose, GetArmJointPose, GetTrajectory
 
 from .look_at_gripper import LookAtGripperAction
 
 
 class ArmAction(AbstractStep):
 
-    POSE_ACTION_SERVER = "/grasp_executor/preset_position"
-    ARM_POSES_SERVICE_NAME = "/database/arm_pose"
+    JOINT_POSE_ACTION_SERVER = "/grasp_executor/preset_position"
+    ARM_GRIPPER_POSES_SERVICE_NAME = "/database/arm_gripper_pose"
+    ARM_JOINT_POSES_SERVICE_NAME = "/database/arm_joint_pose"
     TRAJECTORIES_SERVICE_NAME = "/database/trajectory"
     MAX_ATTEMPTS = 5
     ARM_JOINT_NAMES = [
@@ -36,6 +38,9 @@ class ArmAction(AbstractStep):
         "wrist_roll_joint",
     ]
     ARM_GROUP_NAME = "arm"
+    ARM_PLANNER_NAME = "arm[RRTConnectkConfigDefault]"
+    ARM_PLANNING_TIME = 1.5
+    ARM_EEF_FRAME = "wrist_roll_link"
 
     def init(self, name):
         self.name = name
@@ -45,12 +50,13 @@ class ArmAction(AbstractStep):
 
         # Initialize the service clients, action clients, etc.
         self._listener = tf.TransformListener()
-        self._pose_client = actionlib.SimpleActionClient(
-            ArmAction.POSE_ACTION_SERVER,
+        self._joint_pose_client = actionlib.SimpleActionClient(
+            ArmAction.JOINT_POSE_ACTION_SERVER,
             PresetJointsMoveAction
         )
         self._move_group = moveit_commander.MoveGroupCommander(ArmAction.ARM_GROUP_NAME)
-        self._get_arm_pose_srv = rospy.ServiceProxy(ArmAction.ARM_POSES_SERVICE_NAME, GetArmPose)
+        self._get_arm_gripper_pose_srv = rospy.ServiceProxy(ArmAction.ARM_GRIPPER_POSES_SERVICE_NAME, GetArmGripperPose)
+        self._get_arm_joint_pose_srv = rospy.ServiceProxy(ArmAction.ARM_JOINT_POSES_SERVICE_NAME, GetArmJointPose)
         self._get_trajectory_srv = rospy.ServiceProxy(ArmAction.TRAJECTORIES_SERVICE_NAME, GetTrajectory)
 
         self._max_attempts = ArmAction.MAX_ATTEMPTS
@@ -59,34 +65,58 @@ class ArmAction(AbstractStep):
         self._look_at_gripper = LookAtGripperAction()
 
         # Connect to the various services
-        rospy.loginfo("Connecting to arm_pose_executor...")
-        self._pose_client.wait_for_server()
-        rospy.loginfo("...arm_pose_executor connected")
+        rospy.loginfo("Connecting to arm_preset_pose_executor...")
+        self._joint_pose_client.wait_for_server()
+        rospy.loginfo("...arm_preset_pose_executor connected")
 
         rospy.loginfo("Connecting to database services...")
-        self._get_arm_pose_srv.wait_for_service()
+        self._get_arm_gripper_pose_srv.wait_for_service()
+        self._get_arm_joint_pose_srv.wait_for_service()
         self._get_trajectory_srv.wait_for_service()
         rospy.loginfo("...database services connected")
 
         self._look_at_gripper.init('look_at_gripper_arm')
 
     def run(self, poses, look_at_gripper=False):
-        # Parse out the pose waypoints
-        pose_waypoints = self._parse_poses(poses)
-        if pose_waypoints is None:
+        # Parse out the poses
+        parsed_poses = self._parse_poses(poses)
+        if parsed_poses is None:
             rospy.logerr("Action {}: FAIL. Unknown Format: {}".format(self.name, poses))
             raise KeyError(self.name, "Unknown Format", poses)
 
-        rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, pose_waypoints))
+        rospy.logdebug("Action {}: Moving to arm pose(s): {}".format(self.name, parsed_poses))
 
-        # Enable the look at gripper behaviour
-        if look_at_gripper:
-            self._look_at_gripper(enable=True)
-            rospy.sleep(0.5)
+        try:
+            # Enable the look at gripper behaviour
+            if look_at_gripper:
+                self._look_at_gripper(enable=True)
+                rospy.sleep(0.5)
 
+            # Yield results based on the type of execution being run
+            if type(parsed_poses[0]) == ArmJointPose:
+                for variables in self._run_joint_poses(parsed_poses):
+                    yield variables
+            elif type(parsed_poses[0]) == PoseStamped:
+                for variables in self._run_gripper_poses(parsed_poses):
+                    yield variables
+            else:
+                # This should never happen
+                raise KeyError("Unknown poses parsed from arguments: {}".format(parsed_poses))
+        finally:
+            # Stop looking at the gripper, if we were doing that
+            if look_at_gripper:
+                self._look_at_gripper(enable=False)
+                rospy.sleep(0.5)
+
+    def _run_gripper_poses(self, parsed_poses):
+        # FIXME
+        pass
+
+    def _run_joint_poses(self, parsed_poses):
+        # Run the arm pose follower on a series of joint poses
         status = GoalStatus.LOST
         attempt_num = -1
-        for pose in pose_waypoints:
+        for pose in parsed_poses:
             rospy.loginfo("Action {}: Going to arm pose: {}".format(self.name, pose.angles))
 
             # Create and send the goal
@@ -97,18 +127,18 @@ class ArmAction(AbstractStep):
 
             for attempt_num in xrange(self._max_attempts):
                 rospy.loginfo("Action {}: Attempt {}/{}".format(self.name, attempt_num + 1, self._max_attempts))
-                self._pose_client.send_goal(goal)
-                self.notify_action_send_goal(ArmAction.POSE_ACTION_SERVER, goal)
+                self._joint_pose_client.send_goal(goal)
+                self.notify_action_send_goal(ArmAction.JOINT_POSE_ACTION_SERVER, goal)
 
                 # Yield running while the client is executing
-                while self._pose_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
+                while self._joint_pose_client.get_state() in AbstractStep.RUNNING_GOAL_STATES:
                     yield self.set_running()
 
                 # Yield based on the server's status
-                status = self._pose_client.get_state()
-                self._pose_client.wait_for_result()
-                result = self._pose_client.get_result()
-                self.notify_action_recv_result(ArmAction.POSE_ACTION_SERVER, status, result)
+                status = self._joint_pose_client.get_state()
+                self._joint_pose_client.wait_for_result()
+                result = self._joint_pose_client.get_result()
+                self.notify_action_recv_result(ArmAction.JOINT_POSE_ACTION_SERVER, status, result)
 
                 # Exit if we have succeeded or been preempted
                 if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
@@ -119,11 +149,6 @@ class ArmAction(AbstractStep):
             if status != GoalStatus.SUCCEEDED:
                 break
 
-        # Stop looking at the gripper and give some time for that to propagate
-        if look_at_gripper:
-            self._look_at_gripper(enable=False)
-            rospy.sleep(0.5)
-
         # Yield based on how we exited
         if status == GoalStatus.SUCCEEDED:
             yield self.set_succeeded()
@@ -132,7 +157,7 @@ class ArmAction(AbstractStep):
                 action=self.name,
                 status=status,
                 orig_goal=poses,
-                goal=pose_waypoints,
+                goal=parsed_poses,
                 attempt_num=attempt_num,
                 result=result
             )
@@ -141,36 +166,68 @@ class ArmAction(AbstractStep):
                 action=self.name,
                 status=status,
                 orig_goal=poses,
-                goal=pose_waypoints,
+                goal=parsed_poses,
                 attempt_num=attempt_num,
                 result=result
             )
 
     def stop(self):
         self._look_at_gripper.stop()
-        self._pose_client.cancel_goal()
-        self.notify_action_cancel(ArmAction.POSE_ACTION_SERVER)
+        self._joint_pose_client.cancel_goal()
+        self.notify_action_cancel(ArmAction.JOINT_POSE_ACTION_SERVER)
+        self._move_group.stop()
 
     def _parse_poses(self, poses):
-        pose_waypoints = None
+        """
+        Parses out a meaningful set of poses from the incoming argument to the
+        function.
+
+        Params:
+        - string. Startswith
+            - gripper_poses: get PoseStamped from ARM_GRIPPER_POSES_SERVICE_NAME
+            - joint_poses: get ArmJointPose from ARM_JOINT_POSES_SERVICE_NAME
+            - trajectories: get [ArmJointPose, ...] from TRAJECTORIES_SERVICE_NAME
+        - list/tuple of list/tuples: Joint trajectory
+        - list/tuple of floats: ArmJointPose
+        - dictionary with the keys position, orientation, & frame: PoseStamped
+
+        Returns:
+        - [ArmJointPose(), ...] if the poses are joint poses
+        - [PoseStamped(), ...] if the poses are EEF poses
+        """
+        parsed_poses = None
 
         if type(poses) == str:
             # This is a reference to stored poses in the DB
             db_name, poses = poses.split('.', 1)
-            if db_name == 'poses':
-                pose_waypoints = [self._get_arm_pose_srv(poses).pose,]
-                self.notify_service_called(ArmAction.ARM_POSES_SERVICE_NAME)
+            if db_name == 'gripper_poses':
+                parsed_poses = [self._get_arm_gripper_pose_srv(poses).pose,]
+                self.notify_service_called(ArmAction.ARM_GRIPPER_POSES_SERVICE_NAME)
+            elif db_name == 'joint_poses':
+                parsed_poses = [self._get_arm_joint_pose_srv(poses).pose,]
+                self.notify_service_called(ArmAction.ARM_JOINT_POSES_SERVICE_NAME)
             elif db_name == 'trajectories':
-                pose_waypoints = self._get_trajectory_srv(poses).trajectory
+                parsed_poses = self._get_trajectory_srv(poses).trajectory
                 self.notify_service_called(ArmAction.TRAJECTORIES_SERVICE_NAME)
         elif (type(poses) == list or type(poses) == tuple) \
                 and len(poses) > 0 \
                 and (type(poses[0]) == list or type(poses[0]) == tuple):
             # YAML definition of a trajectory
-            pose_waypoints = [ArmPose(angles=x) for x in poses]
+            parsed_poses = [ArmJointPose(angles=x) for x in poses]
         elif (type(poses) == list or type(poses) == tuple) and len(poses) > 0:
             # YAML definition of a pose
-            pose_waypoints = [ArmPose(angles=poses),]
-        elif (type(poses) == dict
+            parsed_poses = [ArmJointPose(angles=poses),]
+        elif type(poses) == dict \
+                and poses.has_key("position") and poses.has_key("orientation") and poses.has_key("frame"):
+            # YAML definition of a PoseStamped EEF pose
+            parsed_poses = [PoseStamped(),]
+            parsed_poses[0].header.frame_id = poses['position']
+            parsed_poses[0].pose.position.x = poses['position'].get('x', 0)
+            parsed_poses[0].pose.position.y = poses['position'].get('y', 0)
+            parsed_poses[0].pose.position.z = poses['position'].get('z', 0)
+            parsed_poses[0].pose.orientation.x = poses['orientation'].get('x', 0)
+            parsed_poses[0].pose.orientation.y = poses['orientation'].get('y', 0)
+            parsed_poses[0].pose.orientation.z = poses['orientation'].get('z', 0)
+            parsed_poses[0].pose.orientation.w = poses['orientation'].get('w', 0)
 
-        return pose_waypoints
+        return parsed_poses
