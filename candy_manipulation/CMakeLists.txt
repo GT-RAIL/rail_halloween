@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_msgs
   moveit_ros_planning_interface
   roscpp
+  task_executor
   tf
   tf_conversions
   tf2_geometry_msgs
@@ -28,13 +29,15 @@ find_package(catkin REQUIRED COMPONENTS
 add_action_files(FILES
         Drop.action
         Empty.action
+        Grasp.action
+        Stir.action
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
         DEPENDENCIES
         actionlib_msgs
-        geometry_msgs
+        task_executor
 )
 
 ###################################################
@@ -63,7 +66,7 @@ add_executable(candy_manipulator src/candy_manipulator.cpp)
 target_link_libraries(candy_manipulator ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable/library
-add_dependencies(candy_manipulator ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(candy_manipulator ${PROJECT_NAME}_generate_messages_cpp task_executor_generate_messages_cpp)
 
 #############
 ## Install ##

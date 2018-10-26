@@ -7,7 +7,8 @@
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/GripperCommandAction.h>
 #include <candy_manipulation/DropAction.h>
-#include <candy_manipulation/EmptyAction.h>
+#include <candy_manipulation/GraspAction.h>
+#include <candy_manipulation/StirAction.h>
 #include <moveit_msgs/GetCartesianPath.h>
 #include <moveit_msgs/GetPlanningScene.h>
 #include <moveit/move_group_interface/move_group.h>
@@ -27,9 +28,9 @@ public:
 
 private:
 
-  void executeGrasp(const candy_manipulation::EmptyGoalConstPtr &goal);
+  void executeGrasp(const candy_manipulation::GraspGoalConstPtr &goal);
 
-  void executeStir(const candy_manipulation::EmptyGoalConstPtr &goal);
+  void executeStir(const candy_manipulation::StirGoalConstPtr &goal);
 
   void executeDrop(const candy_manipulation::DropGoalConstPtr &goal);
 
@@ -44,8 +45,8 @@ private:
   ros::Publisher planning_scene_publisher;
 
   // actionlib
-  actionlib::SimpleActionServer<candy_manipulation::EmptyAction> grasp_server;
-  actionlib::SimpleActionServer<candy_manipulation::EmptyAction> stir_server;
+  actionlib::SimpleActionServer<candy_manipulation::GraspAction> grasp_server;
+  actionlib::SimpleActionServer<candy_manipulation::StirAction> stir_server;
   actionlib::SimpleActionServer<candy_manipulation::DropAction> drop_server;
   actionlib::SimpleActionClient<control_msgs::GripperCommandAction> gripper_client;
 
@@ -58,7 +59,7 @@ private:
 
   tf::TransformListener tf1_listener;
 
-  sensor_msgs::JointState grasp_pose;
+//  sensor_msgs::JointState grasp_pose;
 
   trajectory_msgs::JointTrajectory stir_trajectory;
 

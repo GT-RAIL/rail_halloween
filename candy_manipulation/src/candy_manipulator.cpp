@@ -18,20 +18,20 @@ CandyManipulator::CandyManipulator() :
   gripper_names.push_back("l_gripper_finger_link");
   gripper_names.push_back("r_gripper_finger_link");
 
-  grasp_pose.name.push_back("shoulder_pan_joint");
-  grasp_pose.name.push_back("shoulder_lift_joint");
-  grasp_pose.name.push_back("upperarm_roll_joint");
-  grasp_pose.name.push_back("elbow_flex_joint");
-  grasp_pose.name.push_back("forearm_roll_joint");
-  grasp_pose.name.push_back("wrist_flex_joint");
-  grasp_pose.name.push_back("wrist_roll_joint");
-  grasp_pose.position.push_back(1.4264682869091796);
-  grasp_pose.position.push_back(0.7546394518989991);
-  grasp_pose.position.push_back(1.8010552049179078);
-  grasp_pose.position.push_back(-1.4541920443832397);
-  grasp_pose.position.push_back(2.400358734161377);
-  grasp_pose.position.push_back(-1.2402720307693482);
-  grasp_pose.position.push_back(0.25749375096061705);
+//  grasp_pose.name.push_back("shoulder_pan_joint");
+//  grasp_pose.name.push_back("shoulder_lift_joint");
+//  grasp_pose.name.push_back("upperarm_roll_joint");
+//  grasp_pose.name.push_back("elbow_flex_joint");
+//  grasp_pose.name.push_back("forearm_roll_joint");
+//  grasp_pose.name.push_back("wrist_flex_joint");
+//  grasp_pose.name.push_back("wrist_roll_joint");
+//  grasp_pose.position.push_back(1.4264682869091796);
+//  grasp_pose.position.push_back(0.7546394518989991);
+//  grasp_pose.position.push_back(1.8010552049179078);
+//  grasp_pose.position.push_back(-1.4541920443832397);
+//  grasp_pose.position.push_back(2.400358734161377);
+//  grasp_pose.position.push_back(-1.2402720307693482);
+//  grasp_pose.position.push_back(0.25749375096061705);
 
   // TODO: read stir trajectory from file, store in stir_trajectory
 
@@ -50,9 +50,9 @@ CandyManipulator::CandyManipulator() :
   drop_server.start();
 }
 
-void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr &goal)
+void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr &goal)
 {
-  candy_manipulation::EmptyResult result;
+  candy_manipulation::GraspResult result;
   collision_objects.clear();
 
   // disable gripper-environment collision
@@ -90,6 +90,21 @@ void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr 
     grasp_server.setPreempted(result, "Preempted at move to grasp pose.");
     return;
   }
+
+  sensor_msgs::JointState grasp_pose;
+  grasp_pose.name.push_back("shoulder_pan_joint");
+  grasp_pose.name.push_back("shoulder_lift_joint");
+  grasp_pose.name.push_back("upperarm_roll_joint");
+  grasp_pose.name.push_back("elbow_flex_joint");
+  grasp_pose.name.push_back("forearm_roll_joint");
+  grasp_pose.name.push_back("wrist_flex_joint");
+  grasp_pose.name.push_back("wrist_roll_joint");
+  grasp_pose.position.clear();
+  for (unsigned int i = 0; i < goal->joint_angles.size(); i ++)
+  {
+    grasp_pose.position.push_back(goal->joint_angles[i]);
+  }
+
   arm_group->setStartStateToCurrentState();
   arm_group->setJointValueTarget(grasp_pose);
 
@@ -171,7 +186,7 @@ void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr 
   grasp_server.setSucceeded(result);
 }
 
-void CandyManipulator::executeStir(const candy_manipulation::EmptyGoalConstPtr &goal)
+void CandyManipulator::executeStir(const candy_manipulation::StirGoalConstPtr &goal)
 {
   //TODO: verify start pose
 
