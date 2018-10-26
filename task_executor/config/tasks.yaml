@@ -209,7 +209,7 @@ tasks:
     - action: speak
       params:
         text: "hello kids"
-        affect: ""
+        affect: "calm"
 
     - action: beep
       params:
@@ -226,7 +226,7 @@ tasks:
     - action: speak
       params:
         text: "What are you dressed as?"
-        affect: ""
+        affect: "calm"
 
     - action: beep
       params:
