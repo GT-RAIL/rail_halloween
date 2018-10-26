@@ -91,7 +91,7 @@ class LocalRecoveryServer(object):
         # Then determine the eventual response based on the choice
         choice = variables['choice']
         if choice:
-            result.resume_hint = RequestAssistanceResult.RESUME_CONTINUE
+            result.resume_hint = RequestAssistanceResult.RESUME_RETRY
         else:
             result.resume_hint = RequestAssistanceResult.RESUME_NONE
 
