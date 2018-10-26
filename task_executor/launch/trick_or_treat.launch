@@ -93,6 +93,8 @@
 
   <!-- Task Execution -->
   <group if="$(arg task_executor)">
+    <node name="halloween" pkg="task_executor" type="run_halloween.py" output="screen" />
+
     <include file="$(find task_executor)/launch/task_executor.launch">
       <arg name="sim" value="$(arg sim)" />
       <arg name="task_config" value="$(arg task_config)" />
