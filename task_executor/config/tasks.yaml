@@ -15,7 +15,7 @@ tasks:
 
     - action: arm
       params:
-        poses: joint_poses.ready_for_candy
+        poses: joint_poses.pre_pick
         look_at_gripper: true
 
     - action: gripper
@@ -35,8 +35,13 @@ tasks:
 
     - action: arm
       params:
-        poses: joint_poses.ready
+        poses: joint_poses.pre_pick
         look_at_gripper: true
+
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
 
   # The verification task
   verify:
@@ -46,7 +51,12 @@ tasks:
     steps:
     - action: arm
       params:
-        poses: gripper_poses.med
+        poses: joint_poses.candy_verify_1
+        look_at_gripper: true
+
+    - action: arm
+      params:
+        poses: joint_poses.candy_verify_2
         look_at_gripper: true
 
     # This should be the verification action
