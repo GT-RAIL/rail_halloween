@@ -188,10 +188,9 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
 
 void CandyManipulator::executeStir(const candy_manipulation::StirGoalConstPtr &goal)
 {
-  //TODO: verify start pose
+  // use MoveIt to plan a trajectory?
 
   //TODO: execute stir trajectory
-
 }
 
 void CandyManipulator::executeDrop(const candy_manipulation::DropGoalConstPtr &goal)
