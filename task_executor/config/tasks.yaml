@@ -6,127 +6,221 @@ tasks:
       params:
         poses: joint_poses.ready
 
-  practice:
-    steps:
-    - action: beep
-      params:
-        beep: unsure
-
   # Task for setting up Halloween
-  halloween_setup:
+  setup:
     steps:
+    - action: torso
+      params:
+        height: 0.25
+
     - action: arm
       params:
         poses: joint_poses.ready_for_candy
+        look_at_gripper: true
 
     - action: gripper
       params:
         command: 'open'
 
-    - action: torso
-      params:
-        height: 0.25
-
     - action: beep
       params:
-        beep: cheerful
-        async: true
+        beep: proud
 
-  halloween_pick:
-    params:
-    - num
-
-    var:
-    - num
-    - not_found
-
+  # The pre-pick task
+  pre_pick:
     steps:
+    - action: look
+      params:
+        pose: {x: 0.05, y: 0.0, z: 0.2, frame: "base_link"}
+
     - action: arm
       params:
         poses: joint_poses.ready
         look_at_gripper: true
 
+  # The verification task
+  verify:
+    var:
+    - not_picked
+
+    steps:
+    - action: arm
+      params:
+        poses: gripper_poses.med
+        look_at_gripper: true
+
+    # This should be the verification action
+    - action: joystick_trigger
+      params:
+        beep: false
+      var:
+      - choice
+
+    - op: assign
+      params:
+        var_name: not_picked
+        value: var.choice
+      var:
+      - not_picked
+
+  # The stir task
+  stir:
+    steps:
+    - action: beep
+      params:
+        beep: concerned
+        async: true
+
+    - action: gripper
+      params:
+        command: open
+
     - action: arm
       params:
         poses: gripper_poses.low
-        look_at_gripper: false
 
-    # - action: arm
-    #   params:
-    #     poses: joint_poses.ready
-    #     look_at_gripper: true
-
-    # - action: arm
-    #   params:
-    #     poses: gripper_poses.med
-    #     look_at_gripper: false
-
-    # - action: arm
-    #   params:
-    #     poses: joint_poses.ready
-    #     look_at_gripper: true
-
-    # - action: arm
-    #   params:
-    #     poses: gripper_poses.high
-    #     look_at_gripper: false
-
-    - op: decrement
+    - action: arm
       params:
-        var_name: num
-      var:
-      - num
+        poses: gripper_poses.med
 
-    - op: make_boolean
-      params:
-        var_name: num
-        bool_name: not_found
-      var:
-      - not_found
+  # The pick loop
+  pick_loop:
+    var:
+    - not_picked
 
-  # The main fetch and deliver task that we want to make robust
-  halloween_main:
     steps:
-    - action: torso
+    - action: beep
       params:
-        height: 0.25
+        beep: unsure
+        async: true
 
+    # This should be the pick action
+    - action: arm
+      params:
+        poses: gripper_poses.low
+
+    - action: gripper
+      params:
+        command: close
+
+    - task: verify
+      var:
+      - not_picked
+
+    - choice: stir_check
+      params:
+        condition: var.not_picked
+        if_true:
+          task: stir
+        if_false:
+          action: beep
+          params:
+            beep: playful
+            async: true
+
+  # The post-pick task
+  post_pick:
+    var:
+    - drop_pose
+
+    steps:
+    - action: arm
+      params:
+        poses: joint_poses.ready
+
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: 1.0, frame: "base_link"}
+
+    - action: look
+      params:
+        pose: {x: 1.5, y: 0.0, z: 1.0, frame: "base_link"}
+
+    - action: look
+      params:
+        pose: {x: 50.0, y: 0.0, z: 1.0, frame: "base_link"}
+
+    # This doesn't actually use the value of the choice returned. Also need the
+    # detector over here
+    - action: joystick_trigger
+      params:
+        beep: false
+      var:
+      - choice
+
+    - action: beep
+      params:
+        beep: unsure
+        async: true
+
+    # This is a stub
     - op: assign
       params:
-        var_name: not_found
+        var_name: drop_pose
+        value: {
+          frame: "base_link",
+          position: {x: 0, y: 0.5, z: 1.0},
+          orientation: {x: 0, y: 0, z: 0, w: 1.0}
+        }
+      var:
+      - drop_pose
+
+  # The drop task
+  drop:
+    params:
+    - drop_pose
+
+    steps:
+    # These should be part of the upcoming drop action
+    - action: arm
+      params:
+        poses: params.drop_pose
+
+    - action: gripper
+      params:
+        command: open
+
+    - action: beep
+      params:
+        beep: proud
+
+    - action: arm
+      params:
+        poses: joint_poses.ready
+
+  # The main trick-or-treat task
+  main:
+    steps:
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+
+    # Move to pre-pick
+    - task: pre_pick
+
+    # The pick-verify loop
+    - op: assign
+      params:
+        var_name: not_picked
         value: true
       var:
-      - not_found
-
-    - op: assign
-      params:
-        var_name: dumb_choice
-        value: false
-      var:
-      - dumb_choice
-
-    - op: assign
-      params:
-        var_name: num
-        value: 1
-      var:
-      - num
+      - not_picked
 
     - loop: pick_verify_loop
       params:
-        condition: var.not_found
+        condition: var.not_picked
         loop_body:
-          task: halloween_pick
-          params:
-            num: var.num
+          task: pick_loop
           var:
-          - num
-          - not_found
+          - not_picked
 
-    - choice: dumb_choice
+    # Move to post-pick
+    - task: post_pick
+      var:
+      - drop_pose
+
+    # The drop task
+    - task: drop
       params:
-        condition: var.dumb_choice
-        if_true:
-          task: test
-        if_false:
-          task: practice
+        drop_pose: var.drop_pose

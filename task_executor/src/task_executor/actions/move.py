@@ -99,14 +99,14 @@ class MoveAction(AbstractStep):
 
     def _parse_location(self, location):
         coords = None
-        if type(location) == str:
+        if isinstance(location, str):
             db_name, location = location.split('.', 1)
             if db_name == 'locations':
                 coords = self._get_waypoints_srv(location).waypoints
                 self.notify_service_called(MoveAction.WAYPOINTS_SERVICE_NAME)
-        elif type(location) == dict:
+        elif isinstance(location, dict):
             coords = [Waypoint(**location),]
-        elif type(location) == list or type(location) == tuple:
+        elif isinstance(location, (list, tuple,)):
             coords = [Waypoint(**x) for x in location]
 
         return coords

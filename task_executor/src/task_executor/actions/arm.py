@@ -100,10 +100,10 @@ class ArmAction(AbstractStep):
                 rospy.sleep(0.5)
 
             # Yield results based on the type of execution being run
-            if type(parsed_poses[0]) == ArmJointPose:
+            if isinstance(parsed_poses[0], ArmJointPose):
                 for variables in self._run_joint_poses(parsed_poses):
                     yield variables
-            elif type(parsed_poses[0]) == PoseStamped:
+            elif isinstance(parsed_poses[0], PoseStamped):
                 for variables in self._run_gripper_poses(parsed_poses):
                     yield variables
             else:
@@ -123,7 +123,9 @@ class ArmAction(AbstractStep):
         for pose in parsed_poses:
             rospy.loginfo("Action {}: Going to gripper pose: {}".format(
                 self.name,
-                { "frame": pose.header.frame_id, "position": pose.pose.position, "orientation": pose.pose.orientation }
+                { "frame": pose.header.frame_id,
+                  "position": str(pose.pose.position).replace("\n", ", "),
+                  "orientation": str(pose.pose.orientation).replace("\n", ", ") }
             ))
 
             # Configure the move group planners
@@ -271,7 +273,7 @@ class ArmAction(AbstractStep):
         """
         parsed_poses = None
 
-        if type(poses) == str:
+        if isinstance(poses, str):
             # This is a reference to stored poses in the DB
             db_name, poses = poses.split('.', 1)
             if db_name == 'gripper_poses':
@@ -283,15 +285,13 @@ class ArmAction(AbstractStep):
             elif db_name == 'trajectories':
                 parsed_poses = self._get_trajectory_srv(poses).trajectory
                 self.notify_service_called(ArmAction.TRAJECTORIES_SERVICE_NAME)
-        elif (type(poses) == list or type(poses) == tuple) \
-                and len(poses) > 0 \
-                and (type(poses[0]) == list or type(poses[0]) == tuple):
+        elif isinstance(poses, (list, tuple,)) and len(poses) > 0 and isinstance(poses[0], (list, tuple,)):
             # YAML definition of a trajectory
             parsed_poses = [ArmJointPose(angles=x) for x in poses]
-        elif (type(poses) == list or type(poses) == tuple) and len(poses) > 0:
+        elif isinstance(poses, (list, tuple,)) and len(poses) > 0:
             # YAML definition of a pose
             parsed_poses = [ArmJointPose(angles=poses),]
-        elif type(poses) == dict \
+        elif isinstance(poses, dict) \
                 and poses.has_key("position") and poses.has_key("orientation") and poses.has_key("frame"):
             # YAML definition of a PoseStamped EEF pose
             parsed_poses = [PoseStamped(),]

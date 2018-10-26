@@ -108,7 +108,7 @@ class Task(AbstractStep):
                 if step.has_key('loop'):
                     condition = step_params['condition']
                     rospy.loginfo("Loop {}: Condition - {}".format(step_name, condition))
-                    assert type(condition) == bool, "Invalid loop condition"
+                    assert isinstance(condition, bool), "Invalid loop condition"
 
                     # We only loop while true. If done, move to next step
                     if not condition:
@@ -124,14 +124,22 @@ class Task(AbstractStep):
                 elif step.has_key('choice'):
                     condition = step_params['condition']
                     rospy.loginfo("Choice {}: Condition - {}".format(step_name, condition))
-                    assert type(condition) == bool, "Invalid choice condition"
+                    assert isinstance(condition, bool), "Invalid choice condition"
 
-                    # Based on the condition, update the step definition and
-                    # step params
+                    # Based on the condition, update the step definition
+                    # to the next step
                     if condition:
-                        step = step_params['if_true']
+                        step = step_params.get('if_true')
                     else:
-                        step = step_params['if_false']
+                        step = step_params.get('if_false')
+
+                    #  If the body is not defined, then we move on to next
+                    if step is None:
+                        rospy.loginfo("Choice {}: No task defined for Condition - {}".format(step_name, condition))
+                        self.step_idx += 1
+                        continue
+
+                    # Update the parameters associated with the step
                     step_params = {
                         name: self._resolve_param(value, var, params)
                         for name, value in step.get('params', {}).iteritems()
@@ -144,7 +152,7 @@ class Task(AbstractStep):
                     # Create the child task context based on saved information
                     child_context = None
                     if self.current_executor is not None \
-                            and type(self.current_executor) == Task \
+                            and isinstance(self.current_executor, Task) \
                             and not context.restart_child:
                         child_context = TaskContext(
                             start_idx=self.current_executor.step_idx,
@@ -241,7 +249,7 @@ class Task(AbstractStep):
         """
         if self.current_executor is None:
             return self
-        elif type(self.current_executor) == Task:
+        elif isinstance(self.current_executor, Task):
             return self.current_executor.get_executor()
         else:
             return self.current_executor
@@ -253,7 +261,7 @@ class Task(AbstractStep):
         return sorted(actual_var.keys()) == sorted(expected_var)
 
     def _resolve_param(self, param, var, task_params):
-        if type(param) == str:
+        if isinstance(param, str):
             splits = param.split('.', 1)  # Split up the param
 
             # Check if this requires a var resolution
