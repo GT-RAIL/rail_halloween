@@ -29,7 +29,7 @@ class GripperAction(AbstractStep):
         rospy.loginfo("...gripper_controller connected")
 
     def run(self, command):
-        if type(command) != str or command.lower() not in ['close', 'open']:
+        if not isinstance(command, str) or command.lower() not in ['close', 'open']:
             rospy.logerr("Action: {}. FAIL. Unrecognized: {}".format(self.name, command))
             raise KeyError(self.name, "Unrecognized", command)
 

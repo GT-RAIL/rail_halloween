@@ -5,7 +5,6 @@
 
   <!-- Args to start different capabilities -->
   <arg name="start_all" default="false" />
-  <arg name="navigation" default="$(arg start_all)" />
   <arg name="perception" default="$(arg start_all)" />
   <arg name="arm" default="$(arg start_all)" />
   <arg name="people" default="$(arg start_all)" />
@@ -14,7 +13,6 @@
   <arg name="task_executor" default="$(arg start_all)" />
   <arg name="arbitrator" default="$(arg task_executor)" />
   <arg name="local_strategy" default="$(arg task_executor)" />
-  <arg name="remote_strategy" default="$(arg task_executor)" />
 
   <!-- Common args -->
   <arg name="cloud_topic" value="/head_camera/depth_registered/points" />
@@ -24,35 +22,26 @@
 
   <!-- Simulation vs. non simulation args -->
   <arg name="data_config" value="$(find task_executor)/config/simulation.yaml" if="$(arg sim)" />
-  <arg name="map_file" value="$(find fetch_gazebo_demo)/maps/test_zone.yaml" if="$(arg sim)" />
   <arg name="data_config" value="$(find task_executor)/config/robot.yaml" unless="$(arg sim)" />
-  <arg name="map_file" value="$(find fetch_demos)/maps/map.yaml" unless="$(arg sim)" />
 
   <!-- Other args -->
   <arg name="speech_gui" default="$(arg sim)" />
 
-  <!-- Navigation -->
-  <group if="$(arg navigation)">
-    <include file="$(find fetch_navigation)/launch/fetch_nav.launch">
-      <arg name="map_file" value="$(arg map_file)" />
-    </include>
-  </group>
-
   <!-- Perception -->
   <group if="$(arg perception)">
     <!-- RAIL Segmentation -->
-    <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
+    <!-- <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
       <param name="zones_config" value="$(arg segmentation_config)" />
       <param name="point_cloud_topic" value="$(arg cloud_topic)" />
       <param name="max_cluster_size" value="30000" />
       <param name="min_cluster_size" value="75" />
-    </node>
+    </node> -->
 
     <!-- Grasp Suggestion -->
-    <include file="$(find fetch_grasp_suggestion)/launch/grasp_suggestion.launch">
+    <!-- <include file="$(find fetch_grasp_suggestion)/launch/grasp_suggestion.launch">
       <arg name="cloud_topic" value="$(arg cloud_topic)" />
       <arg name="classifier_file" value="$(arg grasp_classifier_file)" />
-    </include>
+    </include> -->
   </group>
 
   <!-- Arm -->
@@ -87,9 +76,9 @@
 
   <!-- Speech recognition -->
   <group if="$(arg speech)">
-    <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
+    <!-- <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
       <arg name="speech_gui" value="$(arg speech_gui)" />
-    </include>
+    </include> -->
   </group>
 
   <!-- Local recovery strategy -->
@@ -104,6 +93,8 @@
 
   <!-- Task Execution -->
   <group if="$(arg task_executor)">
+    <node name="halloween" pkg="task_executor" type="run_halloween.py" output="screen" />
+
     <include file="$(find task_executor)/launch/task_executor.launch">
       <arg name="sim" value="$(arg sim)" />
       <arg name="task_config" value="$(arg task_config)" />

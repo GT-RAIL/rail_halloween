@@ -19,7 +19,7 @@ class SpeakAction(AbstractStep):
 
     def run(self, text, affect=""):
         # Check to see if we know about this affect type
-        if type(text) != str \
+        if not isinstance(text, str) \
                 or (affect and affect.upper() not in self._speak_client.get_affect_names()):
             rospy.logerr("Action {}: FAIL. Invalid Args: {} (affect: {})."
                          .format(self.name, text, affect))

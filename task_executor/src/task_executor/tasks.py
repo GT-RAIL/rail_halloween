@@ -55,7 +55,7 @@ class Task(AbstractStep):
 
         # State flags
         self.step_idx = -1              # The current step_idx that is running
-        self.current_step_def = None    # The current step that is running
+        self.current_step_def = None    # The current step definition. If a control structure, entire def is preserved
         self.current_executor = None    # The current action/task executor
 
     def run(self, context, **params):
@@ -82,7 +82,8 @@ class Task(AbstractStep):
         while self.step_idx < len(self.steps):
             # Save the definition of the current step; create a local var alias
             self.current_step_def = step = self.steps[self.step_idx]
-            step_name = step.get('task', step.get('action', step.get('op')))
+            step_name = step.get('task') or step.get('action') or \
+                step.get('op') or step.get('loop') or step.get('choice')
 
             # First resolve any and all params for this step
             step_params = {
@@ -93,18 +94,65 @@ class Task(AbstractStep):
 
             # Check to see if this is an op. If so, run the op
             if step.has_key('op'):
-                self.current_step_def = self.executor = None
-                variables = getattr(ops, step['op'])(**step_params)
+                self.current_step_def = self.current_executor = None
+                variables = getattr(ops, step['op'])(
+                    current_variables=var,
+                    current_params=params,
+                    **step_params
+                )
 
             # Otherwise, execute the action/task:
             else:
+                # First check to see if this a loop or choice. If so, update
+                # defs accordingly. current_step_def remains unchanged here
+                if step.has_key('loop'):
+                    condition = step_params['condition']
+                    rospy.loginfo("Loop {}: Condition - {}".format(step_name, condition))
+                    assert isinstance(condition, bool), "Invalid loop condition"
+
+                    # We only loop while true. If done, move to next step
+                    if not condition:
+                        self.step_idx += 1
+                        continue
+
+                    # Update the step definition and step_params
+                    step = step_params['loop_body']
+                    step_params = {
+                        name: self._resolve_param(value, var, params)
+                        for name, value in step.get('params', {}).iteritems()
+                    }
+                elif step.has_key('choice'):
+                    condition = step_params['condition']
+                    rospy.loginfo("Choice {}: Condition - {}".format(step_name, condition))
+                    assert isinstance(condition, bool), "Invalid choice condition"
+
+                    # Based on the condition, update the step definition
+                    # to the next step
+                    if condition:
+                        step = step_params.get('if_true')
+                    else:
+                        step = step_params.get('if_false')
+
+                    #  If the body is not defined, then we move on to next
+                    if step is None:
+                        rospy.loginfo("Choice {}: No task defined for Condition - {}".format(step_name, condition))
+                        self.step_idx += 1
+                        continue
+
+                    # Update the parameters associated with the step
+                    step_params = {
+                        name: self._resolve_param(value, var, params)
+                        for name, value in step.get('params', {}).iteritems()
+                    }
+
+                # Then, set the appropriate executor
                 if step.has_key('action'):
                     self.current_executor = self.actions[step['action']]
                 else:  # step.has_key('task')
                     # Create the child task context based on saved information
                     child_context = None
                     if self.current_executor is not None \
-                            and type(self.current_executor) == Task \
+                            and isinstance(self.current_executor, Task) \
                             and not context.restart_child:
                         child_context = TaskContext(
                             start_idx=self.current_executor.step_idx,
@@ -134,7 +182,7 @@ class Task(AbstractStep):
                     if executor.is_preempted() or executor.is_aborted():
                         break
 
-                    # Otherwise, yield a running
+                    # Otherwise, yield a running task
                     yield self.set_running(**variables)
 
                 # If the reason we stopped is a failure, then return
@@ -180,7 +228,9 @@ class Task(AbstractStep):
             for name, value in variables.iteritems():
                 var[name] = value
 
-            self.step_idx += 1
+            # Only move on if we're not a loop. Loop termination happens above
+            if self.current_step_def is None or self.current_step_def.get('loop') is None:
+                self.step_idx += 1
 
         # Finally, yield succeeded with the variables that should be local stack
         # of variables that we're keeping track of
@@ -199,7 +249,7 @@ class Task(AbstractStep):
         """
         if self.current_executor is None:
             return self
-        elif type(self.current_executor) == Task:
+        elif isinstance(self.current_executor, Task):
             return self.current_executor.get_executor()
         else:
             return self.current_executor
@@ -211,7 +261,7 @@ class Task(AbstractStep):
         return sorted(actual_var.keys()) == sorted(expected_var)
 
     def _resolve_param(self, param, var, task_params):
-        if type(param) == str:
+        if isinstance(param, str):
             splits = param.split('.', 1)  # Split up the param
 
             # Check if this requires a var resolution

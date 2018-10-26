@@ -189,7 +189,11 @@ class TaskServer(object):
                         execution_context = TaskContext(start_idx=task.step_idx, restart_child=False)
                     else:  # RequestAssistanceResult.RESUME_NONE
                         request_assistance = False
-                        result_context = pickle.loads(assist_result.context)
+                        result_context = (
+                            pickle.loads(assist_result.context)
+                            if assist_result.context != ''
+                            else {}
+                        )
                         variables = task.set_aborted(**result_context)
 
             # End while
