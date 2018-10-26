@@ -33,6 +33,8 @@ private:
 
   void executeDrop(const candy_manipulation::DropGoalConstPtr &goal);
 
+  bool enableCollision();
+
   ros::NodeHandle n, pn;
 
   ros::ServiceClient compute_cartesian_path_client;
@@ -61,6 +63,9 @@ private:
   trajectory_msgs::JointTrajectory stir_trajectory;
 
   std::vector<std::string> gripper_names;
+  std::vector<std::string> collision_objects;
+
+  double drop_wait_time;
 };
 
 #endif  // CANDY_MANIPULATION_CANDY_MANIPULATOR_H

@@ -12,11 +12,12 @@ CandyManipulator::CandyManipulator() :
     stir_server(pn, "stir", boost::bind(&CandyManipulator::executeStir, this, _1), false),
     drop_server(pn, "drop", boost::bind(&CandyManipulator::executeDrop, this, _1), false)
 {
+  pn.param("drop_wait_time", drop_wait_time, 1.0);
+
   gripper_names.push_back("gripper_link");
   gripper_names.push_back("l_gripper_finger_link");
   gripper_names.push_back("r_gripper_finger_link");
 
-  // TODO: measure candy grasp pose and enter here before testing!
   grasp_pose.name.push_back("shoulder_pan_joint");
   grasp_pose.name.push_back("shoulder_lift_joint");
   grasp_pose.name.push_back("upperarm_roll_joint");
@@ -24,13 +25,13 @@ CandyManipulator::CandyManipulator() :
   grasp_pose.name.push_back("forearm_roll_joint");
   grasp_pose.name.push_back("wrist_flex_joint");
   grasp_pose.name.push_back("wrist_roll_joint");
-  grasp_pose.position.push_back(1.5515);
-  grasp_pose.position.push_back(-0.9132);
-  grasp_pose.position.push_back(0.9883);
-  grasp_pose.position.push_back(-1.1887);
-  grasp_pose.position.push_back(0.1412);
-  grasp_pose.position.push_back(-1.0679);
-  grasp_pose.position.push_back(0.0);
+  grasp_pose.position.push_back(1.4264682869091796);
+  grasp_pose.position.push_back(0.7546394518989991);
+  grasp_pose.position.push_back(1.8010552049179078);
+  grasp_pose.position.push_back(-1.4541920443832397);
+  grasp_pose.position.push_back(2.400358734161377);
+  grasp_pose.position.push_back(-1.2402720307693482);
+  grasp_pose.position.push_back(0.25749375096061705);
 
   // TODO: read stir trajectory from file, store in stir_trajectory
 
@@ -52,10 +53,14 @@ CandyManipulator::CandyManipulator() :
 void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr &goal)
 {
   candy_manipulation::EmptyResult result;
+  collision_objects.clear();
 
-  // TODO: disable gripper-environment collision
+  // disable gripper-environment collision
+  if (grasp_server.isPreemptRequested())
+  {
+    grasp_server.setPreempted(result, "Preempted at disabling environment collision.");
+  }
   moveit_msgs::GetPlanningScene planning_scene_srv;
-  vector<string> collision_objects;
   planning_scene_srv.request.components.components = moveit_msgs::PlanningSceneComponents::ALLOWED_COLLISION_MATRIX;
 
   if (!planning_scene_client.call(planning_scene_srv))
@@ -79,18 +84,28 @@ void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr 
   }
 
   // move to grasp pose
-  // TODO: make this pre-emptible
+  if (grasp_server.isPreemptRequested())
+  {
+    enableCollision();
+    grasp_server.setPreempted(result, "Preempted at move to grasp pose.");
+    return;
+  }
   arm_group->setStartStateToCurrentState();
   arm_group->setJointValueTarget(grasp_pose);
+
+  // TODO (stretch): break this into plan and move so we can do safety checks
   int error_code = arm_group->move();
-  if (error_code != moveit_msgs::MoveItErrorCodes::SUCCESS)
+
+  // assume success, because this is a very short move into a potentially dense bowl of candy
+
+  // close gripper
+  if (grasp_server.isPreemptRequested())
   {
-    ROS_INFO("Failed to move to grasp pose.");
-    grasp_server.setAborted(result, "Failed to move to grasp pose.");
+    enableCollision();
+    grasp_server.setPreempted(result, "Preempted at gripper close.");
     return;
   }
 
-  // close gripper
   control_msgs::GripperCommandGoal gripper_goal;
   gripper_goal.command.position = 0;
   gripper_goal.command.max_effort = 100;  // TODO: set effort for candy
@@ -99,6 +114,12 @@ void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr 
 
   // add collision sphere
   // create virtual object at gripper
+  if (grasp_server.isPreemptRequested())
+  {
+    enableCollision();
+    grasp_server.setPreempted(result, "Preempted at virtual collision object creation.");
+    return;
+  }
   vector<moveit_msgs::CollisionObject> virtual_objects;
   virtual_objects.resize(1);
   string group_reference_frame = arm_group->getPoseReferenceFrame();
@@ -125,29 +146,26 @@ void CandyManipulator::executeGrasp(const candy_manipulation::EmptyGoalConstPtr 
 
   virtual_objects[0].operation = moveit_msgs::CollisionObject::ADD;
   planning_scene_interface->addCollisionObjects(virtual_objects);
+  collision_objects.push_back("virtual_object");
   ros::Duration(0.5).sleep();  // wait for scene to be updated...
 
   // attach virtual object to gripper
+  if (grasp_server.isPreemptRequested())
+  {
+    enableCollision();
+    planning_scene_interface->removeCollisionObjects(collision_objects);
+    collision_objects.clear();
+    grasp_server.setPreempted(result, "Preempted at virtual object attachment.");
+    return;
+  }
   arm_group->attachObject("virtual_object", arm_group->getEndEffectorLink(), gripper_names);
   ros::Duration(0.2).sleep();  // wait for change to go through (seems to have a race condition otherwise)
 
   // enable gripper collision with octomap
-  planning_scene_srv.request.components.components = moveit_msgs::PlanningSceneComponents::ALLOWED_COLLISION_MATRIX;
-  if (!planning_scene_client.call(planning_scene_srv))
+  if (!enableCollision())
   {
-    ROS_INFO("Could not get the current planning scene!");
     grasp_server.setAborted(result, "Could not get the current planning scene!");
     return;
-  }
-  else
-  {
-    collision_detection::AllowedCollisionMatrix acm(planning_scene_srv.response.scene.allowed_collision_matrix);
-    acm.setEntry("<octomap>", gripper_names, false);
-
-    moveit_msgs::PlanningScene planning_scene_update;
-    acm.getMessage(planning_scene_update.allowed_collision_matrix);
-    planning_scene_update.is_diff = true;
-    planning_scene_publisher.publish(planning_scene_update);
   }
 
   grasp_server.setSucceeded(result);
@@ -163,8 +181,20 @@ void CandyManipulator::executeStir(const candy_manipulation::EmptyGoalConstPtr &
 
 void CandyManipulator::executeDrop(const candy_manipulation::DropGoalConstPtr &goal)
 {
+  candy_manipulation::DropResult result;
+
   // detach collision sphere
   arm_group->detachObject("virtual_object");
+  planning_scene_interface->removeCollisionObjects(collision_objects);
+  collision_objects.clear();
+
+  ros::Duration(drop_wait_time).sleep();
+
+  if (drop_server.isPreemptRequested())
+  {
+    drop_server.setPreempted(result, "Preempted at open gripper.");
+    return;
+  }
 
   // open gripper
   control_msgs::GripperCommandGoal gripper_goal;
@@ -173,8 +203,29 @@ void CandyManipulator::executeDrop(const candy_manipulation::DropGoalConstPtr &g
   gripper_client.sendGoal(gripper_goal);
   gripper_client.waitForResult(ros::Duration(5.0));
 
-  //TODO: spin gripper
+  drop_server.setSucceeded(result);
+}
 
+bool CandyManipulator::enableCollision()
+{
+  moveit_msgs::GetPlanningScene planning_scene_srv;
+  planning_scene_srv.request.components.components = moveit_msgs::PlanningSceneComponents::ALLOWED_COLLISION_MATRIX;
+  if (!planning_scene_client.call(planning_scene_srv))
+  {
+    ROS_INFO("Could not get the current planning scene!");
+    return false;
+  }
+  else
+  {
+    collision_detection::AllowedCollisionMatrix acm(planning_scene_srv.response.scene.allowed_collision_matrix);
+    acm.setEntry("<octomap>", gripper_names, false);
+
+    moveit_msgs::PlanningScene planning_scene_update;
+    acm.getMessage(planning_scene_update.allowed_collision_matrix);
+    planning_scene_update.is_diff = true;
+    planning_scene_publisher.publish(planning_scene_update);
+  }
+  return true;
 }
 
 int main(int argc, char **argv)
