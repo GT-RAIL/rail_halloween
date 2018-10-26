@@ -198,6 +198,41 @@ tasks:
       params:
         poses: joint_poses.ready
 
+    # Dialogues
+  dialogue1:
+    steps:
+    - action: look
+      params:
+        # needs to modify this pose
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: speak
+      params:
+        text: "hello kids"
+        affect: ""
+
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+
+  dialogue2:
+    steps:
+    - action: look
+      params:
+        # needs to modify this pose
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: speak
+      params:
+        text: "What are you dressed as?"
+        affect: ""
+
+    - action: beep
+      params:
+        beep: playful
+        async: true
+
   # The main trick-or-treat task
   main:
     steps:
