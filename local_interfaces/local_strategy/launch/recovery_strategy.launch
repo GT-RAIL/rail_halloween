@@ -3,5 +3,5 @@
   <arg name="sim" default="false" />
 
   <!-- Launch the recovery server -->
-  <!-- <node name="local_strategy" pkg="local_strategy" type="server_node.py" output="screen" /> -->
+  <node name="local_strategy" pkg="local_strategy" type="server_node.py" output="screen" />
 </launch>

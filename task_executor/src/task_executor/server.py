@@ -131,7 +131,7 @@ class TaskServer(object):
                     rospy.logerr("Task {}: FAIL. Context Keys: {}".format(task.name, variables.keys()))
                     request_assistance = True
 
-            except ValueError as e:
+            except Exception as e:
                 # There was some unexpected error in the underlying code.
                 # Capture it and send it to the recovery mechanism.
                 rospy.logerr("Exception in task execution: {}".format(e))
@@ -189,7 +189,11 @@ class TaskServer(object):
                         execution_context = TaskContext(start_idx=task.step_idx, restart_child=False)
                     else:  # RequestAssistanceResult.RESUME_NONE
                         request_assistance = False
-                        result_context = pickle.loads(assist_result.context)
+                        result_context = (
+                            pickle.loads(assist_result.context)
+                            if assist_result.context != ''
+                            else {}
+                        )
                         variables = task.set_aborted(**result_context)
 
             # End while

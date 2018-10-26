@@ -45,7 +45,7 @@ class JoystickTriggerAction(AbstractStep):
     def run(self, beep=True):
         rospy.loginfo("Action {}: Waiting for a trigger response on Joystick".format(self.name))
 
-        # Set te flags for the wait
+        # Set the flags for the wait
         self._stopped = False
         self._choice = None
         self._make_a_choice = True
