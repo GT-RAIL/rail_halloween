@@ -223,12 +223,12 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         query_dict = {
             'INPUT_TEXT': text,
             'INPUT_TYPE': 'EMOTIONML',
-            'LOCALE': 'en_GB',
-            'VOICE': 'dfki-spike-hsmm',
+            'LOCALE': 'en_US',
+            'VOICE': 'cmu-rms',
             'OUTPUT_TYPE': 'AUDIO',
             'AUDIO': 'WAVE',
-            'effect_Robot_selected': 'on',
-            'effect_Robot_parameters': 'amount:60.0',
+            # 'effect_Robot_selected': 'on',
+            # 'effect_Robot_parameters': 'amount:60.0',
         }
 
         # Send a request to MARY and check the response type
@@ -245,8 +245,8 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         # Increase the volume on the temp file
         speech = AudioSegment(data=r.content)
         speech = speech + SoundClient.SPEECH_GAIN_DB
-        #speech = SoundClient.change_audio_speed(speech, 0.85)
-        speech = speech.set_frame_rate(speech.frame_rate*0.5)
+        speech = SoundClient.change_audio_speed(speech, 0.95)
+        speech = speech.set_frame_rate(int(speech.frame_rate*2.0))
 
         # Write the wav data to a temp file
         speech_filename = create_temp_filename(prefix='marytts', suffix='.wav')
