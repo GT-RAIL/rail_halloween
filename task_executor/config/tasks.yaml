@@ -99,6 +99,10 @@ tasks:
     - not_picked
 
     steps:
+    - action: arm
+      params:
+        poses: joint_poses.pre_pick
+
     - action: beep
       params:
         beep: unsure
@@ -171,6 +175,10 @@ tasks:
     - drop_pose
 
     steps:
+    - action: arm
+      params:
+        poses: params.drop_pose
+
     - action: drop_candy
 
     - action: beep

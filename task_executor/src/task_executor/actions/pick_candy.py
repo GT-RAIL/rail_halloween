@@ -28,7 +28,7 @@ class PickCandyAction(AbstractStep):
             PickCandyAction.ARM_JOINT_POSES_SERVICE_NAME,
             GetArmJointPose
         )
-        self._pick_client = actionlib.SimplActionClient(
+        self._pick_client = actionlib.SimpleActionClient(
             PickCandyAction.PICK_ACTION_SERVER,
             GraspAction
         )
