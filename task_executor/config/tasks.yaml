@@ -105,13 +105,7 @@ tasks:
         async: true
 
     # This should be the pick action
-    - action: arm
-      params:
-        poses: gripper_poses.low
-
-    - action: gripper
-      params:
-        command: close
+    - action: pick_candy
 
     - task: verify
       var:
@@ -167,11 +161,7 @@ tasks:
     - op: assign
       params:
         var_name: drop_pose
-        value: {
-          frame: "base_link",
-          position: {x: 0, y: 0.5, z: 1.0},
-          orientation: {x: 0, y: 0, z: 0, w: 1.0}
-        }
+        value: [0.21, -0.51, 1.47, -0.57, 1.34, -1.98, -0.34]
       var:
       - drop_pose
 
@@ -181,14 +171,7 @@ tasks:
     - drop_pose
 
     steps:
-    # These should be part of the upcoming drop action
-    - action: arm
-      params:
-        poses: params.drop_pose
-
-    - action: gripper
-      params:
-        command: open
+    - action: drop_candy
 
     - action: beep
       params:

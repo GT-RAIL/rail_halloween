@@ -46,7 +46,9 @@
 
   <!-- Arm -->
   <group if="$(arg arm)">
-    <node pkg="fetch_grasp_suggestion" type="executor" name="grasp_executor" output="screen" />
+    <node name="grasp_executor" pkg="fetch_grasp_suggestion" type="executor" output="screen" />
+
+    <node name="candy_manipulator" pkg="candy_manipulation" type="candy_manipulator" output="screen" />
 
     <include file="$(find fetch_moveit_config)/launch/move_group.launch">
       <arg name="info" value="true"/>
