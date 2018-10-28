@@ -100,9 +100,9 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
   grasp_pose.name.push_back("wrist_flex_joint");
   grasp_pose.name.push_back("wrist_roll_joint");
   grasp_pose.position.clear();
-  for (unsigned int i = 0; i < goal->joint_angles.size(); i ++)
+  for (unsigned int i = 0; i < goal->pick_pose.size(); i ++)
   {
-    grasp_pose.position.push_back(goal->joint_angles[i]);
+    grasp_pose.position.push_back(goal->pick_pose[i]);
   }
 
   arm_group->setStartStateToCurrentState();
@@ -123,11 +123,41 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
 
   control_msgs::GripperCommandGoal gripper_goal;
   gripper_goal.command.position = 0;
-  gripper_goal.command.max_effort = 100;  // TODO: set effort for candy
+  gripper_goal.command.max_effort = 50;  // TODO: set effort for candy
   gripper_client.sendGoal(gripper_goal);
   gripper_client.waitForResult(ros::Duration(5.0));
 
-  // add collision sphere
+  // move to post grasp pose
+  if (grasp_server.isPreemptRequested())
+  {
+    enableCollision();
+    grasp_server.setPreempted(result, "Preempted at move to post grasp pose.");
+    return;
+  }
+
+  sensor_msgs::JointState post_grasp_pose;
+  post_grasp_pose.name.push_back("shoulder_pan_joint");
+  post_grasp_pose.name.push_back("shoulder_lift_joint");
+  post_grasp_pose.name.push_back("upperarm_roll_joint");
+  post_grasp_pose.name.push_back("elbow_flex_joint");
+  post_grasp_pose.name.push_back("forearm_roll_joint");
+  post_grasp_pose.name.push_back("wrist_flex_joint");
+  post_grasp_pose.name.push_back("wrist_roll_joint");
+  post_grasp_pose.position.clear();
+  for (unsigned int i = 0; i < goal->post_pick_pose.size(); i ++)
+  {
+    post_grasp_pose.position.push_back(goal->post_pick_pose[i]);
+  }
+
+  arm_group->setStartStateToCurrentState();
+  arm_group->setJointValueTarget(post_grasp_pose);
+
+  // TODO (stretch): break this into plan and move so we can do safety checks
+  error_code = arm_group->move();
+
+  // assume success, because this is a very short move out of the candy
+
+  // add collision sphere only after we're clear of the bowl
   // create virtual object at gripper
   if (grasp_server.isPreemptRequested())
   {

@@ -18,6 +18,7 @@ class PickCandyAction(AbstractStep):
 
     PICK_ACTION_SERVER = "/candy_manipulator/grasp"
     ARM_JOINT_POSES_SERVICE_NAME = "/database/arm_joint_pose"
+    POST_PICK_POSE_NAME = "pre_pick"
     PICK_POSE_NAME = "pick"
 
     def init(self, name):
@@ -43,11 +44,13 @@ class PickCandyAction(AbstractStep):
 
     def run(self):
         rospy.loginfo("Action {}: Picking up candy".format(self.name))
+        post_pick_pose = self._get_arm_joint_pose_srv(PickCandyAction.POST_PICK_POSE_NAME).pose
+        self.notify_service_called(PickCandyAction.ARM_JOINT_POSES_SERVICE_NAME)
         pick_pose = self._get_arm_joint_pose_srv(PickCandyAction.PICK_POSE_NAME).pose
         self.notify_service_called(PickCandyAction.ARM_JOINT_POSES_SERVICE_NAME)
 
         # Create the goal and send it to the server
-        goal = GraspGoal(joint_angles=pick_pose.angles)
+        goal = GraspGoal(pick_pose=pick_pose.angles, post_pick_pose=post_pick_pose.angles)
         self._pick_client.send_goal(goal)
         self.notify_action_send_goal(PickCandyAction.PICK_ACTION_SERVER, goal)
 
