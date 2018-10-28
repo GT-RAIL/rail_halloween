@@ -33,7 +33,7 @@ class GraspVerifier(object):
         with self.image_lock:
             image_in = np.array(self.last_image[145:270, 365:465])
             image_in[image_in > 20] = 0
-            if np.sum(image_in) < 37000:
+            if np.sum(image_in) < 38000:
                 success = False
             else:
                 success = True

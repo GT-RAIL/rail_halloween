@@ -11,6 +11,7 @@
 #include <candy_manipulation/StirAction.h>
 #include <moveit_msgs/GetCartesianPath.h>
 #include <moveit_msgs/GetPlanningScene.h>
+#include <moveit_msgs/MoveItErrorCodes.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
@@ -58,8 +59,6 @@ private:
   tf2_ros::TransformListener tf_listener;
 
   tf::TransformListener tf1_listener;
-
-//  sensor_msgs::JointState grasp_pose;
 
   trajectory_msgs::JointTrajectory stir_trajectory;
 
