@@ -28,15 +28,22 @@ class GraspVerifier(object):
         # Create the services
         self._verify_service = rospy.Service(GraspVerifier.VERIFY_SERVICE, Trigger, self._verify_grasp)
 
+        # FIXME: This is for debug only. Remove in the actual code
+        self.num_calls = 0
+
     def _verify_grasp(self, req):
         success = False
-        with self.image_lock:
-            image_in = np.array(self.last_image[145:270, 365:465])
-            image_in[image_in > 20] = 0
-            if np.sum(image_in) < 38000:
-                success = False
-            else:
-                success = True
+        self.num_calls = (self.num_calls + 1) % 3
+        if self.num_calls == 0:
+            success = True
+        # FIXME: Fix the parameters here
+        # with self.image_lock:
+        #     image_in = np.array(self.last_image[145:270, 365:465])
+        #     image_in[image_in > 20] = 0
+        #     if np.sum(image_in) < 37000:
+        #         success = False
+        #     else:
+        #         success = True
 
         return TriggerResponse(success=success)
 
