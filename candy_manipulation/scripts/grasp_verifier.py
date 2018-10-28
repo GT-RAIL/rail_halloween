@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # Created by Andrew Silva on 10/26/18
 from sensor_msgs.msg import Image
 from std_srvs.srv import Trigger, TriggerResponse
