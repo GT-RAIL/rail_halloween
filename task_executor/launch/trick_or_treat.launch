@@ -29,6 +29,9 @@
 
   <!-- Perception -->
   <group if="$(arg perception)">
+    <!-- Verification of the grasp -->
+    <node name="grasp_verifier" pkg="candy_manipulation" type="grasp_verifier.py" />
+
     <!-- RAIL Segmentation -->
     <!-- <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
       <param name="zones_config" value="$(arg segmentation_config)" />

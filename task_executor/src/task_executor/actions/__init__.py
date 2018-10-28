@@ -24,6 +24,7 @@ from .place import PlaceAction
 from .speak import SpeakAction
 from .toggle_breakers import ToggleBreakersAction
 from .torso import TorsoAction
+from .verify_grasp import VerifyGraspAction
 
 
 class Actions(object):
@@ -72,6 +73,7 @@ default_actions_dict = {
     'speak': SpeakAction,
     'toggle_breakers': ToggleBreakersAction,
     'torso': TorsoAction,
+    'verify_grasp': VerifyGraspAction,
 }
 
 def get_default_actions():

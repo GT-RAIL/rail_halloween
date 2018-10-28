@@ -61,8 +61,6 @@ tasks:
 
     # This should be the verification action
     - action: joystick_trigger
-      params:
-        beep: false
       var:
       - choice
 
@@ -151,8 +149,6 @@ tasks:
     # This doesn't actually use the value of the choice returned. Also need the
     # detector over here
     - action: joystick_trigger
-      params:
-        beep: false
       var:
       - choice
 

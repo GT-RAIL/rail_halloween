@@ -14,15 +14,15 @@ class GraspVerifier(object):
     """
 
     VERIFY_SERVICE = '~verify'
+    IMAGE_TOPIC = '/head_camera/depth/image_rect'
 
     def __init__(self):
         self.bridge = CvBridge()
-        self.image_sub_topic_name = rospy.get_param('~image_sub_topic_name', default='/head_camera/depth/image_rect')
         self.last_image = np.zeros((640, 480))
         self.image_lock = Lock()
 
         # Create the subscriber
-        self._depth_sub = rospy.Subscriber(self.image_sub_topic_name, Image, self._parse_image)
+        self._depth_sub = rospy.Subscriber(GraspVerifier.IMAGE_TOPIC, Image, self._parse_image)
 
         # Create the services
         self._verify_service = rospy.Service(GraspVerifier.VERIFY_SERVICE, Trigger, self._verify_grasp)

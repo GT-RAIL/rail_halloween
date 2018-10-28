@@ -4,12 +4,9 @@
 import rospy
 
 from task_executor.abstract_step import AbstractStep
-from sound_interface import SoundClient
 
 from actionlib_msgs.msg import GoalStatus
 from sensor_msgs.msg import Joy
-
-from .beep import BeepAction
 
 
 class JoystickTriggerAction(AbstractStep):
@@ -33,34 +30,31 @@ class JoystickTriggerAction(AbstractStep):
             self._on_joy
         )
 
-        # Child actions
-        self._beep_action = BeepAction()
-
         # Set a stop flag
         self._stopped = False
 
-        # Initialize the actions
-        self._beep_action.init('beep_joystick_trigger')
-
-    def run(self, beep=True):
-        rospy.loginfo("Action {}: Waiting for a trigger response on Joystick".format(self.name))
+    def run(self, timeout=0.0):
+        # Timeout of 0 implies infinite
+        rospy.loginfo("Action {}: Waiting for a trigger on Joystick within time {}s"
+                      .format(self.name, timeout))
 
         # Set the flags for the wait
         self._stopped = False
         self._choice = None
         self._make_a_choice = True
+        start_time = rospy.Time.now()
 
         # Then wait for the trigger
         while self._make_a_choice:
+            if timeout > 0 and rospy.Time.now() - start_time > rospy.Duration(timeout):
+                yield self.set_aborted(action=self.name, timeout=timeout)
+                raise StopIteration()
+
             if self._stopped:
-                yield self.set_preempted(action=self.name)
+                yield self.set_preempted(action=self.name, timeout=timeout)
                 raise StopIteration()
 
             yield self.set_running()
-
-        # Make a sound based on the response
-        if beep:
-            self._beep_action(beep=(SoundClient.BEEP_CHEERFUL if self._choice else SoundClient.BEEP_SAD))
 
         # Yield a success
         yield self.set_succeeded(choice=self._choice)

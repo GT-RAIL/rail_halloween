@@ -202,6 +202,8 @@ class ROSGraphMonitor(object):
         "/arm_breaker",
         "/base_breaker",
         "/gripper_breaker",
+        # verify_grasp
+        "/grasp_verifier/verify",
     ])
 
     def __init__(self):
