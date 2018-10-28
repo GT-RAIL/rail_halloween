@@ -42,7 +42,7 @@ class GraspVerifier(object):
 
     def _parse_image(self, image_msg):
         try:
-            image_cv = self.bridge.imgmsg_to_cv2(image_msg, "uint16")
+            image_cv = self.bridge.imgmsg_to_cv2(image_msg, desired_encoding="passthrough")  # The encoding is 16UC1
         except CvBridgeError as e:
             rospy.logerr("{}".format(e))
             return
