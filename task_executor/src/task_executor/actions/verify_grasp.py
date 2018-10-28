@@ -32,9 +32,9 @@ class VerifyGraspAction(AbstractStep):
         rospy.loginfo("...verification service connected")
 
     def run(self):
-        rospy.loginfo("Action {}: Checking for candy".format(self.name))
         candy_picked = self._verification_srv().success
         self.notify_service_called(VerifyGraspAction.VERIFICATION_SERVICE_NAME)
+        rospy.loginfo("Action {}: Check for candy - {}".format(self.name, candy_picked))
         yield self.set_succeeded(candy_picked=candy_picked)
 
     def stop(self):

@@ -7,6 +7,7 @@ from task_executor.abstract_step import AbstractStep
 
 from .arm import ArmAction
 from .beep import BeepAction
+from .detach_candy import DetachCandyAction
 from .drop_candy import DropCandyAction
 from .find_closest_person import FindClosestPersonAction
 # from .find_grasps import FindGraspsAction
@@ -56,6 +57,7 @@ class Actions(object):
 default_actions_dict = {
     'arm': ArmAction,
     'beep': BeepAction,
+    'detach_candy': DetachCandyAction,
     'drop_candy': DropCandyAction,
     'find_closest_person': FindClosestPersonAction,
     # 'find_grasps': FindGraspsAction,

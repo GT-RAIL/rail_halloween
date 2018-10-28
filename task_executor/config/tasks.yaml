@@ -95,6 +95,8 @@ tasks:
   # The stir task
   stir:
     steps:
+    - action: detach_candy
+
     - action: beep
       params:
         beep: concerned
