@@ -106,11 +106,11 @@ tasks:
 
     - action: arm
       params:
-        poses: gripper_poses.low
+        poses: joint_poses.ready
 
     - action: arm
       params:
-        poses: gripper_poses.med
+        poses: joint_poses.pre_pick
 
   # The pick loop
   pick_loop:
