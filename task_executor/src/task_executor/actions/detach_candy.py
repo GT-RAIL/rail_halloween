@@ -16,6 +16,7 @@ from task_executor.abstract_step import AbstractStep
 class DetachCandyAction(AbstractStep):
 
     ARM_GROUP_NAME = "arm"
+    CANDY_OBJECT_NAME = "virtual_object"
     ATTACHED_OBJECT_PUBLISHER = "/attached_collision_object"
 
     def init(self, name):
@@ -27,8 +28,9 @@ class DetachCandyAction(AbstractStep):
 
     def run(self):
         rospy.loginfo("Action {}: Detaching candy from planner".format(self.name))
-        result = self._move_group.detach_object()
+        result = self._move_group.detach_object(DetachCandyAction.CANDY_OBJECT_NAME)
         self.notify_topic_published(DetachCandyAction.ATTACHED_OBJECT_PUBLISHER, None)
+        rospy.sleep(0.5)
         if result:
             yield self.set_succeeded()
         else:
