@@ -43,33 +43,54 @@ tasks:
         beep: cheerful
         async: true
 
-  # The verification task
-  verify:
+  # The verification tasks
+  move_arm_and_verify:
+    params:
+    - arm_pose
+
     var:
     - not_picked
 
     steps:
     - action: arm
       params:
-        poses: joint_poses.candy_verify_1
-        look_at_gripper: true
+        poses: params.arm_pose
 
-    - action: arm
-      params:
-        poses: joint_poses.candy_verify_2
-        look_at_gripper: true
-
-    # This should be the verification action
-    - action: joystick_trigger
+    - action: verify_grasp
       var:
-      - choice
+      - candy_picked
 
-    - op: assign
+    - op: negate
       params:
-        var_name: not_picked
-        value: var.choice
+        var_name: candy_picked
+        negate_name: not_picked
       var:
       - not_picked
+
+  verify:
+    var:
+    - not_picked
+
+    steps:
+    - action: look
+      params:
+        pose: { x: 0.3, y: 0.0, z: 0.1, frame: "base_link" }
+
+    - task: move_arm_and_verify
+      params:
+        arm_pose: joint_poses.candy_verify_1
+      var:
+      - not_picked
+
+    - choice: candy_verify_2
+      params:
+        condition: var.not_picked
+        if_true:
+          task: move_arm_and_verify
+          params:
+            arm_pose: joint_poses.candy_verify_2
+          var:
+          - not_picked
 
   # The stir task
   stir:
@@ -106,7 +127,6 @@ tasks:
         beep: unsure
         async: true
 
-    # This should be the pick action
     - action: pick_candy
 
     - task: verify
@@ -161,7 +181,7 @@ tasks:
     - op: assign
       params:
         var_name: drop_pose
-        value: [0.21, -0.51, 1.47, -0.57, 1.34, -1.98, -0.34]
+        value: joint_poses.default_drop
       var:
       - drop_pose
 
@@ -185,7 +205,7 @@ tasks:
       params:
         poses: joint_poses.ready
 
-    # Dialogues
+  # Dialogues
   dialogue1:
     steps:
     - action: look

@@ -3,8 +3,6 @@
 
 from __future__ import print_function, division
 
-import numbers
-
 
 # Private helper functions
 
@@ -43,7 +41,6 @@ def decrement(var_name, current_params, current_variables):
         A dictionary with the var_name value in current_variables decremented
     """
     heap = _get_heap_for_var_name(var_name, current_variables, current_params)
-    assert (heap is not None) and isinstance(heap[var_name], numbers.Number), "Variable cannot be decremented"
     return { var_name: heap[var_name] - 1 }
 
 def make_boolean(var_name, bool_name, current_params, current_variables):
@@ -57,5 +54,17 @@ def make_boolean(var_name, bool_name, current_params, current_variables):
         A dictionary with the { bool_name: bool(var_name) }
     """
     heap = _get_heap_for_var_name(var_name, current_variables, current_params)
-    assert heap is not None, "Cannot binarize non-existent variable"
     return { bool_name: bool(current_variables[var_name]) }
+
+def negate(var_name, negate_name, current_params, current_variables):
+    """
+    Negate the current value of var_name => not var_name
+
+    Args:
+        var_name (str) : Name of the variable to negate
+        negate_name (str) : Name of the variable to contain the negation
+    REturns:
+        A dictionary with the { var_name: not var_name }
+    """
+    heap = _get_heap_for_var_name(var_name, current_variables, current_params)
+    return { negate_name: not heap[var_name] }
