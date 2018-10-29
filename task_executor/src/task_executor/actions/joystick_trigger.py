@@ -60,7 +60,6 @@ class JoystickTriggerAction(AbstractStep):
         yield self.set_succeeded(choice=self._choice)
 
     def stop(self):
-        self._beep_action.stop()
         self._stopped = True
 
     def _on_joy(self, joy_msg):
