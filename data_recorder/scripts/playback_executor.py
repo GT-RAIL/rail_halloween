@@ -13,8 +13,6 @@ class PlaybackExecutor:
 	HAT_RETRACT_FILENAME = 'stir.txt'
 
 	def __init__(self):
-		rospy.init_node('primitive_playback_executor')
-
 		self.stir_executor = TrajectoryExecutor(self.STIR_FILENAME)
 		self.hat_reach_executor = TrajectoryExecutor(self.HAT_REACH_FILENAME)
 		self.hat_maneuver_executor = TrajectoryExecutor(self.HAT_MANEUVER_FILENAME)
@@ -25,8 +23,6 @@ class PlaybackExecutor:
 		self.playback_server.register_preempt_callback(self.preempt_playback_cb)
 
 		self.playback_server.start()
-
-		rospy.spin()
 
 	def playback_cb(self, goal):
 		primitive_name = goal.primitive_name
@@ -57,4 +53,6 @@ class PlaybackExecutor:
 
 
 if __name__ == '__main__':
+	rospy.init_node('playback_primitive')
 	playback_executor = PlaybackExecutor()
+	rospy.spin()

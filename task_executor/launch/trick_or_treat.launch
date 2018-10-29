@@ -53,6 +53,8 @@
 
     <node name="candy_manipulator" pkg="candy_manipulation" type="candy_manipulator" output="screen" />
 
+    <node name="playback_primitive" pkg="data_recorder" type="playback_executor.py" output="screen" />
+
     <include file="$(find fetch_moveit_config)/launch/move_group.launch">
       <arg name="info" value="true"/>
       <arg name="allow_active_sensing" value="true" />
