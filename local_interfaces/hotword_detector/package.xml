@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>hotword_detector_pkg</name>
+  <name>hotword_detector</name>
   <version>0.0.1</version>
   <description>This package stores commonly used finite state machines for SAN.</description>
 

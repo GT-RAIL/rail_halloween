@@ -2,7 +2,7 @@ import rospy
 import snowboydecoder
 import sys
 import signal
-from hotword_detector_pkg.srv import *
+from hotword_detector.srv import *
 
 # Demo code for listening two hotwords at the same time
 DETECTED = False
