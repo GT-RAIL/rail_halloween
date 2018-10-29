@@ -17,7 +17,9 @@ class DetachCandyAction(AbstractStep):
 
     ARM_GROUP_NAME = "arm"
     CANDY_OBJECT_NAME = "virtual_object"
-    ATTACHED_OBJECT_PUBLISHER = "/attached_collision_object"
+    GRIPPER_LINKS = ["gripper_link", "l_gripper_finger_link", "r_gripper_finger_link"]
+    PLANNING_SCENE_TOPIC = "/planning_scene"
+    ATTACHED_OBJECT_TOPIC = "/attached_collision_object"
 
     def init(self, name):
         self.name = name
@@ -25,12 +27,23 @@ class DetachCandyAction(AbstractStep):
         # Initialize the connection to MoveIt
         moveit_commander.roscpp_initialize(sys.argv)
         self._move_group = moveit_commander.MoveGroupCommander(DetachCandyAction.ARM_GROUP_NAME)
+        self._scene = moveit_commander.PlanningSceneInterface()
 
     def run(self):
         rospy.loginfo("Action {}: Detaching candy from planner".format(self.name))
+
+        # First detach the object itself
         result = self._move_group.detach_object(DetachCandyAction.CANDY_OBJECT_NAME)
-        self.notify_topic_published(DetachCandyAction.ATTACHED_OBJECT_PUBLISHER, None)
+        self.notify_topic_published(DetachCandyAction.ATTACHED_OBJECT_TOPIC, None)
         rospy.sleep(0.5)
+
+        # Then remove the collision object from the scene
+        for gripper_link in DetachCandyAction.GRIPPER_LINKS:
+            self._scene.remove_attached_object(gripper_link)
+            self.notify_topic_published(DetachCandyAction.PLANNING_SCENE_TOPIC, None)
+        rospy.sleep(0.5)
+
+        # Finally send a result
         if result:
             yield self.set_succeeded()
         else:
