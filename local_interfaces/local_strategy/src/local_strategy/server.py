@@ -74,8 +74,8 @@ class LocalRecoveryServer(object):
         self._assisting = True
 
         # The actual error recovery mechanism
-        # Unsure beep first
-        self.actions.beep(beep=SoundClient.BEEP_UNSURE, async=True)
+        # Sad beep first
+        self.actions.beep(beep=SoundClient.BEEP_SAD, async=True)
 
         # Then wait for the joystick trigger
         for variables in self.actions.joystick_trigger.run():
@@ -89,6 +89,8 @@ class LocalRecoveryServer(object):
             return
 
         # Then determine the eventual response based on the choice
+        # Happy beep before resuming
+        self.actions.beep(beep=SoundClient.BEEP_HAPPY, async=True)
         choice = variables['choice']
         if choice:
             result.resume_hint = RequestAssistanceResult.RESUME_CONTINUE
