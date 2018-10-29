@@ -33,5 +33,5 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-catkin_install_python(PROGRAMS bin/hotword_detector_node
+catkin_install_python(PROGRAMS nodes/hotword_detector_node
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
