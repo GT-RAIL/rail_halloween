@@ -83,6 +83,8 @@
 
   <!-- Speech recognition -->
   <group if="$(arg speech)">
+    <include file="$(find hotword_detector)/launch/hotword_detector.launch" />
+
     <!-- <include file="$(find hlpr_speech_recognition)/launch/speech_rec.launch">
       <arg name="speech_gui" value="$(arg speech_gui)" />
     </include> -->

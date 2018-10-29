@@ -18,7 +18,7 @@ class HotwordTriggerAction(AbstractStep):
 
     def init(self, name):
         self.name = name
-        self._hotword_client = rospy.ServiceProxy(
+        self._hotword_client = actionlib.SimpleActionClient(
             HotwordTriggerAction.HOTWORD_ACTION_SERVER,
             DetectHotWordAction
         )
