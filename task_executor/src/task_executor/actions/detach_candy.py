@@ -17,7 +17,6 @@ class DetachCandyAction(AbstractStep):
 
     ARM_GROUP_NAME = "arm"
     CANDY_OBJECT_NAME = "virtual_object"
-    GRIPPER_LINKS = ["gripper_link", "l_gripper_finger_link", "r_gripper_finger_link"]
     PLANNING_SCENE_TOPIC = "/planning_scene"
     ATTACHED_OBJECT_TOPIC = "/attached_collision_object"
 
@@ -38,9 +37,7 @@ class DetachCandyAction(AbstractStep):
         rospy.sleep(0.5)
 
         # Then remove the collision object from the scene
-        for gripper_link in DetachCandyAction.GRIPPER_LINKS:
-            self._scene.remove_attached_object(gripper_link)
-            self.notify_topic_published(DetachCandyAction.PLANNING_SCENE_TOPIC, None)
+        self._scene.remove_world_object(DetachCandyAction.CANDY_OBJECT_NAME)
         rospy.sleep(0.5)
 
         # Finally send a result
