@@ -37,6 +37,7 @@ tasks:
       params:
         poses: joint_poses.pre_pick
         look_at_gripper: true
+        max_velocity_scaling: 0.6
 
     - action: beep
       params:
@@ -55,6 +56,7 @@ tasks:
     - action: arm
       params:
         poses: params.arm_pose
+        max_velocity_scaling: 0.6
 
     - action: verify_grasp
       var:
@@ -109,10 +111,12 @@ tasks:
     - action: arm
       params:
         poses: joint_poses.ready
+        max_velocity_scaling: 0.6
 
     - action: arm
       params:
         poses: joint_poses.pre_pick
+        max_velocity_scaling: 0.6
 
   # The pick loop
   pick_loop:
@@ -123,6 +127,7 @@ tasks:
     - action: arm
       params:
         poses: joint_poses.pre_pick
+        max_velocity_scaling: 0.6
 
     - action: beep
       params:
@@ -183,7 +188,7 @@ tasks:
     - op: assign
       params:
         var_name: drop_pose
-        value: joint_poses.default_drop
+        value: gripper_poses.default_drop
       var:
       - drop_pose
 
@@ -217,7 +222,7 @@ tasks:
 
     - action: speak
       params:
-        text: "hello kids"
+        text: "hello children"
         affect: "calm"
 
     - action: beep
@@ -245,6 +250,8 @@ tasks:
   # The main trick-or-treat task
   main:
     steps:
+    - action: detach_candy
+
     - action: beep
       params:
         beep: cheerful

@@ -84,7 +84,7 @@ class ArmAction(AbstractStep):
 
         self._look_at_gripper.init('look_at_gripper_arm')
 
-    def run(self, poses, look_at_gripper=False):
+    def run(self, poses, max_velocity_scaling=0.3, look_at_gripper=False):
         # Parse out the poses
         parsed_poses = self._parse_poses(poses)
         if parsed_poses is None:
@@ -101,10 +101,10 @@ class ArmAction(AbstractStep):
 
             # Yield results based on the type of execution being run
             if isinstance(parsed_poses[0], ArmJointPose):
-                for variables in self._run_joint_poses(parsed_poses):
+                for variables in self._run_joint_poses(parsed_poses, max_velocity_scaling):
                     yield variables
             elif isinstance(parsed_poses[0], PoseStamped):
-                for variables in self._run_gripper_poses(parsed_poses):
+                for variables in self._run_gripper_poses(parsed_poses, max_velocity_scaling):
                     yield variables
             else:
                 # This should never happen
@@ -115,7 +115,7 @@ class ArmAction(AbstractStep):
                 self._look_at_gripper(enable=False)
                 rospy.sleep(0.5)
 
-    def _run_gripper_poses(self, parsed_poses):
+    def _run_gripper_poses(self, parsed_poses, max_velocity_scaling):
         # Run the arm pose follower on a series of PoseStamped
         self._stopped = False
         attempt_num = -1
@@ -129,6 +129,7 @@ class ArmAction(AbstractStep):
             ))
 
             # Configure the move group planners
+            self._move_group.set_max_velocity_scaling_factor(max_velocity_scaling)
             self._move_group.set_planner_id(ArmAction.ARM_PLANNER_NAME)
             self._move_group.set_planning_time(ArmAction.ARM_PLANNING_TIME)
 
@@ -189,7 +190,7 @@ class ArmAction(AbstractStep):
                 attempt_num=attempt_num
             )
 
-    def _run_joint_poses(self, parsed_poses):
+    def _run_joint_poses(self, parsed_poses, max_velocity_scaling):
         # Run the arm pose follower on a series of joint poses
         status = GoalStatus.LOST
         attempt_num = -1
@@ -200,6 +201,7 @@ class ArmAction(AbstractStep):
             goal = PresetJointsMoveGoal()
             goal.name.extend(ArmAction.ARM_JOINT_NAMES)
             goal.position = pose.angles
+            goal.max_velocity_scaling_factor = max_velocity_scaling
             assert len(goal.name) == len(goal.position)
 
             for attempt_num in xrange(self._max_attempts):

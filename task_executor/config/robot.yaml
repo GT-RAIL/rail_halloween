@@ -17,7 +17,11 @@ object_constraints:
     bounds: { xmin: 0.034, xmax: 0.12, ymin: 0.034, ymax: 0.12, zmin: 0.034, zmax: 0.12 }
     location: { xmin: -.inf, xmax: .inf, ymin: -.inf, ymax: .inf, zmin: 0.5, zmax: .inf }
 
-arm_gripper_poses: {}
+arm_gripper_poses:
+  default_drop:
+    frame: "base_link"
+    position: { x: 0.7, y: 0.0, z: 1.0 }
+    orientation: { x: 0, y: 0, z: 0, w: 1.0 }
 
 arm_joint_poses:
   tuck: [1.32, 1.47, -0.20, 1.65, 0.00, 1.66, 0.00]
