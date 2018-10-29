@@ -4,15 +4,15 @@ import rospy
 import actionlib
 import data_recorder.msg
 
-class ExecutorCLient:
+class ExecutorClient:
     def __init__(self):
-        client = actionlib.SimpleActionClient('stir', data_recorder.msg.EmptyAction)
+        client = actionlib.SimpleActionClient('stir', data_recorder.msg.PlaybackAction)
         print "HI"
 
         client.wait_for_server()
         print "HI2"
 
-        goal = data_recorder.msg.EmptyGoal()
+        goal = data_recorder.msg.PlaybackGoal()
         client.send_goal(goal)
 
         client.wait_for_result()
@@ -22,4 +22,4 @@ class ExecutorCLient:
 
 if __name__ == '__main__':
     rospy.init_node('executor_client_node')
-    executor_client = ExecutorCLient()
+    executor_client = ExecutorClient()

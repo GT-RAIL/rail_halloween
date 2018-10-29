@@ -110,13 +110,10 @@ tasks:
 
     - action: arm
       params:
-        poses: joint_poses.ready
-        max_velocity_scaling: 0.8
-
-    - action: arm
-      params:
         poses: joint_poses.pre_pick
         max_velocity_scaling: 0.8
+
+    - action: stir
 
   # The pick loop
   pick_loop:
@@ -251,12 +248,16 @@ tasks:
   # The main trick-or-treat task
   main:
     steps:
-    - action: detach_candy
-
     - action: beep
       params:
         beep: cheerful
         async: true
+
+    - action: gripper
+      params:
+        command: open
+
+    - action: detach_candy
 
     # Move to pre-pick
     - task: pre_pick

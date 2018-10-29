@@ -8,7 +8,6 @@
 #include <control_msgs/GripperCommandAction.h>
 #include <candy_manipulation/DropAction.h>
 #include <candy_manipulation/GraspAction.h>
-#include <candy_manipulation/StirAction.h>
 #include <moveit_msgs/GetCartesianPath.h>
 #include <moveit_msgs/GetPlanningScene.h>
 #include <moveit_msgs/MoveItErrorCodes.h>
@@ -31,8 +30,6 @@ private:
 
   void executeGrasp(const candy_manipulation::GraspGoalConstPtr &goal);
 
-  void executeStir(const candy_manipulation::StirGoalConstPtr &goal);
-
   void executeDrop(const candy_manipulation::DropGoalConstPtr &goal);
 
   bool enableCollision();
@@ -47,7 +44,6 @@ private:
 
   // actionlib
   actionlib::SimpleActionServer<candy_manipulation::GraspAction> grasp_server;
-  actionlib::SimpleActionServer<candy_manipulation::StirAction> stir_server;
   actionlib::SimpleActionServer<candy_manipulation::DropAction> drop_server;
   actionlib::SimpleActionClient<control_msgs::GripperCommandAction> gripper_client;
 
@@ -59,8 +55,6 @@ private:
   tf2_ros::TransformListener tf_listener;
 
   tf::TransformListener tf1_listener;
-
-  trajectory_msgs::JointTrajectory stir_trajectory;
 
   std::vector<std::string> gripper_names;
   std::vector<std::string> collision_objects;

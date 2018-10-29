@@ -16,7 +16,6 @@ catkin_python_setup()
 
 add_action_files(
    FILES
-   Empty.action
    Playback.action
 )
 

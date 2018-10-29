@@ -9,7 +9,6 @@ CandyManipulator::CandyManipulator() :
     tf_listener(tf_buffer),
     gripper_client("gripper_controller/gripper_action"),
     grasp_server(pn, "grasp", boost::bind(&CandyManipulator::executeGrasp, this, _1), false),
-    stir_server(pn, "stir", boost::bind(&CandyManipulator::executeStir, this, _1), false),
     drop_server(pn, "drop", boost::bind(&CandyManipulator::executeDrop, this, _1), false)
 {
   pn.param("drop_wait_time", drop_wait_time, 1.0);
@@ -17,8 +16,6 @@ CandyManipulator::CandyManipulator() :
   gripper_names.push_back("gripper_link");
   gripper_names.push_back("l_gripper_finger_link");
   gripper_names.push_back("r_gripper_finger_link");
-
-  // TODO: read stir trajectory from file, store in stir_trajectory
 
   arm_group = new move_group_interface::MoveGroup("arm");
   arm_group->startStateMonitor();
@@ -31,7 +28,6 @@ CandyManipulator::CandyManipulator() :
   planning_scene_client = n.serviceClient<moveit_msgs::GetPlanningScene>("/get_planning_scene");
 
   grasp_server.start();
-  stir_server.start();
   drop_server.start();
 }
 
@@ -114,7 +110,7 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
 
   control_msgs::GripperCommandGoal gripper_goal;
   gripper_goal.command.position = 0;
-  gripper_goal.command.max_effort = 50;  // TODO: set effort for candy
+  gripper_goal.command.max_effort = 100;  // TODO: set effort for candy
   gripper_client.sendGoal(gripper_goal);
   gripper_client.waitForResult(ros::Duration(5.0));
 
@@ -211,13 +207,6 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
   }
 
   grasp_server.setSucceeded(result);
-}
-
-void CandyManipulator::executeStir(const candy_manipulation::StirGoalConstPtr &goal)
-{
-  // use MoveIt to plan a trajectory?
-
-  //TODO: execute stir trajectory
 }
 
 void CandyManipulator::executeDrop(const candy_manipulation::DropGoalConstPtr &goal)

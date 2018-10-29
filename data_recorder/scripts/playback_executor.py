@@ -43,7 +43,7 @@ class PlaybackExecutor:
 			rospy.logerr('Primitive Does not Exist')
 			success = False
 
-		result = data_recorder.msg.EmptyResult
+		result = data_recorder.msg.PlaybackResult()
 
 		if success:
 			self.playback_server.set_succeeded(result)
@@ -51,7 +51,7 @@ class PlaybackExecutor:
 			self.playback_server.set_aborted(result, 'Playback Execution Failure!')
 
 	def preempt_playback_cb(self):
-		result = data_recorder.msg.EmptyResult
+		result = data_recorder.msg.PlaybackResult()
 		self.stir_executor.preemptExecution()
 		self.playback_server.set_preempted(result, 'Playback pre-empted by user')
 

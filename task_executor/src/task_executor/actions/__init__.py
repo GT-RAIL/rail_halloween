@@ -23,6 +23,7 @@ from .pick import PickAction
 from .pick_candy import PickCandyAction
 from .place import PlaceAction
 from .speak import SpeakAction
+from .stir import StirAction
 from .toggle_breakers import ToggleBreakersAction
 from .torso import TorsoAction
 from .verify_grasp import VerifyGraspAction
@@ -73,6 +74,7 @@ default_actions_dict = {
     'pick_candy': PickCandyAction,
     'place': PlaceAction,
     'speak': SpeakAction,
+    'stir': StirAction,
     'toggle_breakers': ToggleBreakersAction,
     'torso': TorsoAction,
     'verify_grasp': VerifyGraspAction,
