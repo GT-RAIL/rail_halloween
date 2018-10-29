@@ -48,6 +48,7 @@ class Task(AbstractStep):
         # Specific to this task
         self.params = params
         self.var = var
+        self.var_values = dict()
         self.steps = steps
 
         # Flag to indicate if the task is stopped
@@ -75,7 +76,7 @@ class Task(AbstractStep):
             raise KeyError(self.name, "Unexpected Params", self.params, params)
 
         # Setup to run the task
-        var = dict()
+        var = dict() if context.restart_child else self.var_values
         self._stopped = False
 
         # Go through each step of the specified task plan as appropriate
@@ -228,6 +229,8 @@ class Task(AbstractStep):
             for name, value in variables.iteritems():
                 var[name] = value
 
+            self.var_values = var
+
             # Only move on if we're not a loop. Loop termination happens above
             if self.current_step_def is None or self.current_step_def.get('loop') is None:
                 self.step_idx += 1
@@ -237,7 +240,7 @@ class Task(AbstractStep):
         rospy.loginfo("Task {}: SUCCESS.".format(self.name))
         self.step_idx = -1
         self.current_step_def = self.current_executor = None
-        yield self.set_succeeded(**{var_name: var[var_name] for var_name in self.var})
+        yield self.set_succeeded(**{var_name: self.var_values[var_name] for var_name in self.var})
 
     def stop(self):
         self._stopped = True
