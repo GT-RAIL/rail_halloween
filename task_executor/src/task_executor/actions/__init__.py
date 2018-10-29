@@ -7,6 +7,8 @@ from task_executor.abstract_step import AbstractStep
 
 from .arm import ArmAction
 from .beep import BeepAction
+from .detach_candy import DetachCandyAction
+from .drop_candy import DropCandyAction
 from .find_closest_person import FindClosestPersonAction
 # from .find_grasps import FindGraspsAction
 # from .find_object import FindObjectAction
@@ -18,10 +20,12 @@ from .look_at_closest_person import LookAtClosestPersonAction
 from .look_at_gripper import LookAtGripperAction
 # from .move import MoveAction
 from .pick import PickAction
+from .pick_candy import PickCandyAction
 from .place import PlaceAction
 from .speak import SpeakAction
 from .toggle_breakers import ToggleBreakersAction
 from .torso import TorsoAction
+from .verify_grasp import VerifyGraspAction
 
 
 class Actions(object):
@@ -53,6 +57,8 @@ class Actions(object):
 default_actions_dict = {
     'arm': ArmAction,
     'beep': BeepAction,
+    'detach_candy': DetachCandyAction,
+    'drop_candy': DropCandyAction,
     'find_closest_person': FindClosestPersonAction,
     # 'find_grasps': FindGraspsAction,
     # 'find_object': FindObjectAction,
@@ -64,10 +70,12 @@ default_actions_dict = {
     'look_at_gripper': LookAtGripperAction,
     # 'move': MoveAction,
     'pick': PickAction,
+    'pick_candy': PickCandyAction,
     'place': PlaceAction,
     'speak': SpeakAction,
     'toggle_breakers': ToggleBreakersAction,
     'torso': TorsoAction,
+    'verify_grasp': VerifyGraspAction,
 }
 
 def get_default_actions():

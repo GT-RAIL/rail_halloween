@@ -18,21 +18,6 @@ CandyManipulator::CandyManipulator() :
   gripper_names.push_back("l_gripper_finger_link");
   gripper_names.push_back("r_gripper_finger_link");
 
-//  grasp_pose.name.push_back("shoulder_pan_joint");
-//  grasp_pose.name.push_back("shoulder_lift_joint");
-//  grasp_pose.name.push_back("upperarm_roll_joint");
-//  grasp_pose.name.push_back("elbow_flex_joint");
-//  grasp_pose.name.push_back("forearm_roll_joint");
-//  grasp_pose.name.push_back("wrist_flex_joint");
-//  grasp_pose.name.push_back("wrist_roll_joint");
-//  grasp_pose.position.push_back(1.4264682869091796);
-//  grasp_pose.position.push_back(0.7546394518989991);
-//  grasp_pose.position.push_back(1.8010552049179078);
-//  grasp_pose.position.push_back(-1.4541920443832397);
-//  grasp_pose.position.push_back(2.400358734161377);
-//  grasp_pose.position.push_back(-1.2402720307693482);
-//  grasp_pose.position.push_back(0.25749375096061705);
-
   // TODO: read stir trajectory from file, store in stir_trajectory
 
   arm_group = new move_group_interface::MoveGroup("arm");
@@ -91,27 +76,33 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
     return;
   }
 
-  sensor_msgs::JointState grasp_pose;
-  grasp_pose.name.push_back("shoulder_pan_joint");
-  grasp_pose.name.push_back("shoulder_lift_joint");
-  grasp_pose.name.push_back("upperarm_roll_joint");
-  grasp_pose.name.push_back("elbow_flex_joint");
-  grasp_pose.name.push_back("forearm_roll_joint");
-  grasp_pose.name.push_back("wrist_flex_joint");
-  grasp_pose.name.push_back("wrist_roll_joint");
-  grasp_pose.position.clear();
-  for (unsigned int i = 0; i < goal->joint_angles.size(); i ++)
+  sensor_msgs::JointState pick_pose;
+  pick_pose.name.push_back("shoulder_pan_joint");
+  pick_pose.name.push_back("shoulder_lift_joint");
+  pick_pose.name.push_back("upperarm_roll_joint");
+  pick_pose.name.push_back("elbow_flex_joint");
+  pick_pose.name.push_back("forearm_roll_joint");
+  pick_pose.name.push_back("wrist_flex_joint");
+  pick_pose.name.push_back("wrist_roll_joint");
+  pick_pose.position.clear();
+  for (unsigned int i = 0; i < goal->pick_pose.size(); i ++)
   {
-    grasp_pose.position.push_back(goal->joint_angles[i]);
+    pick_pose.position.push_back(goal->pick_pose[i]);
   }
 
   arm_group->setStartStateToCurrentState();
-  arm_group->setJointValueTarget(grasp_pose);
+  arm_group->setJointValueTarget(pick_pose);
 
   // TODO (stretch): break this into plan and move so we can do safety checks
-  int error_code = arm_group->move();
+  result.error_code = arm_group->move();
 
-  // assume success, because this is a very short move into a potentially dense bowl of candy
+  // If on the very remote chance we fail, return appropriately
+  if (result.error_code != moveit_msgs::MoveItErrorCodes::SUCCESS)
+  {
+    ROS_INFO("Failed to move to the pick pose");
+    grasp_server.setAborted(result, "Motion to predefined joint pose failed!");
+    return;
+  }
 
   // close gripper
   if (grasp_server.isPreemptRequested())
@@ -123,11 +114,47 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
 
   control_msgs::GripperCommandGoal gripper_goal;
   gripper_goal.command.position = 0;
-  gripper_goal.command.max_effort = 100;  // TODO: set effort for candy
+  gripper_goal.command.max_effort = 50;  // TODO: set effort for candy
   gripper_client.sendGoal(gripper_goal);
   gripper_client.waitForResult(ros::Duration(5.0));
 
-  // add collision sphere
+  // move to post grasp pose
+  if (grasp_server.isPreemptRequested())
+  {
+    enableCollision();
+    grasp_server.setPreempted(result, "Preempted at move to post grasp pose.");
+    return;
+  }
+
+  sensor_msgs::JointState post_grasp_pose;
+  post_grasp_pose.name.push_back("shoulder_pan_joint");
+  post_grasp_pose.name.push_back("shoulder_lift_joint");
+  post_grasp_pose.name.push_back("upperarm_roll_joint");
+  post_grasp_pose.name.push_back("elbow_flex_joint");
+  post_grasp_pose.name.push_back("forearm_roll_joint");
+  post_grasp_pose.name.push_back("wrist_flex_joint");
+  post_grasp_pose.name.push_back("wrist_roll_joint");
+  post_grasp_pose.position.clear();
+  for (unsigned int i = 0; i < goal->post_pick_pose.size(); i ++)
+  {
+    post_grasp_pose.position.push_back(goal->post_pick_pose[i]);
+  }
+
+  arm_group->setStartStateToCurrentState();
+  arm_group->setJointValueTarget(post_grasp_pose);
+
+  // TODO (stretch): break this into plan and move so we can do safety checks
+  result.error_code = arm_group->move();
+
+  // If on the very remote chance we fail, return appropriately
+  if (result.error_code != moveit_msgs::MoveItErrorCodes::SUCCESS)
+  {
+    ROS_INFO("Failed to move to the post pick pose");
+    grasp_server.setAborted(result, "Motion to predefined joint pose failed!");
+    return;
+  }
+
+  // add collision sphere only after we're clear of the bowl
   // create virtual object at gripper
   if (grasp_server.isPreemptRequested())
   {

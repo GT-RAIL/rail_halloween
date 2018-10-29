@@ -43,39 +43,60 @@ tasks:
         beep: cheerful
         async: true
 
-  # The verification task
-  verify:
+  # The verification tasks
+  move_arm_and_verify:
+    params:
+    - arm_pose
+
     var:
     - not_picked
 
     steps:
     - action: arm
       params:
-        poses: joint_poses.candy_verify_1
-        look_at_gripper: true
+        poses: params.arm_pose
 
-    - action: arm
-      params:
-        poses: joint_poses.candy_verify_2
-        look_at_gripper: true
-
-    # This should be the verification action
-    - action: joystick_trigger
-      params:
-        beep: false
+    - action: verify_grasp
       var:
-      - choice
+      - candy_picked
 
-    - op: assign
+    - op: negate
       params:
-        var_name: not_picked
-        value: var.choice
+        var_name: candy_picked
+        negate_name: not_picked
       var:
       - not_picked
+
+  verify:
+    var:
+    - not_picked
+
+    steps:
+    - action: look
+      params:
+        pose: { x: 0.3, y: 0.0, z: 0.1, frame: "base_link" }
+
+    - task: move_arm_and_verify
+      params:
+        arm_pose: joint_poses.candy_verify_1
+      var:
+      - not_picked
+
+    - choice: candy_verify_2
+      params:
+        condition: var.not_picked
+        if_true:
+          task: move_arm_and_verify
+          params:
+            arm_pose: joint_poses.candy_verify_2
+          var:
+          - not_picked
 
   # The stir task
   stir:
     steps:
+    - action: detach_candy
+
     - action: beep
       params:
         beep: concerned
@@ -87,11 +108,11 @@ tasks:
 
     - action: arm
       params:
-        poses: gripper_poses.low
+        poses: joint_poses.ready
 
     - action: arm
       params:
-        poses: gripper_poses.med
+        poses: joint_poses.pre_pick
 
   # The pick loop
   pick_loop:
@@ -99,19 +120,16 @@ tasks:
     - not_picked
 
     steps:
+    - action: arm
+      params:
+        poses: joint_poses.pre_pick
+
     - action: beep
       params:
         beep: unsure
         async: true
 
-    # This should be the pick action
-    - action: arm
-      params:
-        poses: gripper_poses.low
-
-    - action: gripper
-      params:
-        command: close
+    - action: pick_candy
 
     - task: verify
       var:
@@ -153,8 +171,6 @@ tasks:
     # This doesn't actually use the value of the choice returned. Also need the
     # detector over here
     - action: joystick_trigger
-      params:
-        beep: false
       var:
       - choice
 
@@ -167,11 +183,7 @@ tasks:
     - op: assign
       params:
         var_name: drop_pose
-        value: {
-          frame: "base_link",
-          position: {x: 0, y: 0.5, z: 1.0},
-          orientation: {x: 0, y: 0, z: 0, w: 1.0}
-        }
+        value: joint_poses.default_drop
       var:
       - drop_pose
 
@@ -181,14 +193,11 @@ tasks:
     - drop_pose
 
     steps:
-    # These should be part of the upcoming drop action
     - action: arm
       params:
         poses: params.drop_pose
 
-    - action: gripper
-      params:
-        command: open
+    - action: drop_candy
 
     - action: beep
       params:
@@ -198,7 +207,7 @@ tasks:
       params:
         poses: joint_poses.ready
 
-    # Dialogues
+  # Dialogues
   dialogue1:
     steps:
     - action: look
@@ -209,7 +218,7 @@ tasks:
     - action: speak
       params:
         text: "hello kids"
-        affect: ""
+        affect: "calm"
 
     - action: beep
       params:
@@ -226,7 +235,7 @@ tasks:
     - action: speak
       params:
         text: "What are you dressed as?"
-        affect: ""
+        affect: "calm"
 
     - action: beep
       params:

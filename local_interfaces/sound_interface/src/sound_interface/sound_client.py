@@ -135,6 +135,19 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             """.format(text)
         )
 
+    @staticmethod
+    def change_audio_speed(sound, speed=1.0):
+        # Manually override the frame_rate. This tells the computer how many
+        # samples to play per second
+        sound_with_altered_frame_rate = sound._spawn(sound.raw_data, overrides={
+            "frame_rate": int(sound.frame_rate * speed)
+        })
+
+        # convert the sound with altered frame rate to a standard frame rate
+        # so that regular playback programs will work right. They often only
+        # know how to play audio at standard frame rate (like 44.1k)
+        return sound_with_altered_frame_rate.set_frame_rate(sound.frame_rate)
+
     def __init__(self, beeps=None, affects=None):
         # Want to reimplement SoundClient so that we are always using the action
         # interface to the sound_play_node.
@@ -210,8 +223,8 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         query_dict = {
             'INPUT_TEXT': text,
             'INPUT_TYPE': 'EMOTIONML',
-            'LOCALE': 'en_GB',
-            'VOICE': 'dfki-prudence-hsmm',
+            'LOCALE': 'en_US',
+            'VOICE': 'cmu-rms',
             'OUTPUT_TYPE': 'AUDIO',
             'AUDIO': 'WAVE',
             # 'effect_Robot_selected': 'on',
@@ -232,6 +245,8 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
         # Increase the volume on the temp file
         speech = AudioSegment(data=r.content)
         speech = speech + SoundClient.SPEECH_GAIN_DB
+        speech = SoundClient.change_audio_speed(speech, 0.95)
+        speech = speech.set_frame_rate(int(speech.frame_rate*2.0))
 
         # Write the wav data to a temp file
         speech_filename = create_temp_filename(prefix='marytts', suffix='.wav')

@@ -29,6 +29,9 @@
 
   <!-- Perception -->
   <group if="$(arg perception)">
+    <!-- Verification of the grasp -->
+    <node name="grasp_verifier" pkg="candy_manipulation" type="grasp_verifier.py" />
+
     <!-- RAIL Segmentation -->
     <!-- <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
       <param name="zones_config" value="$(arg segmentation_config)" />
@@ -46,7 +49,9 @@
 
   <!-- Arm -->
   <group if="$(arg arm)">
-    <node pkg="fetch_grasp_suggestion" type="executor" name="grasp_executor" output="screen" />
+    <node name="grasp_executor" pkg="fetch_grasp_suggestion" type="executor" output="screen" />
+
+    <node name="candy_manipulator" pkg="candy_manipulation" type="candy_manipulator" output="screen" />
 
     <include file="$(find fetch_moveit_config)/launch/move_group.launch">
       <arg name="info" value="true"/>

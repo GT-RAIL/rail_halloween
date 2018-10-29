@@ -24,7 +24,7 @@ The different keys and values in the errors that are sent with the assistance re
 - **goal** - transformed version of argument sent to run
     - arm:pose - the pose of the arm that failed
     - beep:beep - name of the beep key
-    - find_closest_person:max_duration - the max amount of time, float, within which to find a person
+    - find_closest_person:timeout - the max amount of time, float, within which to find a person
     - find_grasps:segmented_obj - of type rail_manipulation_msgs/SegmentedObject
     - find_object:obj - the string name of the object in the DB
     - gripper:command - open/close command sent

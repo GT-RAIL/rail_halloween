@@ -38,6 +38,7 @@ generate_messages(
         DEPENDENCIES
         actionlib_msgs
         task_executor
+        moveit_msgs
 )
 
 ###################################################

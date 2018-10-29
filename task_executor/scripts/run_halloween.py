@@ -98,9 +98,10 @@ class Halloween(object):
             rospy.loginfo("Result: {}".format(goal_status_from_code(self.client.get_state())))
 
     def _on_start(self, req):
-        self._spin = True
-        self._background_spinner = Thread(target=self.spin)
-        self._background_spinner.start()
+        if not self._spin:
+            self._spin = True
+            self._background_spinner = Thread(target=self.spin)
+            self._background_spinner.start()
         return TriggerResponse(success=True)
 
     def _on_stop(self, req):
@@ -118,8 +119,11 @@ class Halloween(object):
         return resp
 
     def _on_trigger(self, req):
-        self._trigger = True
-        return TriggerResponse(success=True)
+        if self._spin:
+            self._trigger = True
+            return TriggerResponse(success=True)
+        else:
+            return TriggerResponse(success=False)
 
     def _on_joy(self, joy_msg):
         if self._last_pressed_time + Halloween.BUTTON_PRESS_TIMEOUT >= rospy.Time.now():

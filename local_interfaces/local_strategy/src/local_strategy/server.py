@@ -78,7 +78,7 @@ class LocalRecoveryServer(object):
         self.actions.beep(beep=SoundClient.BEEP_UNSURE, async=True)
 
         # Then wait for the joystick trigger
-        for variables in self.actions.joystick_trigger.run(beep=True):
+        for variables in self.actions.joystick_trigger.run():
             if self._server.is_preempt_requested() or not self._server.is_active():
                 self.actions.joystick_trigger.stop()
 

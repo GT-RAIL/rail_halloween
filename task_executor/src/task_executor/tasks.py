@@ -107,7 +107,7 @@ class Task(AbstractStep):
                 # defs accordingly. current_step_def remains unchanged here
                 if step.has_key('loop'):
                     condition = step_params['condition']
-                    rospy.loginfo("Loop {}: Condition - {}".format(step_name, condition))
+                    rospy.loginfo("Loop {}: condition - {}".format(step_name, condition))
                     assert isinstance(condition, bool), "Invalid loop condition"
 
                     # We only loop while true. If done, move to next step
@@ -123,7 +123,7 @@ class Task(AbstractStep):
                     }
                 elif step.has_key('choice'):
                     condition = step_params['condition']
-                    rospy.loginfo("Choice {}: Condition - {}".format(step_name, condition))
+                    rospy.loginfo("Choice {}: condition - {}".format(step_name, condition))
                     assert isinstance(condition, bool), "Invalid choice condition"
 
                     # Based on the condition, update the step definition
@@ -135,7 +135,7 @@ class Task(AbstractStep):
 
                     #  If the body is not defined, then we move on to next
                     if step is None:
-                        rospy.loginfo("Choice {}: No task defined for Condition - {}".format(step_name, condition))
+                        rospy.loginfo("Choice {}: No task defined for condition - {}".format(step_name, condition))
                         self.step_idx += 1
                         continue
 
