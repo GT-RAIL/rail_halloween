@@ -6,7 +6,7 @@ from geometry_msgs.msg import Pose
 
 
 class StateRecorder(object):
-	r = rospkg.RosPack()
+    r = rospkg.RosPack()
     PACKAGE_PATH = r.get_path('data_recorder')
 
     def __init__(self, filename, rate, joint_state_topic = "/joint_states", eef_state_topic="/eef_pose"):

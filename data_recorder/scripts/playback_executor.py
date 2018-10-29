@@ -7,7 +7,7 @@ import data_recorder.msg
 from data_recorder.executor import TrajectoryExecutor
 
 class PlaybackExecutor:
-	STIR_FILENAME = 'stir.txt'
+	STIR_FILENAME = 'stir4.txt'
 	HAT_REACH_FILENAME = 'stir.txt'  # Replace these with new trajectories
 	HAT_MANEUVER_FILENAME = 'stir.txt'
 	HAT_RETRACT_FILENAME = 'stir.txt'
