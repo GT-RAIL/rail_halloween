@@ -51,14 +51,16 @@ class HotwordTriggerAction(AbstractStep):
                 action=self.name,
                 status=status,
                 goal=goal,
-                result=result
+                result=result,
+                timeout=timeout
             )
         else:
             yield self.set_aborted(
                 action=self.name,
                 status=status,
                 goal=goal,
-                result=result
+                result=result,
+                timeout=timeout
             )
 
     def stop(self):
