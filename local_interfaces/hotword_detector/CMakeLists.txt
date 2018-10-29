@@ -2,17 +2,18 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hotword_detector)
 
 find_package(catkin REQUIRED COMPONENTS
+  actionlib
+  actionlib_msgs
   std_msgs
   message_generation
-  roslaunch
 )
 
 catkin_python_setup()
 
-#add_message_files(
-#    DIRECTORY msg
-#    FILES
-#)
+add_action_files(
+  FILES
+  DetectHotWord.action
+)
 
 add_service_files(
   DIRECTORY srv
@@ -22,6 +23,7 @@ add_service_files(
 
 generate_messages(
   DEPENDENCIES
+  actionlib_msgs
   std_msgs
 )
 
