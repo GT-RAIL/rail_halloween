@@ -18,8 +18,6 @@ log_lvls = {
     'fatal': rospy.FATAL,
 }
 
-# comment to commit
-
 if __name__ == "__main__":
     """
     Initialize the node and create an Instance DB

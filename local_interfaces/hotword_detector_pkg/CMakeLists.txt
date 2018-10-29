@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(hotword_detector)
+project(hotword_detector_pkg)
 
 find_package(catkin REQUIRED COMPONENTS
   std_msgs
@@ -33,5 +33,5 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-# catkin_install_python(PROGRAMS bin/hotword_detector_node
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+catkin_install_python(PROGRAMS bin/hotword_detector_node
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

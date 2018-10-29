@@ -6,7 +6,7 @@ from catkin_pkg.python_setup import generate_distutils_setup
 
 # fetch values from package.xml
 setup_args = generate_distutils_setup(
-    packages=['hotword_detector'],
+    packages=['hotword_detector_pkg'],
     package_dir={'': 'src'},
 )
 
