@@ -21,7 +21,7 @@ class StirAction(AbstractStep):
         self.name = name
         self._stir_client = actionlib.SimpleActionClient(
             StirAction.PLAYBACK_ACTION_SERVER,
-            StirAction
+            PlaybackAction
         )
 
         rospy.loginfo("Connecting to stir executor...")
