@@ -15,6 +15,8 @@ from sensor_msgs.msg import Joy
 from task_executor.msg import ExecuteAction, ExecuteGoal
 from std_srvs.srv import Trigger, TriggerResponse
 
+from task_executor.actions import JoystickTriggerAction, HotwordTriggerAction
+
 
 # Helpers
 
@@ -51,7 +53,14 @@ class Halloween(object):
         # The background spinner
         self._background_spinner = None
         self._spin = False
-        self._trigger = False  # TODO: Use a wake-word or something smarter
+        self._trigger = False  # The combined result of all triggers
+
+        # The trigger actions
+        self._joystick_trigger = JoystickTriggerAction()
+        self._joystick_trigger.init('joystick_trigger')
+
+        self._hotword_trigger = HotwordTriggerAction()
+        self._hotword_trigger.init('hotword_trigger')
 
         # The joystick subscriber
         self._joy_sub = rospy.Subscriber(Halloween.JOY_TOPIC, Joy, self._on_joy)
@@ -79,7 +88,18 @@ class Halloween(object):
         while self._spin:
             # Wait for the trigger to start. TODO: Make this better
             self._trigger = False
+            joystick_generator = self._joystick_trigger.run()
+            hotword_generator = self._hotword_trigger.run()
             while not self._trigger and self._spin:
+                try:
+                    joystick_variables = next(joystick_generator)
+                    hotword_variables = next(hotword_generator)
+                except StopIteration:
+                    # This is only going to happen if one of the triggers
+                    # returned. Don't need to check the value because infinite
+                    # timeout
+                    break
+
                 rospy.sleep(0.5)
 
             # Exit if we should stop

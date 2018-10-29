@@ -99,11 +99,6 @@ tasks:
     steps:
     - action: detach_candy
 
-    - action: beep
-      params:
-        beep: concerned
-        async: true
-
     - action: gripper
       params:
         command: open
@@ -114,6 +109,11 @@ tasks:
         max_velocity_scaling: 0.8
 
     - action: stir
+
+    - action: beep
+      params:
+        beep: concerned
+        async: true
 
   # The pick loop
   pick_loop:
@@ -132,6 +132,11 @@ tasks:
         async: true
 
     - action: pick_candy
+
+    - action: beep
+      params:
+        beep: surprised
+        async: true
 
     - task: verify
       var:
@@ -171,16 +176,16 @@ tasks:
       params:
         pose: {x: 50.0, y: 0.0, z: 1.0, frame: "base_link"}
 
+    - action: beep
+      params:
+        beep: unsure
+        async: true
+
     # This doesn't actually use the value of the choice returned. Also need the
     # detector over here
     - action: joystick_trigger
       var:
       - choice
-
-    - action: beep
-      params:
-        beep: unsure
-        async: true
 
     # This is a stub
     - op: assign
