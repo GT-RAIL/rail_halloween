@@ -98,45 +98,50 @@ class SoundClient(object):
     @staticmethod
     def make_happy(text):
         """Make the text happy!"""
-        return ('<emotion><category name="happy" />{}</emotion>'.format(text))
+        # return ('<emotion><category name="happy" />{}</emotion>'.format(text))
+        return text
 
     @staticmethod
     def make_sad(text):
         """Make the text sad :("""
-        return ('<emotion><category name="sad" />{}</emotion>'.format(text))
+        # return ('<emotion><category name="sad" />{}</emotion>'.format(text))
+        return text
 
     @staticmethod
     def make_angry(text):
         """Make the text angry"""
-        return ('<emotion><category name="angry" />{}</emotion>'.format(text))
+        # return ('<emotion><category name="angry" />{}</emotion>'.format(text))
+        return text
 
     @staticmethod
     def make_calm(text):
         """Make the text calm"""
-        return (
-            """
-        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
-            {}
-            <dimension name="arousal" value="0.3"/><!-- lower arousal -->
-            <dimension name="pleasure" value="0.9"/><!-- high positive valence -->
-            <dimension name="dominance" value="0.8"/><!-- high potency    -->
-        </emotion>
-            """.format(text)
-        )
+        # return (
+        #     """
+        # <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
+        #     {}
+        #     <dimension name="arousal" value="0.3"/><!-- lower arousal -->
+        #     <dimension name="pleasure" value="0.9"/><!-- high positive valence -->
+        #     <dimension name="dominance" value="0.8"/><!-- high potency    -->
+        # </emotion>
+        #     """.format(text)
+        # )
+        return text
 
     @staticmethod
     def make_nervous(text):
         """Make the text nervous"""
-        return (
-            """
-        <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
-            {}
-            <dimension name="arousal" value="0.9"/><!-- high arousal -->
-            <dimension name="pleasure" value="0.2"/><!-- negative valence -->
-            <dimension name="dominance" value="0.2"/><!-- low potency    -->
-        </emotion>
-            """.format(text)
-        )
+        # return (
+        #     """
+        # <emotion dimension-set="http://www.w3.org/TR/emotion-voc/xml#pad-dimensions">
+        #     {}
+        #     <dimension name="arousal" value="0.9"/><!-- high arousal -->
+        #     <dimension name="pleasure" value="0.2"/><!-- negative valence -->
+        #     <dimension name="dominance" value="0.2"/><!-- low potency    -->
+        # </emotion>
+        #     """.format(text)
+        # )
+        return text
 
     @staticmethod
     def change_audio_speed(sound, speed=1.0):
