@@ -215,41 +215,6 @@ tasks:
         poses: joint_poses.pre_pick
         look_at_gripper: true
 
-  # Dialogues
-  dialogue1:
-    steps:
-    - action: look
-      params:
-        # needs to modify this pose
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: speak
-      params:
-        text: "hello children"
-        affect: "calm"
-
-    - action: beep
-      params:
-        beep: cheerful
-        async: true
-
-  dialogue2:
-    steps:
-    - action: look
-      params:
-        # needs to modify this pose
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
-
-    - action: speak
-      params:
-        text: "What are you dressed as?"
-        affect: "calm"
-
-    - action: beep
-      params:
-        beep: playful
-        async: true
-
   # The main trick-or-treat task
   main:
     steps:
@@ -292,3 +257,49 @@ tasks:
     - task: drop
       params:
         drop_pose: var.drop_pose
+
+  # IDLE
+  idle1:
+    steps:
+    - action: look
+      params:
+        pose: {x: 5.0, y: 0.0, z: 1.0, frame: "base_link"}
+
+    - action: arm
+      params:
+        poses: joint_poses.hat_reach_start
+
+  # Dialogues
+  dialogue1:
+    steps:
+    - action: look
+      params:
+        # needs to modify this pose
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: speak
+      params:
+        text: "hello children"
+        affect: "calm"
+
+    - action: beep
+      params:
+        beep: cheerful
+        async: true
+
+  dialogue2:
+    steps:
+    - action: look
+      params:
+        # needs to modify this pose
+        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+
+    - action: speak
+      params:
+        text: "What are you dressed as?"
+        affect: "calm"
+
+    - action: beep
+      params:
+        beep: playful
+        async: true

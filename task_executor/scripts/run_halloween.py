@@ -39,6 +39,7 @@ class Halloween(object):
     """
 
     TASK_EXECUTOR_SERVER = '/task_executor'
+    IDLE_EXECUTOR_SERVER = '/idle_executor'
     MAIN_TASK_NAME = 'main'
     SETUP_TASK_NAME = 'setup'
 
