@@ -56,11 +56,15 @@ class JoystickTriggerAction(AbstractStep):
 
             yield self.set_running()
 
-        # Yield a success
+        # Yield a success or preempted based on the stopped variable
+        if self._stopped:
+            yield self.set_preempted(action=self.name, timeout=timeout)
+
         yield self.set_succeeded(choice=self._choice)
 
     def stop(self):
         self._stopped = True
+        self._make_a_choice = False
 
     def _on_joy(self, joy_msg):
         # If there is no choice to be made, then don't make a choice

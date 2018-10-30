@@ -18,7 +18,7 @@ class HotwordTriggerAction(AbstractStep):
 
     def init(self, name):
         self.name = name
-        self._hotword_client = rospy.ServiceProxy(
+        self._hotword_client = actionlib.SimpleActionClient(
             HotwordTriggerAction.HOTWORD_ACTION_SERVER,
             DetectHotWordAction
         )
@@ -51,14 +51,16 @@ class HotwordTriggerAction(AbstractStep):
                 action=self.name,
                 status=status,
                 goal=goal,
-                result=result
+                result=result,
+                timeout=timeout
             )
         else:
             yield self.set_aborted(
                 action=self.name,
                 status=status,
                 goal=goal,
-                result=result
+                result=result,
+                timeout=timeout
             )
 
     def stop(self):
