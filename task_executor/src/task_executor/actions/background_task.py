@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Run a background task while the main task loop progresses
 
+import numpy as np
+
 from threading import Thread
 
 import rospy
@@ -50,6 +52,9 @@ class BackgroundTaskAction(AbstractStep):
         rospy.loginfo("...background task executor connected")
 
     def run(self, task):
+        if isinstance(task, (list, tuple,)):
+            task = np.random.choice(task)
+
         rospy.loginfo("Action {}: Starting background task {}".format(self.name, task))
 
         # Wait for an old thread to complete, if it must

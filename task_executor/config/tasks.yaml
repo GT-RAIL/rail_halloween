@@ -239,7 +239,7 @@ tasks:
     # Move to post-pick
     - action: background_task
       params:
-        task: dialogue2
+        task: [dialogue2, joke1, joke2, joke3, joke4, joke5, joke6, joke7]
 
     - task: post_pick
       var:
@@ -253,6 +253,10 @@ tasks:
   # IDLE
   idle1:
     steps:
+    - action: gripper
+      params:
+        command: 'open'
+
     - action: look
       params:
         pose: {x: 5.0, y: 0.0, z: 1.0, frame: "base_link"}
@@ -261,6 +265,11 @@ tasks:
       params:
         poses: joint_poses.hat_reach_start
         max_velocity_scaling: 0.8
+        look_at_gripper: true
+
+    - action: look
+      params:
+        pose: {x: 5.0, y: 0.0, z: 1.0, frame: "base_link"}
 
     - action: hat
       params:
@@ -298,6 +307,7 @@ tasks:
       params:
         poses: joint_poses.pre_pick
         max_velocity_scaling: 0.8
+        look_at_gripper: true
 
   # Dialogues
   dialogue1:

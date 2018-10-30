@@ -69,7 +69,7 @@ class GraspVerifier(object):
         success = self._default_succeed
         msg = str(self.img_sum)
         if not self._in_simulation:
-            if self.img_sum < 11000 or self.gripper_pos >= 0.005:
+            if self.img_sum < 11000 or self.gripper_pos >= 0.0078:
                 success = True
             else:
                 success = False
