@@ -50,17 +50,20 @@ class SoundClient(object):
     package that begins with `SOUND_*`. By default, the sound files in `sounds`
     map to one of these keys.
 
-    To speak, you can use EmotionML syntax to specify text. The TTS interface
+    To speak, you can use SSML syntax to specify text. The TTS interface
     expects a MaryTTS server running in the background. The TTS could be a long
     running process and is currently blocking.
     """
 
-    # Template EmotionML
-    EMOTIONML_TEMPLATE = \
-    """<emotionml version="1.0" xmlns="http://www.w3.org/2009/10/emotionml"
-category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
+    # Template SSML
+    SSML_TEMPLATE = \
+    """<?xml version="1.0" encoding="UTF-8" ?>
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.w3.org/2001/10/synthesis http://www.w3.org/TR/speech-synthesis/synthesis.xsd"
+  xml:lang="en-US">
 {speech}
-</emotionml>
+</speak>
     """
 
     # Keys for the different beeps
@@ -219,7 +222,7 @@ category-set="http://www.w3.org/TR/emotion-voc/xml#everyday-categories">
             text = self.affects[affect.upper()](text)
 
         # Create the vars for the EmotionML query
-        text = SoundClient.EMOTIONML_TEMPLATE.format(speech=text)
+        text = SoundClient.SSML_TEMPLATE.format(speech=text)
         query_dict = {
             'INPUT_TEXT': text,
             'INPUT_TYPE': 'EMOTIONML',

@@ -326,7 +326,7 @@ tasks:
     - action: speak
       params:
         text: "hello children"
-        affect: "calm"
+        affect: ""
 
   dialogue2:
     steps:
@@ -338,4 +338,4 @@ tasks:
     - action: speak
       params:
         text: "And what are you dressed as today?"
-        affect: "calm"
+        affect: ""
