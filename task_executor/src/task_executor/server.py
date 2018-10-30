@@ -131,7 +131,7 @@ class TaskServer(object):
                     rospy.logerr("Task {}: FAIL. Context Keys: {}".format(task.name, variables.keys()))
                     request_assistance = True
 
-            except Exception as e:
+            except AssertionError as e:
                 # There was some unexpected error in the underlying code.
                 # Capture it and send it to the recovery mechanism.
                 rospy.logerr("Exception in task execution: {}".format(e))

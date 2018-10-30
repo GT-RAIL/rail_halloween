@@ -155,9 +155,10 @@ class Task(AbstractStep):
                     if self.current_executor is not None \
                             and isinstance(self.current_executor, Task) \
                             and not context.restart_child:
+                        # Restart the child if it ends in an operation
                         child_context = TaskContext(
                             start_idx=self.current_executor.step_idx,
-                            restart_child=False
+                            restart_child=(False or self.current_executor.current_executor is None)
                         )
                     else:
                         # restart_child or current_executor is None or

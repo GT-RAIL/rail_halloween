@@ -16,11 +16,17 @@ class GraspVerifier(object):
 
     VERIFY_SERVICE = '~verify'
     IMAGE_TOPIC = '/head_camera/depth/image_rect'
+    DEFAULT_SUCCEED_SERVICE = '~default_success'
+    DEFAULT_FAIL_SERVICE = '~default_fail'
+    SIMULATION_PARAMETER = '/use_sim_time'
 
     def __init__(self):
         self.bridge = CvBridge()
         self.last_image = np.zeros((640, 480))
         self.image_lock = Lock()
+
+        # We don't actually want to verify in sim
+        self._in_simulation = rospy.get_param(GraspVerifier.SIMULATION_PARAMETER, False)
 
         # Create the subscriber
         self._depth_sub = rospy.Subscriber(GraspVerifier.IMAGE_TOPIC, Image, self._parse_image)
@@ -28,25 +34,42 @@ class GraspVerifier(object):
         # Create the services
         self._verify_service = rospy.Service(GraspVerifier.VERIFY_SERVICE, Trigger, self._verify_grasp)
 
+        # The variable to threshold detection on
         self.img_sum = 0.0
 
-        # FIXME: This is for debug only. Remove in the actual code
-        self.num_calls = 0
+        # Should we succeed or fail by default?
+        self._default_succeed = False
+        self._default_succeed_service = rospy.Service(
+            GraspVerifier.DEFAULT_SUCCEED_SERVICE,
+            Trigger,
+            self._set_default_succeed
+        )
+        self._default_fail_service = rospy.Service(
+            GraspVerifier.DEFAULT_FAIL_SERVICE,
+            Trigger,
+            self._set_default_fail
+        )
+
+    def _set_default_succeed(self, req):
+        self._default_succeed = True
+        return TriggerResponse(success=True)
+
+    def _set_default_fail(self, req):
+        self._default_succeed = False
+        return TriggerResponse(success=True)
 
     def _verify_grasp(self, req):
-        success = False
-        # self.num_calls = (self.num_calls + 1) % 3
-        # if self.num_calls == 0:
-        #     success = True
+        success = self._default_succeed
         # FIXME: Fix the parameters here
         # with self.image_lock:
         #     image_in = np.array(self.last_image[145:270, 365:465])
         #     image_in[image_in > 20] = 0
         msg = str(self.img_sum)
-        if self.img_sum < 11000:
-            success = True
-        else:
-            success = False
+        if not self._in_simulation:
+            if self.img_sum < 11000:
+                success = True
+            else:
+                success = False
 
         return TriggerResponse(success=success, message=msg)
 

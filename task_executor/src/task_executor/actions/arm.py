@@ -175,6 +175,9 @@ class ArmAction(AbstractStep):
                 if success:
                     break
 
+                # Wait a bit before retrying
+                rospy.sleep(0.5)
+
             # If reaching the previous pose was not successful, then break out
             # Otherwise, move on to the next pose
             if not success:
@@ -222,6 +225,9 @@ class ArmAction(AbstractStep):
                 # Exit if we have succeeded or been preempted
                 if status == GoalStatus.SUCCEEDED or status == GoalStatus.PREEMPTED:
                     break
+
+                # Wait a bit before retrying
+                rospy.sleep(0.5)
 
             # If we haven't succeeded in reaching this intermediate pose, then
             # break. Otherwise, move on to the next pose

@@ -80,7 +80,7 @@ class MoveAction(AbstractStep):
             yield self.set_preempted(
                 action=self.name,
                 status=status,
-                goal=coord,
+                goal=goal,
                 coord_num=coord_num,
                 result=result
             )
@@ -88,7 +88,7 @@ class MoveAction(AbstractStep):
             yield self.set_aborted(
                 action=self.name,
                 status=status,
-                goal=coord,
+                goal=goal,
                 coord_num=coord_num,
                 result=result
             )

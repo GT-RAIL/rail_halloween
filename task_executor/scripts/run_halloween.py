@@ -72,9 +72,9 @@ class Halloween(object):
         self._last_pressed_time = rospy.Time(0)  # Debounce helper
 
         # The action client to the task Halloween
-        self.client = actionlib.SimpleActionClient(Halloween.TASK_EXECUTOR_SERVER, ExecuteAction)
+        self.task_client = actionlib.SimpleActionClient(Halloween.TASK_EXECUTOR_SERVER, ExecuteAction)
         rospy.loginfo("Connecting to task_executor...")
-        self.client.wait_for_server()
+        self.task_client.wait_for_server()
         rospy.loginfo("...task_executor connected")
 
         # Create the services
@@ -91,7 +91,10 @@ class Halloween(object):
             # Wait for the trigger to start. TODO: Make this better
             self._trigger = False
 
-            for (jvar, hvar) in itertools.izip_longest(self._joystick_trigger.run(), self._hotword_trigger.run()):
+            for (jvar, hvar) in itertools.izip_longest(
+                self._joystick_trigger.run(),
+                self._hotword_trigger.run()
+            ):
                 # Update the value of trigger
                 self._trigger = self._trigger or hvar.has_key('choice') or jvar.has_key('choice')
 
@@ -101,8 +104,10 @@ class Halloween(object):
 
                 # Check to see if one of the trigger methods has been called
                 if self._trigger:
-                    self._joystick_trigger.stop()
-                    self._hotword_trigger.stop()
+                    if self._joystick_trigger.is_running():
+                        self._joystick_trigger.stop()
+                    if self._hotword_trigger.is_running():
+                        self._hotword_trigger.stop()
 
                 # Otherwise, wait a bit
                 rospy.sleep(0.5)
@@ -114,13 +119,13 @@ class Halloween(object):
             # Create the execution goal for the main task
             rospy.loginfo("Starting: {}".format(Halloween.MAIN_TASK_NAME))
             goal = ExecuteGoal(name=Halloween.MAIN_TASK_NAME)
-            self.client.send_goal(goal)
-            while not self.client.wait_for_result(rospy.Duration(0.5)):
+            self.task_client.send_goal(goal)
+            while not self.task_client.wait_for_result(rospy.Duration(0.5)):
                 if not self._spin:
-                    self.client.cancel_all_goals()
+                    self.task_client.cancel_all_goals()
 
             # Get the status
-            rospy.loginfo("Result: {}".format(goal_status_from_code(self.client.get_state())))
+            rospy.loginfo("Result: {}".format(goal_status_from_code(self.task_client.get_state())))
 
     def _on_start(self, req):
         if not self._spin:
@@ -136,11 +141,11 @@ class Halloween(object):
     def _on_setup(self, req):
         rospy.loginfo("Starting: {}".format(Halloween.SETUP_TASK_NAME))
         goal = ExecuteGoal(name=Halloween.SETUP_TASK_NAME)
-        self.client.send_goal(goal)
-        self.client.wait_for_result()
-        rospy.loginfo("Result: {}".format(goal_status_from_code(self.client.get_state())))
+        self.task_client.send_goal(goal)
+        self.task_client.wait_for_result()
+        rospy.loginfo("Result: {}".format(goal_status_from_code(self.task_client.get_state())))
 
-        resp = TriggerResponse(success=self.client.get_result().success)
+        resp = TriggerResponse(success=self.task_client.get_result().success)
         return resp
 
     def _on_trigger(self, req):
@@ -165,7 +170,7 @@ class Halloween(object):
         # We only use this for sending cancel messages
         if self._is_estop_pressed(joy_msg):
             self._last_pressed_time = rospy.Time.now()
-            self.client.cancel_all_goals()
+            self.task_client.cancel_all_goals()
 
 
 # The main
