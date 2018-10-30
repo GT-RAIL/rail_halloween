@@ -8,9 +8,9 @@ from data_recorder.executor import TrajectoryExecutor
 
 class PlaybackExecutor:
 	STIR_FILENAME = 'stir4.txt'
-	HAT_REACH_FILENAME = 'stir.txt'  # Replace these with new trajectories
-	HAT_MANEUVER_FILENAME = 'stir.txt'
-	HAT_RETRACT_FILENAME = 'stir.txt'
+	HAT_REACH_FILENAME = 'hat_reach.txt'  # Replace these with new trajectories
+	HAT_MANEUVER_FILENAME = 'hat_maneuver2.txt'
+	HAT_RETRACT_FILENAME = 'hat_retract.txt'
 
 	def __init__(self):
 		self.stir_executor = TrajectoryExecutor(self.STIR_FILENAME)
@@ -33,7 +33,7 @@ class PlaybackExecutor:
 			success = self.hat_reach_executor.executeTrajectory()
 		elif primitive_name == 'hat_maneuver':
 			success = self.hat_maneuver_executor.executeTrajectory()
-		elif primitive_name == 'hat_reach':
+		elif primitive_name == 'hat_retract':
 			success = self.hat_retract_executor.executeTrajectory()
 		else:
 			rospy.logerr('Primitive Does not Exist')

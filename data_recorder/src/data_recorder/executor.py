@@ -21,7 +21,7 @@ class TrajectoryExecutor:
     JOINT_STATE_TOPIC = '/joint_states'
     JOINT_VEL_ACTION = '/arm_controller/follow_joint_trajectory'           # This Action Call smooths the trajectory
     # Minimum threshold for a point to be included in trajectory. Identical adjacent points cause velocity control failure
-    MIN_JOINT_DIFF = 0.0
+    MIN_JOINT_DIFF = 0.001
 
     r = rospkg.RosPack()
     PACKAGE_PATH = r.get_path('data_recorder')
@@ -73,15 +73,18 @@ class TrajectoryExecutor:
         time = (time - time[0])
 
         currJoint = [100000]*7
+        currTime = 0.0
+        dt = time[2] - time[1]
 
         for i in range(len(data)):
             if norm(data[i]-currJoint) >= self.MIN_JOINT_DIFF:
                 tempTrajPoint = trajectory_msgs.msg.JointTrajectoryPoint()
                 tempTrajPoint.positions = data[i]
-                tempTrajPoint.time_from_start = rospy.Duration(time[i])
+                # tempTrajPoint.time_from_start = rospy.Duration(time[i])
+                tempTrajPoint.time_from_start = rospy.Duration(currTime)
                 self.trajActionGoal.trajectory.points.append(tempTrajPoint)
                 currJoint = data[i]
-
+                currTime = currTime + dt
 
     def executeTrajectory(self):
         """
