@@ -3,6 +3,8 @@
 
 from __future__ import print_function, division
 
+import itertools
+
 import numpy as np
 
 from threading import Thread
@@ -89,7 +91,9 @@ class Halloween(object):
             # Wait for the trigger to start. TODO: Make this better
             self._trigger = False
 
-            for (joystick_var, hotword_var) in zip(self._joystick_trigger.run(), self._hotword_trigger.run()):
+            for (jvar, hvar) in itertools.izip_longest(self._joystick_trigger.run(), self._hotword_trigger.run()):
+                # Update the value of trigger
+                self._trigger = self._trigger or hvar.has_key('choice') or jvar.has_key('choice')
 
                 # Check to see if the thread is shutdown
                 if not self._spin:
@@ -103,35 +107,20 @@ class Halloween(object):
                 # Otherwise, wait a bit
                 rospy.sleep(0.5)
 
-            # Then search for the value of trigger. If the trigger is still
-            # running, make sure to call stop so that downstream clients are
-            # canceled. Also, we don't actually care about the value of 'choice'
-            if self._joystick_trigger.is_running():
-                self._joystick_trigger.stop()
-            else:
-                self._trigger = self._trigger or joystick_var.has_key('choice')
-
-            if self._hotword_trigger.is_running():
-                self._hotword_trigger.stop()
-            else:
-                self._trigger = self._trigger or hotword_var.has_key('choice')
-
             # Exit if we should stop
             if not self._spin:
                 break
 
             # Create the execution goal for the main task
             rospy.loginfo("Starting: {}".format(Halloween.MAIN_TASK_NAME))
-            rospy.sleep(10.0)
-            rospy.loginfo("Done: {}".format(Halloween.MAIN_TASK_NAME))
-            # goal = ExecuteGoal(name=Halloween.MAIN_TASK_NAME)
-            # self.client.send_goal(goal)
-            # while not self.client.wait_for_result(rospy.Duration(0.5)):
-            #     if not self._spin:
-            #         self.client.cancel_all_goals()
+            goal = ExecuteGoal(name=Halloween.MAIN_TASK_NAME)
+            self.client.send_goal(goal)
+            while not self.client.wait_for_result(rospy.Duration(0.5)):
+                if not self._spin:
+                    self.client.cancel_all_goals()
 
-            # # Get the status
-            # rospy.loginfo("Result: {}".format(goal_status_from_code(self.client.get_state())))
+            # Get the status
+            rospy.loginfo("Result: {}".format(goal_status_from_code(self.client.get_state())))
 
     def _on_start(self, req):
         if not self._spin:
