@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   assistance_msgs
+  bagposefromperson
   control_msgs
   fetch_grasp_suggestion
   geometry_msgs

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>task_executor</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>The task_executor package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
@@ -53,6 +53,7 @@
   <depend>actionlib</depend>
   <depend>actionlib_msgs</depend>
   <depend>assistance_msgs</depend>
+  <depend>bagposefromperson</depend>
   <depend>control_msgs</depend>
   <depend>fetch_grasp_suggestion</depend>
   <depend>geometry_msgs</depend>
