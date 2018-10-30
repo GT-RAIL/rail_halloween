@@ -38,7 +38,6 @@ tasks:
     - action: arm
       params:
         poses: joint_poses.pre_pick
-        look_at_gripper: true
         max_velocity_scaling: 0.8
 
     - action: beep
@@ -161,23 +160,6 @@ tasks:
     - drop_pose
 
     steps:
-    - action: look
-      params:
-        pose: {x: 5.0, y: 0.0, z: 1.0, frame: "base_link"}
-
-    - action: look
-      params:
-        pose: {x: 1.5, y: 0.0, z: 1.0, frame: "base_link"}
-
-    - action: look
-      params:
-        pose: {x: 5.0, y: 0.0, z: 1.0, frame: "base_link"}
-
-    - action: beep
-      params:
-        beep: unsure
-        async: true
-
     # This doesn't actually use the value of the choice returned. Also need the
     # detector over here
     - action: joystick_trigger
@@ -238,10 +220,6 @@ tasks:
     # Move to pre-pick
     - task: pre_pick
 
-    - action: background_task
-      params:
-        task: dialogue2
-
     # The pick-verify loop
     - op: assign
       params:
@@ -259,6 +237,10 @@ tasks:
           - not_picked
 
     # Move to post-pick
+    - action: background_task
+      params:
+        task: dialogue2
+
     - task: post_pick
       var:
       - drop_pose
@@ -322,20 +304,18 @@ tasks:
     steps:
     - action: look
       params:
-        # needs to modify this pose
-        pose: {x: 0.7, y: 0.0, z: 1.0, frame: "base_link"}
+        pose: gripper_poses.default_drop
 
     - action: speak
       params:
-        text: "how are you today?"
+        text: "Why, hello there! What is your name?"
         affect: ""
 
   dialogue2:
     steps:
     - action: look
       params:
-        # needs to modify this pose
-        pose: {x: 0.7, y: 0.0, z: 1.0, frame: "base_link"}
+        pose: gripper_poses.default_drop
 
     - action: speak
       params:
