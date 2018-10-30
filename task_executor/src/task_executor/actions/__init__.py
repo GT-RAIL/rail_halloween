@@ -13,6 +13,7 @@ from .find_closest_person import FindClosestPersonAction
 # from .find_grasps import FindGraspsAction
 # from .find_object import FindObjectAction
 from .gripper import GripperAction
+from .hat import HatAction
 from .hotword_trigger import HotwordTriggerAction
 from .joystick_trigger import JoystickTriggerAction
 # from .listen import ListenAction
@@ -65,6 +66,7 @@ default_actions_dict = {
     # 'find_grasps': FindGraspsAction,
     # 'find_object': FindObjectAction,
     'gripper': GripperAction,
+    'hat': HatAction,
     'hotword_trigger': HotwordTriggerAction,
     'joystick_trigger': JoystickTriggerAction,
     # 'listen': ListenAction,

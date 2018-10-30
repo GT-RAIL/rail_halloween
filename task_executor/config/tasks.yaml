@@ -269,6 +269,38 @@ tasks:
       params:
         poses: joint_poses.hat_reach_start
 
+    - action: hat
+      params:
+        command: hat_reach
+
+    - action: speak
+      params:
+        text: "Greetings! I do not have a monopoly on candy"
+        affect: ""
+        async: true
+
+    - action: gripper
+      params:
+        command: close
+
+    - action: hat
+      params:
+        command: hat_maneuver
+
+    - action: speak
+      params:
+        text: "I simply have market share"
+        affect: ""
+        async: true
+
+    - action: gripper
+      params:
+        command: open
+
+    - action: hat
+      params:
+        command: hat_retract
+
   # Dialogues
   dialogue1:
     steps:
