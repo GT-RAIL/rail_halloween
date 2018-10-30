@@ -52,11 +52,19 @@ class Halloween(object):
     SETUP_SERVICE = '~setup'
     TRIGGER_SERVICE = '~trigger'
 
+    IDLE_TASKS = ["idle1"]
+    IDLE_WAIT_LOW = 5
+    IDLE_WAIT_HIGH = 60
+
     def __init__(self):
         # The background spinner
         self._background_spinner = None
         self._spin = False
         self._trigger = False  # The combined result of all triggers
+
+        # The background idle tasks
+        self._idle_timer = None
+        self._idle_is_running = False
 
         # The trigger actions
         self._joystick_trigger = JoystickTriggerAction()
@@ -72,11 +80,17 @@ class Halloween(object):
         )
         self._last_pressed_time = rospy.Time(0)  # Debounce helper
 
-        # The action client to the task Halloween
+        # The action clients to the Halloween tasks
         self.task_client = actionlib.SimpleActionClient(Halloween.TASK_EXECUTOR_SERVER, ExecuteAction)
+        self.idle_client = actionlib.SimpleActionClient(Halloween.IDLE_EXECUTOR_SERVER, ExecuteAction)
+
         rospy.loginfo("Connecting to task_executor...")
         self.task_client.wait_for_server()
         rospy.loginfo("...task_executor connected")
+
+        rospy.loginfo("Connecting to idle_executor...")
+        self.idle_client.wait_for_server()
+        rospy.loginfo("...idle_executor connected")
 
         # Create the services
         self._start_service = rospy.Service(Halloween.START_SERVICE, Trigger, self._on_start)
@@ -91,6 +105,12 @@ class Halloween(object):
         while self._spin:
             # Wait for the trigger to start. TODO: Make this better
             self._trigger = False
+            self._idle_timer = rospy.Timer(
+                rospy.Duration(np.random.random_integers(Halloween.IDLE_WAIT_LOW,
+                                                         Halloween.IDLE_WAIT_HIGH)),
+                self._run_idle,
+                oneshot=True
+            )
 
             for (jvar, hvar) in itertools.izip_longest(
                 self._joystick_trigger.run(),
@@ -105,6 +125,7 @@ class Halloween(object):
 
                 # Check to see if one of the trigger methods has been called
                 if self._trigger:
+                    self._idle_timer.shutdown()
                     if self._joystick_trigger.is_running():
                         self._joystick_trigger.stop()
                     if self._hotword_trigger.is_running():
@@ -112,6 +133,11 @@ class Halloween(object):
 
                 # Otherwise, wait a bit
                 rospy.sleep(0.5)
+
+            # If the idle task is running, then wait for it to finish
+            while self._idle_is_running:
+                rospy.sleep(0.5)
+            self._idle_timer = None
 
             # Exit if we should stop
             if not self._spin:
@@ -127,6 +153,30 @@ class Halloween(object):
 
             # Get the status
             rospy.loginfo("Result: {}".format(goal_status_from_code(self.task_client.get_state())))
+
+    def _run_idle(self, evt):
+        # Signal that you've started, and select a task
+        self._idle_is_running = True
+        idle_to_run = np.random.choice(Halloween.IDLE_TASKS)
+
+        # Send the task to the server and wait
+        rospy.loginfo("Running IDLE: {}".format(idle_to_run))
+        goal = ExecuteGoal(name=idle_to_run)
+        self.idle_client.send_goal(goal)
+        while not self.idle_client.wait_for_result(rospy.Duration(0.5)):
+            pass
+
+        # Get the status
+        rospy.loginfo("Result IDLE: {}".format(goal_status_from_code(self.idle_client.get_state())))
+
+        # Notify that you're done and reset the timer for the next idle
+        self._idle_is_running = False
+        self._idle_timer = rospy.Timer(
+            rospy.Duration(np.random.random_integers(Halloween.IDLE_WAIT_LOW,
+                                                     Halloween.IDLE_WAIT_HIGH)),
+            self._run_idle,
+            oneshot=True
+        )
 
     def _on_start(self, req):
         if not self._spin:
