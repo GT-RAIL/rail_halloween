@@ -284,7 +284,7 @@ tasks:
 
     - action: speak
       params:
-        text: "Greetings! I do not have a monopoly on candy"
+        text: "Greetings! I do not have <prosody rate="x-slow">a</prosody> monopoly on <prosody rate="x-slow">sweeets</prosody>"
         affect: ""
         async: true
 
@@ -325,7 +325,7 @@ tasks:
 
     - action: speak
       params:
-        text: "hello children"
+        text: "how are you today?"
         affect: ""
 
   dialogue2:

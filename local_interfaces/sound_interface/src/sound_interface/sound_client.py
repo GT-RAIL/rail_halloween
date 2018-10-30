@@ -215,17 +215,17 @@ class SoundClient(object):
         return self.affects.keys()
 
     def say(self, text, affect="", blocking=False, **kwargs):
-        """Perform TTS using EmotionML"""
+        """Perform TTS using SSML"""
 
         # Transform the text if the affect argument calls for it
         if affect and affect.upper() in self.affects.keys():
             text = self.affects[affect.upper()](text)
 
-        # Create the vars for the EmotionML query
+        # Create the vars for the SSML query
         text = SoundClient.SSML_TEMPLATE.format(speech=text)
         query_dict = {
             'INPUT_TEXT': text,
-            'INPUT_TYPE': 'EMOTIONML',
+            'INPUT_TYPE': 'SSML',
             'LOCALE': 'en_US',
             'VOICE': 'cmu-rms',
             'OUTPUT_TYPE': 'AUDIO',
