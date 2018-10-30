@@ -102,6 +102,7 @@ class Halloween(object):
 
     def spin(self):
         """Continuously executes the task in the background"""
+        status = GoalStatus.LOST
         while self._spin:
             # Wait for the trigger to start. TODO: Make this better
             self._trigger = False
@@ -112,12 +113,15 @@ class Halloween(object):
                 oneshot=True
             )
 
-            for (jvar, hvar) in itertools.izip_longest(
-                self._joystick_trigger.run(),
-                self._hotword_trigger.run()
-            ):
+            # Use the hotword trigger only if the previous run was not preempted
+            # or aborted
+            iterators_to_use = [self._joystick_trigger.run(),]
+            if status not in [GoalStatus.PREEMPTED, GoalStatus.ABORTED]:
+                iterators_to_use.append(self._hotword_trigger.run())
+
+            for vars_tuple in itertools.izip_longest(*iterators_to_use):
                 # Update the value of trigger
-                self._trigger = self._trigger or hvar.has_key('choice') or jvar.has_key('choice')
+                self._trigger = self._trigger or np.any([x.has_key('choice') for x in vars_tuple])
 
                 # Check to see if the thread is shutdown
                 if not self._spin:
@@ -152,7 +156,8 @@ class Halloween(object):
                     self.task_client.cancel_all_goals()
 
             # Get the status
-            rospy.loginfo("Result: {}".format(goal_status_from_code(self.task_client.get_state())))
+            status = self.task_client.get_state()
+            rospy.loginfo("Result: {}".format(goal_status_from_code(status)))
 
     def _run_idle(self, evt):
         # Signal that you've started, and select a task
