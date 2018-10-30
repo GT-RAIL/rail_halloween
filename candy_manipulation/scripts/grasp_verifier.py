@@ -76,7 +76,7 @@ class GraspVerifier(object):
 
         return TriggerResponse(success=success, message=msg)
 
-    def _gripper_sub(self, gripper_msg):
+    def _parse_gripper_state(self, gripper_msg):
         try:
             self.gripper_pos = gripper_msg.joints[0].position
         except Exception as e:

@@ -334,6 +334,10 @@ tasks:
         affect: ""
         async: false
 
+    - action: wait
+      params:
+        duration: 5.0
+
     - action: speak
       params:
         text: "Happy Owl-ween!"
@@ -351,6 +355,10 @@ tasks:
         text: "What do they teach in witching school?"
         affect: ""
         async: false
+
+    - action: wait
+      params:
+        duration: 5.0
 
     - action: speak
       params:
@@ -370,6 +378,10 @@ tasks:
         affect: ""
         async: false
 
+    - action: wait
+      params:
+        duration: 5.0
+
     - action: speak
       params:
         text: "You Are My Sunshine."
@@ -387,6 +399,10 @@ tasks:
         text: "What type of monster loves dance music?"
         affect: ""
         async: false
+
+    - action: wait
+      params:
+        duration: 5.0
 
     - action: speak
       params:
@@ -406,6 +422,10 @@ tasks:
         affect: ""
         async: false
 
+    - action: wait
+      params:
+        duration: 5.0
+
     - action: speak
       params:
         text: "What-wolf and When-wolf."
@@ -424,6 +444,10 @@ tasks:
         affect: ""
         async: false
 
+    - action: wait
+      params:
+        duration: 5.0
+
     - action: speak
       params:
         text: "A lazy bone."
@@ -441,6 +465,10 @@ tasks:
         text: "Which room do ghost houses never have?"
         affect: ""
         async: false
+
+    - action: wait
+      params:
+        duration: 5.0
 
     - action: speak
       params:

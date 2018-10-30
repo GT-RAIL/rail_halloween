@@ -30,6 +30,7 @@ from .stir import StirAction
 from .toggle_breakers import ToggleBreakersAction
 from .torso import TorsoAction
 from .verify_grasp import VerifyGraspAction
+from .wait import WaitAction
 
 
 class Actions(object):
@@ -84,6 +85,7 @@ default_actions_dict = {
     'toggle_breakers': ToggleBreakersAction,
     'torso': TorsoAction,
     'verify_grasp': VerifyGraspAction,
+    'wait': WaitAction,
 }
 
 def get_default_actions():
