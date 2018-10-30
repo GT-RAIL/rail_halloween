@@ -53,7 +53,7 @@ class Halloween(object):
     TRIGGER_SERVICE = '~trigger'
 
     IDLE_TASKS = ["idle1"]
-    IDLE_WAIT_LOW = 5
+    IDLE_WAIT_LOW = 20
     IDLE_WAIT_HIGH = 60
 
     def __init__(self):
