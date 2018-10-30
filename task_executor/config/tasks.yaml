@@ -276,6 +276,7 @@ tasks:
     - action: arm
       params:
         poses: joint_poses.hat_reach_start
+        max_velocity_scaling: 0.8
 
     - action: hat
       params:
@@ -309,13 +310,18 @@ tasks:
       params:
         command: hat_retract
 
+    - action: arm
+      params:
+        poses: joint_poses.pre_pick
+        max_velocity_scaling: 0.8
+
   # Dialogues
   dialogue1:
     steps:
     - action: look
       params:
         # needs to modify this pose
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+        pose: {x: 0.7, y: 0.0, z: 1.0, frame: "base_link"}
 
     - action: speak
       params:
@@ -327,7 +333,7 @@ tasks:
     - action: look
       params:
         # needs to modify this pose
-        pose: {x: 1.5, y: 0.0, z: -1.0, frame: "base_link"}
+        pose: {x: 0.7, y: 0.0, z: 1.0, frame: "base_link"}
 
     - action: speak
       params:

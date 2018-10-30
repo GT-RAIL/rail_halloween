@@ -90,7 +90,7 @@ class TrajectoryExecutor:
         """
         Passes the trajectory to controller
         """
-        self.gotoInit()
+        # self.gotoInit()
         self.trajActionGoal.trajectory.header.stamp = rospy.Time.now() + rospy.Duration(1.0)
 
         rospy.on_shutdown(self.preemptExecution)
