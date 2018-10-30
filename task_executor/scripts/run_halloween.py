@@ -129,7 +129,6 @@ class Halloween(object):
 
                 # Check to see if one of the trigger methods has been called
                 if self._trigger:
-                    self._idle_timer.shutdown()
                     if self._joystick_trigger.is_running():
                         self._joystick_trigger.stop()
                     if self._hotword_trigger.is_running():
@@ -141,6 +140,7 @@ class Halloween(object):
             # If the idle task is running, then wait for it to finish
             while self._idle_is_running:
                 rospy.sleep(0.5)
+            self._idle_timer.shutdown()
             self._idle_timer = None
 
             # Exit if we should stop

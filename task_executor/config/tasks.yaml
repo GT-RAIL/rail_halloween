@@ -31,9 +31,9 @@ tasks:
   # The pre-pick task
   pre_pick:
     steps:
-    - action: look
-      params:
-        pose: {x: 0.42, y: 0.32, z: 0.61, frame: "base_link"}
+    # - action: look
+    #   params:
+    #     pose: {x: 0.42, y: 0.32, z: 0.61, frame: "base_link"}
 
     - action: arm
       params:

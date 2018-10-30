@@ -22,7 +22,7 @@ class HWDetector():
         self._timeout_timer = None
 
         # init the detector
-        sensitivity = [0.5] * len(models)  # 0.465 is really well-tuned to Angel
+        sensitivity = [0.465] * len(models)  # 0.465 is really well-tuned to Angel
         self.detector = \
             snowboydecoder.HotwordDetector(models, sensitivity=sensitivity)
         self.callbacks = [self.notify] * len(models)
