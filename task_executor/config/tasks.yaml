@@ -223,6 +223,10 @@ tasks:
         beep: cheerful
         async: true
 
+    - action: background_task
+      params:
+        task: dialogue1
+
     - action: gripper
       params:
         command: open
@@ -231,6 +235,10 @@ tasks:
 
     # Move to pre-pick
     - task: pre_pick
+
+    - action: background_task
+      params:
+        task: dialogue2
 
     # The pick-verify loop
     - op: assign
@@ -314,11 +322,6 @@ tasks:
         text: "hello children"
         affect: "calm"
 
-    - action: beep
-      params:
-        beep: cheerful
-        async: true
-
   dialogue2:
     steps:
     - action: look
@@ -328,10 +331,5 @@ tasks:
 
     - action: speak
       params:
-        text: "What are you dressed as?"
+        text: "And what are you dressed as today?"
         affect: "calm"
-
-    - action: beep
-      params:
-        beep: playful
-        async: true

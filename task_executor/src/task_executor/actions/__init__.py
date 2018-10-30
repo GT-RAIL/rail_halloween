@@ -6,6 +6,7 @@ from __future__ import print_function
 from task_executor.abstract_step import AbstractStep
 
 from .arm import ArmAction
+from .background_task import BackgroundTaskAction
 from .beep import BeepAction
 from .detach_candy import DetachCandyAction
 from .drop_candy import DropCandyAction
@@ -59,6 +60,7 @@ class Actions(object):
 # package
 default_actions_dict = {
     'arm': ArmAction,
+    'background_task': BackgroundTaskAction,
     'beep': BeepAction,
     'detach_candy': DetachCandyAction,
     'drop_candy': DropCandyAction,

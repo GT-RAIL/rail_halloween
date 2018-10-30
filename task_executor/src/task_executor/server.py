@@ -33,9 +33,12 @@ class TaskServer(object):
 
     ASSISTANCE_ARBITRATOR_ACTION_SERVER = "arbitrator"
 
-    def __init__(self, connect_arbitrator=True):
+    def __init__(self, actions=None, connect_arbitrator=True):
         # Instantiate the action clients
-        self.actions = get_default_actions()
+        if actions is None:
+            self.actions = get_default_actions()
+        else:
+            self.actions = actions
 
         # Provide a service to reload, and then reload
         self._reload_service = rospy.Service('~reload', Trigger, self.reload)
