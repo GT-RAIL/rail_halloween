@@ -95,6 +95,11 @@ tasks:
   # The stir task
   stir:
     steps:
+    - action: speak
+      params:
+        text: "Oops!"
+        async: true
+
     - action: detach_candy
 
     - action: gripper
