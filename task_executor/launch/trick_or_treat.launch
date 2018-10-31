@@ -32,6 +32,9 @@
     <!-- Verification of the grasp -->
     <node name="grasp_verifier" pkg="candy_manipulation" type="grasp_verifier.py" />
 
+    <!-- The bag pose detector -->
+    <node name="bag_pose_from_person_server" pkg="bagposefromperson" type="bag_pose.py" />
+
     <!-- RAIL Segmentation -->
     <!-- <node pkg="rail_segmentation" type="rail_segmentation" name="rail_segmentation" output="screen">
       <param name="zones_config" value="$(arg segmentation_config)" />
