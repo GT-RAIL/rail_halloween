@@ -69,6 +69,7 @@ class FindBagPoseAction(AbstractStep):
     DEFAULT_BAG_POSE_NAME = "default_drop"
 
     BASE_FRAME = "base_link"
+    BAG_POSE_OFFSET = [-0.05, 0, 0.1]  # 5 cm back, 10 cm up (from base_link)
 
     def init(self, name):
         self.name = name
@@ -107,7 +108,7 @@ class FindBagPoseAction(AbstractStep):
 
     def run(self, timeout=0.0, detection_mode=GetBagPoseGoal.D_MODE_STD):
         # Timeout of 0 implies infinite. The timeout only applies to the pose
-        # detector. It does not apply to the trigger based verification
+        # detector. It does not apply to the joystick trigger based 'detection'
         rospy.loginfo("Action {}: Waiting for a trigger on pose detector within time {}s"
                       .format(self.name, timeout))
 
@@ -139,7 +140,7 @@ class FindBagPoseAction(AbstractStep):
             # If the server was preempted, then stop. Else change the frame,
             # update the location and publish on the bag pose topic
             bag_pose = result.bag_pose
-            if status == GoalStatus.PREEMPTED:
+            if status == GoalStatus.PREEMPTED and timeout == 0:
                 yield self.set_preempted(
                     action=self.name,
                     goal=goal,
@@ -159,6 +160,9 @@ class FindBagPoseAction(AbstractStep):
                     bag_pose = tf2_geometry_msgs.do_transform_pose(bag_pose, transform)
 
                     # Then modify it a bit
+                    bag_pose.pose.position.x += FindBagPoseAction.BAG_POSE_OFFSET[0]
+                    bag_pose.pose.position.y += FindBagPoseAction.BAG_POSE_OFFSET[1]
+                    bag_pose.pose.position.z += FindBagPoseAction.BAG_POSE_OFFSET[2]
                     bag_pose.pose.orientation = Quaternion(*[0., 0., 0., 1.])
 
                     # Finally output it as debug
