@@ -12,7 +12,7 @@ from actionlib_msgs.msg import GoalStatus
 from sensor_msgs.msg import Joy
 from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceResult
 
-from task_executor.actions import get_default_actions
+from task_executor.actions import get_default_actions, JoystickTriggerAction
 from sound_interface import SoundClient
 
 # from .dialogue import DialogueManager
@@ -78,7 +78,7 @@ class LocalRecoveryServer(object):
         self.actions.beep(beep=SoundClient.BEEP_SAD, async=True)
 
         # Then wait for the joystick trigger
-        for variables in self.actions.joystick_trigger.run():
+        for variables in self.actions.joystick_trigger.run(binarize=False):
             if self._server.is_preempt_requested() or not self._server.is_active():
                 self.actions.joystick_trigger.stop()
 
@@ -92,9 +92,11 @@ class LocalRecoveryServer(object):
         # Happy beep before resuming
         self.actions.beep(beep=SoundClient.BEEP_HAPPY, async=True)
         choice = variables['choice']
-        if choice:
+        if choice == JoystickTriggerAction.ACCEPT_BUTTON_IDX:
             result.resume_hint = RequestAssistanceResult.RESUME_CONTINUE
-        else:
+        elif choice == JoystickTriggerAction.RESTART_BUTTON_IDX:
+            result.resume_hint = RequestAssistanceResult.RESUME_RETRY
+        else:  # JoystickTriggerAction.REJECT_BUTTON_IDX
             result.resume_hint = RequestAssistanceResult.RESUME_NONE
 
         # Finally, send the response back

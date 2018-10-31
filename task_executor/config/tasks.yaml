@@ -113,17 +113,28 @@ tasks:
         beep: concerned
         async: true
 
+  # The post verify task5C
+  post_verify:
+    steps:
+    - action: beep
+      params:
+        beep: playful
+        async: true
+
+    - action: look
+      params:
+        pose: gripper_poses.default_drop
+
+    - action: wait
+      params:
+        duration: 0.4
+
   # The pick loop
   pick_loop:
     var:
     - not_picked
 
     steps:
-    - action: arm
-      params:
-        poses: joint_poses.pre_pick
-        max_velocity_scaling: 0.8
-
     - action: beep
       params:
         beep: unsure
@@ -146,10 +157,7 @@ tasks:
         if_true:
           task: stir
         if_false:
-          action: beep
-          params:
-            beep: playful
-            async: true
+          task: post_verify
 
   # The post-pick task
   post_pick:
@@ -185,7 +193,7 @@ tasks:
     steps:
     - action: look
       params:
-        pose: params.drop_pose
+        pose: gripper_poses.default_drop
 
     - action: arm
       params:

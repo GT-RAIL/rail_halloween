@@ -63,13 +63,13 @@ class FindBagPoseAction(AbstractStep):
     """
 
     BAGPOSE_SERVER = "/get_bag_pose_from_person"
-    BAGPOSE_DISTANCE_THRESHOLD = 1.0
+    BAGPOSE_DISTANCE_THRESHOLD = 0.83
 
     ARM_GRIPPER_POSES_SERVICE_NAME = "/database/arm_gripper_pose"
     DEFAULT_BAG_POSE_NAME = "default_drop"
 
     BASE_FRAME = "base_link"
-    BAG_POSE_OFFSET = [-0.2, 0, 0.1]  # 20 cm back, 10 cm up (from base_link)
+    BAG_POSE_OFFSET = [-0.3, 0, 0.2]  # 30 cm back, 20 cm up (from base_link)
 
     def init(self, name):
         self.name = name
