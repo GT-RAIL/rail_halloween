@@ -127,7 +127,7 @@ tasks:
 
     - action: wait
       params:
-        duration: 0.4
+        duration: 0.2
 
   # The pick loop
   pick_loop:
@@ -165,11 +165,10 @@ tasks:
     - drop_pose
 
     steps:
-    # # This doesn't actually use the value of the choice returned. Also need the
-    # # detector over here
-    # - action: joystick_trigger
-    #   var:
-    #   - choice
+    - action: look
+      params:
+        pose: gripper_poses.default_drop
+
     - action: find_bag_pose
       params:
         detection_mode: normal
@@ -191,10 +190,6 @@ tasks:
     - drop_pose
 
     steps:
-    - action: look
-      params:
-        pose: gripper_poses.default_drop
-
     - action: arm
       params:
         poses: params.drop_pose
