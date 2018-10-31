@@ -10,6 +10,7 @@ from .background_task import BackgroundTaskAction
 from .beep import BeepAction
 from .detach_candy import DetachCandyAction
 from .drop_candy import DropCandyAction
+from .find_bag_pose import FindBagPoseAction
 from .find_closest_person import FindClosestPersonAction
 # from .find_grasps import FindGraspsAction
 # from .find_object import FindObjectAction
@@ -65,6 +66,7 @@ default_actions_dict = {
     'beep': BeepAction,
     'detach_candy': DetachCandyAction,
     'drop_candy': DropCandyAction,
+    'find_bag_pose': FindBagPoseAction,
     'find_closest_person': FindClosestPersonAction,
     # 'find_grasps': FindGraspsAction,
     # 'find_object': FindObjectAction,

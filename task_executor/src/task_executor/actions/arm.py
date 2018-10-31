@@ -7,7 +7,6 @@ import sys
 
 import rospy
 import actionlib
-import tf
 import moveit_commander
 
 from task_executor.abstract_step import AbstractStep
@@ -54,7 +53,6 @@ class ArmAction(AbstractStep):
         moveit_commander.roscpp_initialize(sys.argv)
 
         # Initialize the service clients, action clients, etc.
-        self._listener = tf.TransformListener()
         self._joint_pose_client = actionlib.SimpleActionClient(
             ArmAction.JOINT_POSE_ACTION_SERVER,
             PresetJointsMoveAction
