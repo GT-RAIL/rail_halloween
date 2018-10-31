@@ -31,15 +31,16 @@ tasks:
   # The pre-pick task
   pre_pick:
     steps:
+    - action: gripper
+      params:
+        command: open
+
+    - action: detach_candy
+
     - action: arm
       params:
         poses: joint_poses.pre_pick
         max_velocity_scaling: 0.8
-
-    - action: beep
-      params:
-        beep: cheerful
-        async: true
 
   # The verification tasks
   move_arm_and_verify:
@@ -211,13 +212,7 @@ tasks:
 
     - action: background_task
       params:
-        task: dialogue1
-
-    - action: gripper
-      params:
-        command: open
-
-    - action: detach_candy
+        task: [dialogue1_1, dialogue1_2, dialogue1_3]
 
     # Move to pre-pick
     - task: pre_pick
@@ -312,7 +307,7 @@ tasks:
         look_at_gripper: true
 
   # Dialogues
-  dialogue1:
+  dialogue1_1:
     steps:
     - action: look
       params:
@@ -321,6 +316,28 @@ tasks:
     - action: speak
       params:
         text: "Why, hello there! What is your name?"
+        affect: ""
+
+  dialogue1_2:
+    steps:
+    - action: look
+      params:
+        pose: gripper_poses.default_drop
+
+    - action: speak
+      params:
+        text: "What is your name, little one?"
+        affect: ""
+
+  dialogue1_3:
+    steps:
+    - action: look
+      params:
+        pose: gripper_poses.default_drop
+
+    - action: speak
+      params:
+        text: "Hello hello! What is your name?"
         affect: ""
 
   dialogue2:

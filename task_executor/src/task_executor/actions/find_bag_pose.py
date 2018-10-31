@@ -63,13 +63,13 @@ class FindBagPoseAction(AbstractStep):
     """
 
     BAGPOSE_SERVER = "/get_bag_pose_from_person"
-    BAGPOSE_DISTANCE_THRESHOLD = 1.5
+    BAGPOSE_DISTANCE_THRESHOLD = 1.0
 
     ARM_GRIPPER_POSES_SERVICE_NAME = "/database/arm_gripper_pose"
     DEFAULT_BAG_POSE_NAME = "default_drop"
 
     BASE_FRAME = "base_link"
-    BAG_POSE_OFFSET = [-0.05, 0, 0.1]  # 5 cm back, 10 cm up (from base_link)
+    BAG_POSE_OFFSET = [-0.2, 0, 0.1]  # 20 cm back, 10 cm up (from base_link)
 
     def init(self, name):
         self.name = name
@@ -195,8 +195,18 @@ class FindBagPoseAction(AbstractStep):
         if pose_is_nanpose(bag_pose) \
                 or get_xy_pose_distance(bag_pose) > FindBagPoseAction.BAGPOSE_DISTANCE_THRESHOLD \
                 or not variables['choice']:
+            self._pose_debug_topic.publish(self._default_pose)
+            self.notify_topic_published(
+                FindBagPoseAction.BAGPOSE_SERVER + '/pose',
+                self._default_pose
+            )
             yield self.set_succeeded(bag_pose=pose_to_dict(self._default_pose))
         else:
+            self._pose_debug_topic.publish(bag_pose)
+            self.notify_topic_published(
+                FindBagPoseAction.BAGPOSE_SERVER + '/pose',
+                bag_pose
+            )
             yield self.set_succeeded(bag_pose=pose_to_dict(bag_pose))
 
     def stop(self):
