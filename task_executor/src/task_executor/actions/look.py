@@ -102,7 +102,14 @@ class LookAction(AbstractStep):
                     'z': pose_stamped.pose.position.z,
                     'frame': pose_stamped.header.frame_id,
                 }
-        elif isinstance(pose, dict):
+        elif isinstance(pose, dict) and pose.has_key('x'):
             parsed_pose = pose
+        elif isinstance(pose, dict) and pose.has_key('position'):
+            parsed_pose = {
+                'frame': pose['frame'],
+                'x': pose['position']['x'],
+                'y': pose['position']['y'],
+                'z': pose['position']['z'],
+            }
 
         return parsed_pose
