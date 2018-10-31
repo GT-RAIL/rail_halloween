@@ -24,6 +24,15 @@ NANPOSE = PoseStamped()
 NANPOSE.pose.position = Point(*([float('nan')] * 3))
 
 
+def pose_is_nanpose(pose):
+    global NANPOSE
+    return pose.header.frame_id == '' \
+        and np.isnan(pose.pose.position.x) \
+        and np.isnan(pose.pose.position.y) \
+        and np.isnan(pose.pose.position.z) \
+        and pose.pose.orientation == NANPOSE.pose.orientation
+
+
 def get_xy_pose_distance(poseA):
     """Assume base_link framed PoseStamped messages"""
     return np.sqrt(poseA.pose.position.x ** 2 + poseA.pose.position.y ** 2)
@@ -84,7 +93,7 @@ class FindBagPoseAction(AbstractStep):
         rospy.loginfo("...database services connected")
 
         # Get the default pose and initialize the pose visualizer
-        self._default_pose = self.get_arm_gripper_pose_srv(FindBagPoseAction.DEFAULT_BAG_POSE_NAME).pose
+        self._default_pose = get_arm_gripper_pose_srv(FindBagPoseAction.DEFAULT_BAG_POSE_NAME).pose
         self.notify_service_called(FindBagPoseAction.ARM_GRIPPER_POSES_SERVICE_NAME)
         self._pose_debug_topic = rospy.Publisher(
             FindBagPoseAction.BAGPOSE_SERVER + '/pose',
@@ -138,7 +147,7 @@ class FindBagPoseAction(AbstractStep):
                     result=result
                 )
                 raise StopIteration()
-            elif bag_pose != NANPOSE:
+            elif not pose_is_nanpose(bag_pose):
                 try:
                     # First transform the frame
                     transform = self._tf_buffer.lookup_transform(
@@ -179,8 +188,8 @@ class FindBagPoseAction(AbstractStep):
             raise StopIteration()
 
         # If bag_pose is invalid, then continue to default
-        if bag_pose == NANPOSE \
-                or get_xy_pose_distance(bagpose) > FindBagPoseAction.BAGPOSE_DISTANCE_THRESHOLD \
+        if pose_is_nanpose(bag_pose) \
+                or get_xy_pose_distance(bag_pose) > FindBagPoseAction.BAGPOSE_DISTANCE_THRESHOLD \
                 or not variables['choice']:
             yield self.set_succeeded(bag_pose=self._default_pose)
         else:
