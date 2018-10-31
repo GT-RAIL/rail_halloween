@@ -31,10 +31,6 @@ tasks:
   # The pre-pick task
   pre_pick:
     steps:
-    # - action: look
-    #   params:
-    #     pose: {x: 0.42, y: 0.32, z: 0.61, frame: "base_link"}
-
     - action: arm
       params:
         poses: joint_poses.pre_pick
@@ -160,17 +156,23 @@ tasks:
     - drop_pose
 
     steps:
-    # This doesn't actually use the value of the choice returned. Also need the
-    # detector over here
-    - action: joystick_trigger
+    # # This doesn't actually use the value of the choice returned. Also need the
+    # # detector over here
+    # - action: joystick_trigger
+    #   var:
+    #   - choice
+    - action: find_bag_pose
+      params:
+        detection_mode: normal
+        timeout: 2.0
       var:
-      - choice
+      - bag_pose
 
     # This is a stub
     - op: assign
       params:
         var_name: drop_pose
-        value: gripper_poses.default_drop
+        value: var.bag_pose
       var:
       - drop_pose
 

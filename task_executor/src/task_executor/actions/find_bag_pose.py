@@ -195,9 +195,9 @@ class FindBagPoseAction(AbstractStep):
         if pose_is_nanpose(bag_pose) \
                 or get_xy_pose_distance(bag_pose) > FindBagPoseAction.BAGPOSE_DISTANCE_THRESHOLD \
                 or not variables['choice']:
-            yield self.set_succeeded(bag_pose=self._default_pose)
+            yield self.set_succeeded(bag_pose=pose_to_dict(self._default_pose))
         else:
-            yield self.set_succeeded(bag_pose=bag_pose)
+            yield self.set_succeeded(bag_pose=pose_to_dict(bag_pose))
 
     def stop(self):
         # If the bag pose client exists, cancel its goal
