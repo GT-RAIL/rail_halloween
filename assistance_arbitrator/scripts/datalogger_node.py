@@ -62,7 +62,7 @@ class DataLogger(object):
         self._split_service = rospy.Service(DataLogger.SPLIT_SERVICE_NAME, Empty, self._split_srv)
 
         # Ready!
-        rospy.loginfo("DataLogger node is ready...")
+        rospy.loginfo("datalogger node is ready...")
 
     def _start_srv(self, req):
         self.start()
@@ -77,6 +77,9 @@ class DataLogger(object):
         return EmptyResponse()
 
     def start(self):
+        if self._bag_process is not None:
+            return
+
         cmd = copy.copy(DataLogger.ROSBAG_CMD)
         with open(DataLogger.CONFIG_FILENAME, 'r') as fd:
             self.config = yaml.load(fd)
@@ -109,7 +112,7 @@ class DataLogger(object):
     def stop(self):
         if self._bag_process is not None:
             subprocess.check_call(DataLogger.ROSBAG_KILL_CMD)
-            assert self._bag_process.wait() == 0, "Error in process"
+            assert self._bag_process.wait() == 0, "Error in record process"
         self._bag_process = None
 
     def split(self):
