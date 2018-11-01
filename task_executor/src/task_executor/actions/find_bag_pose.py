@@ -141,13 +141,14 @@ class FindBagPoseAction(AbstractStep):
             # update the location and publish on the bag pose topic
             bag_pose = result.bag_pose
             if status == GoalStatus.PREEMPTED and timeout == 0:
-                yield self.set_preempted(
-                    action=self.name,
-                    goal=goal,
-                    status=status,
-                    result=result
-                )
-                raise StopIteration()
+                pass
+                # yield self.set_preempted(
+                #     action=self.name,
+                #     goal=goal,
+                #     status=status,
+                #     result=result
+                # )
+                # raise StopIteration()
             elif not pose_is_nanpose(bag_pose):
                 try:
                     # First transform the frame

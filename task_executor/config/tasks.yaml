@@ -118,7 +118,7 @@ tasks:
         beep: concerned
         async: true
 
-  # The post verify task5C
+  # The post verify task
   post_verify:
     steps:
     - action: beep
@@ -170,24 +170,25 @@ tasks:
     - drop_pose
 
     steps:
-    - action: look
-      params:
-        pose: gripper_poses.default_drop
-
-    - action: find_bag_pose
-      params:
-        detection_mode: normal
-        timeout: 2.0
-      var:
-      - bag_pose
-
-    # This is a stub
     - op: assign
       params:
         var_name: drop_pose
-        value: var.bag_pose
+        value: gripper_poses.default_drop
       var:
       - drop_pose
+
+    - action: joystick_trigger
+      var:
+      - choice
+
+    # - action: find_bag_pose
+    #   params:
+    #     detection_mode: depth
+    #     timeout: 2.0
+    #   var:
+    #   - bag_pose
+
+    # This is a stub
 
   # The drop task
   drop:
@@ -226,20 +227,26 @@ tasks:
     - task: pre_pick
 
     # The pick-verify loop
-    - op: assign
-      params:
-        var_name: not_picked
-        value: true
-      var:
-      - not_picked
+    # - op: assign
+    #   params:
+    #     var_name: not_picked
+    #     value: false
+    #   var:
+    #   - not_picked
 
-    - loop: pick_verify_loop
+    # - loop: pick_verify_loop
+    #   params:
+    #     condition: var.not_picked
+    #     loop_body:
+    #       task: pick_loop
+    #       var:
+    #       - not_picked
+    - action: pick_candy
+
+    - action: beep
       params:
-        condition: var.not_picked
-        loop_body:
-          task: pick_loop
-          var:
-          - not_picked
+        beep: surprised
+        async: true
 
     # Move to post-pick
     - action: background_task

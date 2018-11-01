@@ -112,7 +112,7 @@ void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr 
   gripper_goal.command.position = 0;
   gripper_goal.command.max_effort = 100;  // TODO: set effort for candy
   gripper_client.sendGoal(gripper_goal);
-  gripper_client.waitForResult(ros::Duration(5.0));
+  gripper_client.waitForResult(ros::Duration(10.0));
 
   // move to post grasp pose
   if (grasp_server.isPreemptRequested())

@@ -17,7 +17,7 @@ from sensor_msgs.msg import Joy
 from task_executor.msg import ExecuteAction, ExecuteGoal
 from std_srvs.srv import Trigger, TriggerResponse
 
-from task_executor.actions import JoystickTriggerAction, HotwordTriggerAction
+from task_executor.actions import JoystickTriggerAction
 
 
 # Helpers
@@ -70,8 +70,8 @@ class Halloween(object):
         self._joystick_trigger = JoystickTriggerAction()
         self._joystick_trigger.init('joystick_trigger')
 
-        self._hotword_trigger = HotwordTriggerAction()
-        self._hotword_trigger.init('hotword_trigger')
+#        self._hotword_trigger = HotwordTriggerAction()
+#        self._hotword_trigger.init('hotword_trigger')
 
         # The joystick subscriber
         self._joy_sub = rospy.Subscriber(Halloween.JOY_TOPIC, Joy, self._on_joy)
@@ -116,8 +116,8 @@ class Halloween(object):
             # Use the hotword trigger only if the previous run was not preempted
             # or aborted
             iterators_to_use = [self._joystick_trigger.run(),]
-            if status not in [GoalStatus.PREEMPTED, GoalStatus.ABORTED]:
-                iterators_to_use.append(self._hotword_trigger.run())
+            # if status not in [GoalStatus.PREEMPTED, GoalStatus.ABORTED]:
+            #     iterators_to_use.append(self._hotword_trigger.run())
 
             for vars_tuple in itertools.izip_longest(*iterators_to_use):
                 # Update the value of trigger
@@ -131,8 +131,8 @@ class Halloween(object):
                 if self._trigger:
                     if self._joystick_trigger.is_running():
                         self._joystick_trigger.stop()
-                    if self._hotword_trigger.is_running():
-                        self._hotword_trigger.stop()
+                    # if self._hotword_trigger.is_running():
+                    #    self._hotword_trigger.stop()
 
                 # Otherwise, wait a bit
                 rospy.sleep(0.5)

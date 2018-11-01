@@ -72,7 +72,7 @@ default_actions_dict = {
     # 'find_object': FindObjectAction,
     'gripper': GripperAction,
     'hat': HatAction,
-    'hotword_trigger': HotwordTriggerAction,
+#     'hotword_trigger': HotwordTriggerAction,
     'joystick_trigger': JoystickTriggerAction,
     # 'listen': ListenAction,
     'look': LookAction,
