@@ -9,6 +9,8 @@ The package uses three concepts when executing a task:
 
 - `actions`: Actions are primitive robot actions that can be executed by either calling low level controllers (such as the torso controller), or high level planners (such as move_base or MoveIt), or even higher level action servers (such as the RAIL Lab's grasp calculation pipeline). In a hierarchical task plan, actions are at the leaves of the hierarchy; in a state machine (`smach`), actions are the states.
 - `ops`: Ops (operations) are code operations that do not interface with the robot's sensors or actuators, but instead operate upon the state or task plan between one action and the next.
+- `loop`: Loops execute the `loop_body` parameter while the `condition` parameter evaluates to true
+- `choice`: Choices execute the `if_true` parameter if the `condition` parameter evaluates to true; else the execute the `if_false` parameter
 - `tasks`: Tasks are sequences of `actions` and `ops` that can either be predefined or constructed on the fly. In a hierarchical task plan, tasks are any node that is not a leaf node; in a state machine (`smach`), tasks are state machines.
 
 Task definitions are currently stored in [`config/tasks.yaml`](config/tasks.yaml), actions are defined in [`src/task_executor/actions`](src/task_executor/actions), and ops are defined in [`src/task_executor/ops.py`](src/task_executor/ops.py). See the section on [Syntax (TODO)](#syntax).

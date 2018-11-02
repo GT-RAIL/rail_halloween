@@ -65,15 +65,34 @@ roslaunch fetch_gazebo playground.launch
 2. Start the MoveIt, move_base, grasp planners, speech, etc
 ```bash
 # Use the sim flag only in simulation
-roslaunch task_executor fetch_deliver.launch sim:=true start_all:=true task_executor:=false
+roslaunch task_executor trick_or_treat.launch sim:=true start_all:=true task_executor:=false
 ```
 3. Start the task_executor
 ```bash
 # Use the sim flag only in simulation
 roslaunch task_executor fetch_deliver.launch sim:=true task_executor:=true
 ```
-4. Run a task defined in `$(find task_executor)/config/tasks.yaml`
+4. Setup to run the halloween demo
+```bash
+rosservice call /halloween/setup
+```
+5. Start the background thread to wait for the start triggers
+```bash
+rosservice call /halloween/start
+```
+
+When you are done, make sure to call the stop on the halloween-task runner: `rosservice call /halloween/stop`.
+
+Extra helper commands:
+
+1. Run a task defined in `$(find task_executor)/config/tasks.yaml`
 ```bash
 # For example, to run the task with the key `main` in the YAML file
 rosrun task_executor run_task.py main
+```
+2. Run an action defined at [`task_executor/actions`](task_executor/src/task_executor/actions/)
+```bash
+# Make sure you follow the exact quote syntax followed herefor the JSON
+# params. Assuming you want to move to an arm position:
+rosrun task_executor run_action.py arm '{"poses": [1,1,1,1,1,0,1], "look_at_gripper": true}'
 ```
