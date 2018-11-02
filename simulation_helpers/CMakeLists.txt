@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   fetch_driver_msgs
   geometry_msgs
   message_generation
-  rail_people_detection_msgs
   rospy
   std_msgs
   std_srvs
@@ -61,10 +60,10 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  CreatePerson.srv
-)
+# add_service_files(
+#   FILES
+#   CreatePerson.srv
+# )
 
 ## Generate actions in the 'action' folder
 # add_action_files(

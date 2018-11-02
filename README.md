@@ -11,15 +11,22 @@
 
 Packages:
 
-- [`task_executor`](task_executor/) - The main workhorse for this package. It executes the task specified in `config/tasks.yaml`.
-- [`candy_manipulation`](candy_manipulation/) - Contains the action servers to:
-    - move the arm to specified joint poses
-    - move the arm through a pick motion
-    - drop off the candy
-    - verify that the arm has picked up candy based on vision and gripper position
-- [`assistance_arbitrator`](assistance_arbitrator/) - Research code that uses context passed on from the task_executor (or another node that might be requesting assistance), and decides where to forward the request - local or remote.
-- [`local_interfaces`](local_interfaces/) - If we decide to solicit help from a local person, then the code in this folder (main entrypoint: [`local_interfaces/local_strategy`](local_interfaces/local_strategy)) handles the presentation of the request to a human.
-- [`assistance_msgs`](assistance_msgs/) - The primary interface between all the other modules in this folder.
+- [`task_executor`](task_executor/) - The main workhorse for this package. It executes the task specified in [`config/tasks.yaml`](task_executor/config/tasks.yaml).
+- [`manipulation`](manipulation/) - Packages to assist in various manipulation tasks
+    - [`candy_manipulation`](candy_manipulation/) - Contains the action servers to:
+        - move the arm to specified joint poses
+        - move the arm through a pick motion
+        - drop off the candy
+        - verify that the arm has picked up candy based on vision and gripper position
+    - [`data_recorder`](data_recorder/) - Record and playback joint trajectories with some time scaling
+- [`local_interfaces`](local_interfaces/) - Methods of interacting with a local human
+    - [`bagposefromperson`](local_interfaces/bagposefromperson) - Use pose detection and/or depth thresholding to determine where to drop candy
+    - [`hotword_detector`](local_interfaces/hotword_detector) - Detect a hotword "trick-or-treat" trigger
+    - [`local_strategy`](local_interfaces/local_strategy) - In case the task executor fails, provide a joystick interface for recovery
+- [`assistance_arbitration`](assistance_arbitration/) - Research code to provide assistance when the task fails.
+    - [`assistance_arbitrator`](assistance_arbitrator/) - The server that serves assistance requests. Also includes fault detectors.
+    - [`assistance_msgs`](assistance_msgs/) - The primary interface between the arbitration server and the strategy servers and the task executor.
+- [`simulation_helpers`](simulation_helpers) - Stub interfaces to simulate real robot functionality in simulation
 
 ## Prerequisites
 
@@ -31,7 +38,7 @@ pip:
 - psutil
 - pydub
 
-# Prerequisite for tts. Instructions are in the speech_interface package in this repository
+# Prerequisite for tts. Instructions are in the sound_interface package in this repository
 docker:
 - marytts
 
@@ -40,12 +47,11 @@ ros:
 - GT-RAIL/fetch_demos
 - GT-RAIL/fetch_gazebo
 - GT-RAIL/fetch_ros
+- GT-RAIL/rail_pose_estimation_msgs
 
 # optional
-- GT-RAIL/rail_pose_estimation
+- GT-RAIL/rail_pose_estimator
 ```
-
-In the near future, these will be packaged into a script(s) placed in the `install` directory.
 
 
 ## Quickstart
