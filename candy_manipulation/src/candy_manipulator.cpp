@@ -9,7 +9,8 @@ CandyManipulator::CandyManipulator() :
     tf_listener(tf_buffer),
     gripper_client("gripper_controller/gripper_action"),
     grasp_server(pn, "grasp", boost::bind(&CandyManipulator::executeGrasp, this, _1), false),
-    drop_server(pn, "drop", boost::bind(&CandyManipulator::executeDrop, this, _1), false)
+    drop_server(pn, "drop", boost::bind(&CandyManipulator::executeDrop, this, _1), false),
+    preset_pose_server(pn, "preset_position", boost::bind(&CandyManipulator::executePresetPosition, this, _1), false)
 {
   pn.param("drop_wait_time", drop_wait_time, 1.0);
 
@@ -29,6 +30,51 @@ CandyManipulator::CandyManipulator() :
 
   grasp_server.start();
   drop_server.start();
+}
+
+void CandyManipulator::executePresetPosition(const candy_manipulation::PresetJointsMoveGoalConstPtr &goal)
+{
+  candy_manipulation::PresetJointsMoveResult result;
+
+  ROS_INFO("Preparing robot to preset pose...");
+
+  sensor_msgs::JointState preset_pose;
+  preset_pose.name = goal->name;
+  preset_pose.position = goal->position;
+
+  arm_group->setPlannerId("arm[RRTConnectkConfigDefault]");
+  arm_group->setPlanningTime(7.0);
+  arm_group->setStartStateToCurrentState();
+  arm_group->setJointValueTarget(preset_pose);
+  if (goal->max_velocity_scaling_factor > 0)
+  {
+    arm_group->setMaxVelocityScalingFactor(goal->max_velocity_scaling_factor);
+  }
+
+  if (preset_pose_server.isPreemptRequested())
+  {
+    ROS_INFO("Preempted while moving to preset pose.");
+    result.success = false;
+    preset_pose_server.setPreempted(result);
+    arm_group->setMaxVelocityScalingFactor(MAX_VELOCITY_SCALING_FACTOR);
+    return;
+  }
+  result.error_code = arm_group->move();
+  if (result.error_code != moveit_msgs::MoveItErrorCodes::SUCCESS)
+  {
+    ROS_INFO("Failed to move to preset pose.");
+    result.success = false;
+    preset_pose_server.setAborted(result);
+  }
+  else
+  {
+    ROS_INFO("Arm successfully reached the preset pose.");
+    result.success = true;
+    preset_pose_server.setSucceeded(result);
+  }
+
+  // Reset the scaling factor
+  arm_group->setMaxVelocityScalingFactor(MAX_VELOCITY_SCALING_FACTOR);
 }
 
 void CandyManipulator::executeGrasp(const candy_manipulation::GraspGoalConstPtr &goal)

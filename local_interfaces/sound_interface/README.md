@@ -24,7 +24,15 @@ If you have docker running, simply run:
 docker run -d --rm --name marytts -p 59125:59125 gtrail/marytts:dfki-prudence-hsmm
 ```
 
-This will start up MARY TTS with the `dfki-prudence-hsmm` voice installed. The image tag is meant to denote the different voices, but we only have a single voice tag in the remote docker hub at the moment.
+This will start up MARY TTS with the `dfki-prudence-hsmm` voice installed. The image tag is meant to denote the different voices. The list of currently available voices can be found in our [DockerHub account](https://hub.docker.com/r/gtrail/marytts/tags/).
+
+To build a new docker image with a new voice tag, run the following command in the [`docker/marytts`](docker/marytts) directory:
+
+```bash
+docker build -t gtrail/marytts:<voice-tag> --build-arg MARYTTS_VOICE=<voice-tag> .
+```
+
+The available choices for `voice-tag` can be found on the [Mary TTS Demo](http://mary.dfki.de:59125/) website.
 
 
 ### MARY: Local installation
@@ -82,4 +90,4 @@ rosrun sound_play soundplay_node.py
 python $(pwd)/local_strategy/src/local_strategy/speak.py --help
 ```
 
-The demo script (the last command) has two modes of operation - `beep` and `speak`. The former plays pre-recorded R2D2 beeps based on the key. The latter performs TTS using Mary and outputs it via `sound_play`. There are also options to change the emotion in the output speech with the use of `EmotionML`.
+The demo script (the last command) has two modes of operation - `beep` and `speak`. The former plays pre-recorded R2D2 beeps based on the key. The latter performs TTS using Mary and outputs it via `sound_play`. There are also options to change the emotion in the output speech with the use of `SSML`.

@@ -8,6 +8,7 @@
 #include <control_msgs/GripperCommandAction.h>
 #include <candy_manipulation/DropAction.h>
 #include <candy_manipulation/GraspAction.h>
+#include <candy_manipulation/PresetJointsMoveAction.h>
 #include <moveit_msgs/GetCartesianPath.h>
 #include <moveit_msgs/GetPlanningScene.h>
 #include <moveit_msgs/MoveItErrorCodes.h>
@@ -32,6 +33,8 @@ private:
 
   void executeDrop(const candy_manipulation::DropGoalConstPtr &goal);
 
+  void executePresetPosition(const candy_manipulation::PresetJointsMoveGoalConstPtr &goal);
+
   bool enableCollision();
 
   ros::NodeHandle n, pn;
@@ -45,6 +48,7 @@ private:
   // actionlib
   actionlib::SimpleActionServer<candy_manipulation::GraspAction> grasp_server;
   actionlib::SimpleActionServer<candy_manipulation::DropAction> drop_server;
+  actionlib::SimpleActionServer<candy_manipulation::PresetJointsMoveAction> preset_pose_server;
   actionlib::SimpleActionClient<control_msgs::GripperCommandAction> gripper_client;
 
   // MoveIt interfaces

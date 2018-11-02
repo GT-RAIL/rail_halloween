@@ -1,0 +1,6 @@
+string D_MODE_STD=normal
+string D_MODE_ALT=depth
+string detection_mode
+---
+geometry_msgs/PoseStamped bag_pose
+---

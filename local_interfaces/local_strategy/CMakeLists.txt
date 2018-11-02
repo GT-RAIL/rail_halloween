@@ -13,7 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   control_msgs
   fetch_driver_msgs
   geometry_msgs
-  rail_people_detection_msgs
   rospy
   sensor_msgs
   std_msgs

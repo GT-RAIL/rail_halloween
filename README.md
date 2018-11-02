@@ -1,19 +1,25 @@
-# Assistance Arbitration
+# RAIL Halloween
 
-Feeling alone? Need help? Don't worry, we've got you covered. Our novel algorithms will help you choose what's the best help for you! Step right up.
+```
+         \\                \\                \\
+    .-'```^```'-.     .-'```^```'-.     .-'```^```'-.
+   /   /\ __ /\  \   /   (\ __ /)  \   /   /) __ (\  \
+   |   ^^ \/ ^^  |   |    ` \/ `   |   |   ^  \/  ^  |
+   \   \_.__._/  /   \    \____/   /   \    `'=='`   /
+    `'-.......-'`     `'-.......-'`     `'-.......-'`
+```
 
-Modules:
+Packages:
 
-- [`assistance_msgs`](assistance_msgs/) - The primary interface between all the other modules in this folder.
-- [`task_executor`](task_executor/) - Executes fetch and deliver tasks according to a program specification in YAML (now; perhaps CodeIt! in the future).
+- [`task_executor`](task_executor/) - The main workhorse for this package. It executes the task specified in `config/tasks.yaml`.
+- [`candy_manipulation`](candy_manipulation/) - Contains the action servers to:
+    - move the arm to specified joint poses
+    - move the arm through a pick motion
+    - drop off the candy
+    - verify that the arm has picked up candy based on vision and gripper position
 - [`assistance_arbitrator`](assistance_arbitrator/) - Research code that uses context passed on from the task_executor (or another node that might be requesting assistance), and decides where to forward the request - local or remote.
 - [`local_interfaces`](local_interfaces/) - If we decide to solicit help from a local person, then the code in this folder (main entrypoint: [`local_interfaces/local_strategy`](local_interfaces/local_strategy)) handles the presentation of the request to a human.
-- [`remote_interfaces`](remote_interfaces/) - If we decide to solicit help from a remote person, then the code in this folder (main entrypoint: [`remote_interfaces/remote_strategy`](remote_interfaces/remote_strategy)) handles the presentation of the request to a human.
-
-Installation (TODO):
-
-- [`install`](install/) - `rosinstall` files to setup and synchronize the different workspaces. However, we cannot use the default `wstool` for this. Also includes `requirements.txt` (TODO), etc.
-
+- [`assistance_msgs`](assistance_msgs/) - The primary interface between all the other modules in this folder.
 
 ## Prerequisites
 
@@ -26,22 +32,17 @@ pip:
 - pydub
 
 # Prerequisite for tts. Instructions are in the speech_interface package in this repository
-java:
+docker:
 - marytts
 
 # Prerequisite packages. Ensure these are in your ROS workspace
 ros:
 - GT-RAIL/fetch_demos
 - GT-RAIL/fetch_gazebo
-- gt-rail-internal/fetch_grasp_suggestion  # Expect a public release from Fetch soon
 - GT-RAIL/fetch_ros
-- HLP-R/hlpr_speech
-- GT-RAIL/rail_agile
-- GT-RAIL/rail_grasp_calculation
-- GT-RAIL/rail_manipulation_msgs
-- GT-RAIL/rail_object_detection  # Only really need the msgs from here
-- GT-RAIL/rail_people_detection
-- GT-RAIL/rail_segmentation
+
+# optional
+- GT-RAIL/rail_pose_estimation
 ```
 
 In the near future, these will be packaged into a script(s) placed in the `install` directory.
