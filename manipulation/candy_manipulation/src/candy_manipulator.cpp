@@ -4,6 +4,8 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
+const float MAX_VELOCITY_SCALING_FACTOR = 0.3;
+
 CandyManipulator::CandyManipulator() :
     pn("~"),
     tf_listener(tf_buffer),
@@ -30,6 +32,7 @@ CandyManipulator::CandyManipulator() :
 
   grasp_server.start();
   drop_server.start();
+  preset_pose_server.start();
 }
 
 void CandyManipulator::executePresetPosition(const candy_manipulation::PresetJointsMoveGoalConstPtr &goal)

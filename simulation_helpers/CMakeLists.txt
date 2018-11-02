@@ -76,7 +76,6 @@ find_package(catkin REQUIRED COMPONENTS
 generate_messages(
   DEPENDENCIES
     geometry_msgs
-    rail_people_detection_msgs
     std_msgs
 )
 

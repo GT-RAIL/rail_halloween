@@ -14,7 +14,7 @@ from task_executor.abstract_step import AbstractStep
 from actionlib_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from moveit_msgs.msg import MoveItErrorCodes
-from fetch_grasp_suggestion.msg import PresetJointsMoveAction, PresetJointsMoveGoal
+from candy_manipulation.msg import PresetJointsMoveAction, PresetJointsMoveGoal
 from task_executor.msg import ArmJointPose
 from task_executor.srv import GetArmGripperPose, GetArmJointPose, GetTrajectory
 
@@ -24,7 +24,7 @@ from .look_at_gripper import LookAtGripperAction
 class ArmAction(AbstractStep):
 
     MAX_ATTEMPTS = 5
-    JOINT_POSE_ACTION_SERVER = "/grasp_executor/preset_position"
+    JOINT_POSE_ACTION_SERVER = "/candy_manipulator/preset_position"
     MOVE_GROUP_PLAN_ACTION_SERVER = "/move_group"
     MOVE_GROUP_EXECUTE_SERVICE = "/execute_kinematic_path"
 

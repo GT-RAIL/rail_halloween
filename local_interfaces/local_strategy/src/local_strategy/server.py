@@ -15,8 +15,6 @@ from assistance_msgs.msg import RequestAssistanceAction, RequestAssistanceResult
 from task_executor.actions import get_default_actions, JoystickTriggerAction
 from sound_interface import SoundClient
 
-# from .dialogue import DialogueManager
-
 
 # The server performs local behaviours to resume execution after contact with
 # local humans

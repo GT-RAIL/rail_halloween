@@ -70,8 +70,8 @@ class Halloween(object):
         self._joystick_trigger = JoystickTriggerAction()
         self._joystick_trigger.init('joystick_trigger')
 
-#        self._hotword_trigger = HotwordTriggerAction()
-#        self._hotword_trigger.init('hotword_trigger')
+       # self._hotword_trigger = HotwordTriggerAction()
+       # self._hotword_trigger.init('hotword_trigger')
 
         # The joystick subscriber
         self._joy_sub = rospy.Subscriber(Halloween.JOY_TOPIC, Joy, self._on_joy)

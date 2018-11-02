@@ -11,21 +11,14 @@ from .beep import BeepAction
 from .detach_candy import DetachCandyAction
 from .drop_candy import DropCandyAction
 from .find_bag_pose import FindBagPoseAction
-from .find_closest_person import FindClosestPersonAction
-# from .find_grasps import FindGraspsAction
-# from .find_object import FindObjectAction
 from .gripper import GripperAction
 from .hat import HatAction
 from .hotword_trigger import HotwordTriggerAction
 from .joystick_trigger import JoystickTriggerAction
-# from .listen import ListenAction
 from .look import LookAction
-from .look_at_closest_person import LookAtClosestPersonAction
 from .look_at_gripper import LookAtGripperAction
 # from .move import MoveAction
-from .pick import PickAction
 from .pick_candy import PickCandyAction
-from .place import PlaceAction
 from .speak import SpeakAction
 from .stir import StirAction
 from .toggle_breakers import ToggleBreakersAction
@@ -67,21 +60,14 @@ default_actions_dict = {
     'detach_candy': DetachCandyAction,
     'drop_candy': DropCandyAction,
     'find_bag_pose': FindBagPoseAction,
-    'find_closest_person': FindClosestPersonAction,
-    # 'find_grasps': FindGraspsAction,
-    # 'find_object': FindObjectAction,
     'gripper': GripperAction,
     'hat': HatAction,
-#     'hotword_trigger': HotwordTriggerAction,
+    # 'hotword_trigger': HotwordTriggerAction,
     'joystick_trigger': JoystickTriggerAction,
-    # 'listen': ListenAction,
     'look': LookAction,
-    'look_at_closest_person': LookAtClosestPersonAction,
     'look_at_gripper': LookAtGripperAction,
     # 'move': MoveAction,
-    'pick': PickAction,
     'pick_candy': PickCandyAction,
-    'place': PlaceAction,
     'speak': SpeakAction,
     'stir': StirAction,
     'toggle_breakers': ToggleBreakersAction,
